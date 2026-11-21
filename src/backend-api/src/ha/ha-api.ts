@@ -58,6 +58,8 @@ export interface HaDeps {
   resumeFile?: string
   /** monitor.json: whether the display is on ({"monitor": "On" | "Off"}) - for the operating state in /state */
   monitorFile?: string
+  /** what the child did with the search pool (search-pool.ts): put on the start page, taken out - for /search_events */
+  searchPoolEvents?: () => Promise<{ id: number; at: string; what: string; kind: string; name: string; artist: string; category: string }[]>
 }
 
 const log = (msg: string) => console.log(`${new Date().toLocaleString()}: [ha-api] ${msg}`)
@@ -525,10 +527,21 @@ export function buildApp(deps: HaDeps): Express {
       manufacturer: 'MuPiBox',
       model: 'MuPiBox Classic',
       // (sleep_timer only where the box has the shared timer: the script of this version and systemd-run)
-      capabilities: (await sleepTimerAvailable()) ? [...CAPABILITIES, 'sleep_timer'] : CAPABILITIES,
+      capabilities: [...((await sleepTimerAvailable()) ? [...CAPABILITIES, 'sleep_timer'] : CAPABILITIES), ...(deps.searchPoolEvents ? ['search_events'] : [])],
       // (splitti's integration shows whether announcements can be made)
       tts: { enabled: speechOf(deps.getMupiboxConfig()).engine !== 'off' },
     })
+  })
+
+  /**
+   * GET /search_events?after=<id> (read) - what the child did with the search pool, oldest first: put something on the
+   * start page under a tab ("added") or took it out again ("removed"). The integration polls it and passes on the ones
+   * after the last id it saw. (Not /events: that path is the contract's WebSocket, §7.)
+   */
+  v1.get('/search_events', requireScope('read'), async (req, res) => {
+    const after = Number.parseInt(String(req.query.after ?? '0'), 10) || 0
+    const list = deps.searchPoolEvents ? await deps.searchPoolEvents().catch(() => []) : []
+    res.json({ events: list.filter((e) => e.id > after), last_id: list[list.length - 1]?.id ?? 0 })
   })
 
   v1.get('/state', requireScope('read'), async (_req, res) => {

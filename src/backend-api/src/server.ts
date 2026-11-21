@@ -53,6 +53,7 @@ import type { Duplex } from 'node:stream'
 import { SUDO_BACKUP_SNIPPET, backupBeforeWrite } from './file-backup'
 import { readEmbeddedPicture } from './embedded-cover'
 import { acquireLock, releaseLock, staleReason } from './file-lock'
+import { registerSearchPoolRoutes } from './search-pool'
 import { type AlbumFillDeps, fillSpotifyAlbums, isBareAlbum, startSpotifyAlbumFill } from './spotify-album-fill'
 import { coverHidden } from './hidden-covers'
 import { OnlineCovers } from './online-covers'
@@ -1195,11 +1196,24 @@ const haDeps = {
   },
   resumeFile: activeresumeFile,
   monitorFile,
+  // (searchPool: set up below - asked only when a request comes)
+  searchPoolEvents: () => searchPool.events(),
 }
 registerHaDisplayRoute(app)
 const haRouter = express.Router()
 registerHaAppRoutes(haRouter, haDeps, { session: requireSession, csrf: requireCsrf })
 app.use('/api/app', haRouter)
+
+// The search pool ("Nur in der Suche", search-pool.ts): allowed for the display's search, not on its start page
+const searchPool = registerSearchPoolRoutes(app, {
+  configDir: configBasePath,
+  dataFile,
+  dataLock,
+  writeLibrary: (data) => new Promise((resolve, reject) => writeJsonAtomic(dataFile, data, (error) => (error ? reject(error) : resolve()))),
+  spotify: () => spotifyApiService,
+  session: requireSession,
+  csrf: requireCsrf,
+})
 
 // Whether the box has no internet right now (network.json, written every minute by get_network.sh)
 let offlineCheck = { at: 0, offline: false }

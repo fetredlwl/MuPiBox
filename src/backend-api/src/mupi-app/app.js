@@ -3858,7 +3858,31 @@ async function loadSubAlbums(a, box) {
 // (cat: the category chosen last - the next sheet starts with it; artist: one opened from the search, its albums with
 // the way back to the search; have: what is in the library already, see libraryHave)
 // (mine: the account's own and followed playlists - the search finds public ones only)
-const search = { q: '', type: 'Alle', cat: 'audiobook', result: null, busy: false, artist: null, have: new Set(), mine: null, mineAll: false }
+const search = { q: '', type: 'Alle', cat: 'audiobook', result: null, busy: false, artist: null, have: new Set(), pool: new Set(), mine: null, mineAll: false }
+
+// The search pool ("Nur in der Suche", backend search-pool.ts): allowed for the display's search, not on its start
+// page - as "kind:spotifyId"
+// (a podcast by its feed, without http(s):// - as the backend's poolIdent)
+const poolKey = (e) => (e.kind === 'podcast' ? `podcast:${String(e.feedUrl ?? '').replace(/^https?:\/\//i, '')}` : `${e.kind}:${e.spotifyId}`)
+async function poolKeys() {
+  const r = await api(`${API}/search-pool`)
+  return new Set((r.ok ? (r.body?.entries ?? []) : []).map(poolKey))
+}
+
+async function addToPool(item) {
+  const r = await api(`${API}/search-pool`, { method: 'POST', body: item })
+  if (!r.ok) {
+    toast('Das hat nicht geklappt', 'info')
+    return false
+  }
+  search.pool.add(poolKey(item))
+  drawSearch()
+  drawSpotifyMine()
+  toast(`In der Suche: ${item.name}`)
+  return true
+}
+
+const POOL_HELP = '„Nur in der Suche“: nicht auf der Startseite. Das Kind findet es mit der Suche am Display, kann es abspielen und selbst unter einen Reiter holen.'
 
 function searchTop() {
   return [
@@ -3883,9 +3907,10 @@ async function loadSpotifyMine() {
   const el = $('#s-mine')
   if (!el) return
   if (!search.mine) el.innerHTML = `<div class="loading"><p>${esc('Lade …')}</p></div>`
-  const [r, have] = await Promise.all([api(`${SYNC_API}/my-playlists`), libraryHave('spotify')])
+  const [r, have, pool] = await Promise.all([api(`${SYNC_API}/my-playlists`), libraryHave('spotify'), poolKeys()])
   if (!el.isConnected) return
   search.have = have
+  search.pool = pool
   if (!r.ok) {
     // (no connection any more - disconnected, or the sign-in refused: the list of before goes, it was that account's)
     const gone = r.status === 409 || r.status === 401
@@ -3975,7 +4000,8 @@ async function doSpotifySearch() {
   const types = { Alle: 'artist,album,track,playlist', Künstler: 'artist', Alben: 'album', Titel: 'track', Playlists: 'playlist' }[search.type]
   const box = $('#s-results')
   box.innerHTML = `<div class="loading"><p>Suche …</p></div>`
-  const [r, have] = await Promise.all([api(`/api/spotify/search?q=${encodeURIComponent(q)}&types=${types}&limit=8`), libraryHave('spotify')])
+  const [r, have, pool] = await Promise.all([api(`/api/spotify/search?q=${encodeURIComponent(q)}&types=${types}&limit=8`), libraryHave('spotify'), poolKeys()])
+  search.pool = pool
   if (!r.ok) {
     // (the backend's reason is English, e.g. "Failed to search"; 503: Spotify is not set up)
     box.innerHTML = `<p class="help">${r.status === 503 ? 'Die Suche braucht eine eingerichtete Spotify-Verbindung (Bibliothek › Spotify).' : 'Die Suche hat nicht geklappt.'}</p>`
@@ -3996,6 +4022,7 @@ const spAlbum = (a) => ({
   t: a.name,
   s: [spNames(a.artists), String(a.release_date ?? '').slice(0, 4), a.total_tracks ? `${a.total_tracks} Titel` : ''].filter(Boolean).join(' · '),
   img: spImg(a.images),
+  artist: spNames(a.artists),
   date: String(a.release_date ?? ''),
   single: a.album_type === 'single',
   artistIds: (a.artists ?? []).map((x) => x?.id).filter(Boolean),
@@ -4006,8 +4033,10 @@ const spAlbum = (a) => ({
 // (via: an album of a subscribed artist - on the box through the subscription, not as an entry of its own)
 function resultRow(r, i, list, have) {
   const there = have?.has(`${r.kind}:${r.id}`) || !!r.via
+  // (in the search pool: only in the display's search - see addToPool)
+  const pooled = !there && search.pool.has(`${r.kind}:${r.id}`)
   return `<button class="entry lib-row ard-show" data-list="${list}" data-i="${i}"><span class="lib-thumb">${r.img ? `<img src="${esc(r.img)}" alt="" loading="lazy">` : ''}${icon(r.kind === 'artist' ? 'folder' : 'music', 18)}</span>
-    <span class="lbl"><b translate="no">${esc(r.t)}</b><small translate="no">${esc(r.s)}${there ? ` · <span class="in-lib">${esc(have?.has(`${r.kind}:${r.id}`) ? 'In der Bibliothek' : (r.viaText ?? 'Künstler abonniert'))}</span>` : ''}</small></span>${there ? `<span class="in-lib" aria-hidden="true">${icon('check', 18)}</span>` : ''}<span class="chev">${icon('chevron', 18)}</span></button>`
+    <span class="lbl"><b translate="no">${esc(r.t)}</b><small translate="no">${esc(r.s)}${there ? ` · <span class="in-lib">${esc(have?.has(`${r.kind}:${r.id}`) ? 'In der Bibliothek' : (r.viaText ?? 'Künstler abonniert'))}</span>` : ''}${pooled ? ` · <span class="in-lib">${esc('Nur in der Suche')}</span>` : ''}</small></span>${there ? `<span class="in-lib" aria-hidden="true">${icon('check', 18)}</span>` : pooled ? `<span class="in-lib" aria-hidden="true">${icon('search', 18)}</span>` : ''}<span class="chev">${icon('chevron', 18)}</span></button>`
 }
 
 // The albums of an artist in a search, filtered: by a text, by kind (albums or EPs and singles) and in an order -
@@ -4072,10 +4101,12 @@ function drawSearch() {
   if (search.artist) {
     const a = search.artist
     const subscribed = search.have.has(`artist:${a.id}`)
+    const pooled = search.pool.has(`artist:${a.id}`)
     box.innerHTML = `<div class="btns"><button class="btn" id="s-back">${icon('back', 18)}Zurück zur Suche</button></div>
       <section class="card"><div class="ard-head">${a.img ? `<img src="${esc(a.img)}" alt="">` : ''}<span class="lbl"><h2 translate="no" style="margin:0">${esc(a.name)}</h2><small>${esc(subscribed ? 'Künstler auf Spotify · abonniert' : 'Künstler auf Spotify')}</small></span></div>
         <p class="help" style="margin:0">${esc(lib.sync && !lib.sync.enabled ? 'Abonnieren holt alle Folgen auf die Box. Später erscheinende kommen nur mit Smart-Sync von selbst (Bibliothek › Spotify). Einzelne Alben fügst du unten hinzu.' : 'Abonnieren holt alle Folgen auf die Box und später auch neue. Einzelne Alben fügst du unten hinzu.')}</p>
-        <div class="btns"><button class="btn primary" id="s-sub">${icon(subscribed ? 'check' : 'plus', 18)}${esc(subscribed ? 'Abonniert' : 'Ganzen Künstler abonnieren')}</button></div></section>
+        <div class="btns"><button class="btn primary" id="s-sub">${icon(subscribed ? 'check' : 'plus', 18)}${esc(subscribed ? 'Abonniert' : 'Ganzen Künstler abonnieren')}</button>${subscribed ? '' : `<button class="btn" id="s-pool"${pooled ? ' disabled' : ''}>${icon(pooled ? 'check' : 'search', 18)}${esc(pooled ? 'In der Suche' : 'Nur in der Suche')}</button>`}</div>
+        ${subscribed ? '' : `<p class="help" style="margin:0">${esc(POOL_HELP)}</p>`}</section>
       <section class="card"><h2>${esc('Alben')}</h2>${artistControls('s')}<div class="rows" id="s-alist"></div></section>`
     const list = () => {
       const el = $('#s-alist', box)
@@ -4093,6 +4124,8 @@ function drawSearch() {
       drawSearch()
     }
     $('#s-sub', box).onclick = () => subscribeSpotifyArtist(a)
+    const poolBtn = $('#s-pool', box)
+    if (poolBtn) poolBtn.onclick = () => addToPool({ kind: 'artist', spotifyId: a.id, name: a.name, cover: a.img ?? '' })
     return
   }
   const show = (t) => search.type === 'Alle' || search.type === t
@@ -4103,7 +4136,7 @@ function drawSearch() {
       ? card(
           'tracks',
           'Titel',
-          (d.tracks ?? []).filter((t) => t.album?.id).map((t) => viaSubscription({ kind: 'album', id: t.album.id, name: t.album.name ?? t.name, t: t.name, s: `${spNames(t.artists)} · ${t.album?.name ?? ''}`, img: spImg(t.album?.images), artistIds: (t.album?.artists ?? t.artists ?? []).map((x) => x?.id).filter(Boolean) })),
+          (d.tracks ?? []).filter((t) => t.album?.id).map((t) => viaSubscription({ kind: 'album', id: t.album.id, name: t.album.name ?? t.name, t: t.name, s: `${spNames(t.artists)} · ${t.album?.name ?? ''}`, img: spImg(t.album?.images), artist: spNames(t.album?.artists ?? t.artists), artistIds: (t.album?.artists ?? t.artists ?? []).map((x) => x?.id).filter(Boolean) })),
           `<p class="help" style="margin:0">${esc('Ein Titel kommt mit seinem ganzen Album auf die Box.')}</p>`,
         )
       : '') +
@@ -4213,7 +4246,9 @@ function wirePlace(sheet, p, catOf) {
 // The sheet to add something from a search to the box: picture, what it is, the category - chosen here, not before the
 // search - and the button. have: already in the library (only closing then). place: a playlist, "Auf der Startseite"
 // (a tile of its own first). onAdd(category, folder) returns true when done ('' = a tile of its own).
-function addSheet({ title, sub, img, have, haveText, cat, text, okLabel, place }, onAdd) {
+// pool: { inPool, onPool } - the second way, "Nur in der Suche" (onPool returns true when done)
+function addSheet({ title, sub, img, have, haveText, cat, text, okLabel, place, pool }, onAdd) {
+  const poolBtn = pool ? `<button class="btn" data-pool${pool.inPool ? ' disabled' : ''}>${icon(pool.inPool ? 'check' : 'search', 18)}${esc(pool.inPool ? 'In der Suche' : 'Nur in der Suche')}</button>` : ''
   openSheet(
     `<div class="ard-head">${img ? `<img src="${esc(img)}" alt="">` : ''}<span class="lbl"><h2 translate="no" style="margin:0">${esc(title)}</h2><small translate="no">${esc(sub ?? '')}</small></span></div>
      ${text ? `<p class="help" style="margin:0">${esc(text)}</p>` : ''}
@@ -4222,10 +4257,18 @@ function addSheet({ title, sub, img, have, haveText, cat, text, okLabel, place }
          ? `<p class="help" style="margin:0">${esc(haveText ?? 'Schon in der Bibliothek.')}</p><div class="btns"><button class="btn" data-close>Schließen</button></div>`
          : `<div class="field"><label for="add-cat">Hinzufügen als</label>${catSelect('add-cat', cat, false)}</div>
             ${place ? placeField('add', '') : ''}
-            <div class="btns"><button class="btn" data-close>Abbrechen</button><button class="btn primary" data-add>${icon('plus', 18)}${esc(okLabel ?? 'Hinzufügen')}</button></div>`
+            <div class="btns"><button class="btn" data-close>Abbrechen</button>${poolBtn}<button class="btn primary" data-add>${icon('plus', 18)}${esc(okLabel ?? 'Hinzufügen')}</button></div>
+            ${pool ? `<p class="help" style="margin:0">${esc(POOL_HELP)}</p>` : ''}`
      }`,
     (sheet, close) => {
       for (const b of sheet.querySelectorAll('[data-close]')) b.onclick = close
+      sheet.querySelector('[data-pool]:not([disabled])')?.addEventListener('click', async (e) => {
+        const btn = e.currentTarget
+        btn.disabled = true
+        const done = await pool.onPool()
+        btn.disabled = false
+        if (done) close()
+      })
       const placer = place && !have ? wirePlace(sheet, 'add', () => sheet.querySelector('#add-cat').value) : null
       if (placer) sheet.querySelector('#add-cat').addEventListener('change', () => void placer.reload())
       sheet.querySelector('[data-add]')?.addEventListener('click', async (e) => {
@@ -4252,7 +4295,8 @@ function markHave(key) {
 }
 
 async function openSpotifyAlbum(r) {
-  addSheet({ title: r.name, sub: r.s, img: r.img, have: search.have.has(`album:${r.id}`), cat: search.cat }, async (category) => {
+  const pool = { inPool: search.pool.has(`album:${r.id}`), onPool: () => addToPool({ kind: 'album', spotifyId: r.id, name: r.name, artist: r.artist ?? '', cover: r.img ?? '' }) }
+  addSheet({ title: r.name, sub: r.s, img: r.img, have: search.have.has(`album:${r.id}`), cat: search.cat, pool }, async (category) => {
     const res = await api(`${API}/library/add-album`, { method: 'POST', body: { albumId: r.id, category, name: r.name } })
     if (!res.ok) {
       toast('Das hat nicht geklappt', 'info')
@@ -4270,7 +4314,8 @@ async function openSpotifyAlbum(r) {
 // A playlist: an entry of the library as a pasted link makes it (the box fetches its tracks when it plays)
 async function openSpotifyPlaylist(r) {
   // (note: a hint of "Meine Playlists" - Smart-Sync brings it already, or Spotify's own)
-  addSheet({ title: r.name, sub: r.s, img: r.img, text: r.note, have: search.have.has(`playlist:${r.id}`), cat: search.cat === 'audiobook' ? 'music' : search.cat, place: true }, async (category, folder) => {
+  const pool = { inPool: search.pool.has(`playlist:${r.id}`), onPool: () => addToPool({ kind: 'playlist', spotifyId: r.id, name: r.name, cover: r.img ?? '' }) }
+  addSheet({ title: r.name, sub: r.s, img: r.img, text: r.note, have: search.have.has(`playlist:${r.id}`), cat: search.cat === 'audiobook' ? 'music' : search.cat, place: true, pool }, async (category, folder) => {
     // (no artist: a tile of its own on the box, named as the playlist)
     const body = { type: 'spotify', playlistid: r.id, spotify_url: `https://open.spotify.com/playlist/${r.id}`, title: r.name, ...(folder ? { artist: folder } : {}), category, source: 'manual' }
     const res = await api('/api/add', { method: 'POST', body })
@@ -4416,9 +4461,11 @@ function wirePodList(box, shows) {
 
 // A show of the directory: its newest episodes (from its feed, as the box reads it) and how it comes onto the box
 async function openPodShow(s) {
-  const data = await api('/api/data')
+  const [data, pooled] = await Promise.all([api('/api/data'), poolKeys()])
   const same = (id) => String(id ?? '').replace(/^https?:\/\//, '') === s.feedUrl.replace(/^https?:\/\//, '')
   const have = Array.isArray(data.body) && data.body.some((it) => it?.type === 'rss' && same(it.id))
+  // ("Nur in der Suche": the child finds it with the display's search and puts it on the start page itself)
+  const inPool = pooled.has(poolKey({ kind: 'podcast', feedUrl: s.feedUrl }))
   openSheet(
     `<div class="ard-head">${s.image ? `<img src="${esc(s.image)}" alt="">` : ''}<span class="lbl"><h2 translate="no" style="margin:0">${esc(s.title)}</h2><small translate="no">${esc([s.author, s.genre].filter(Boolean).join(' · '))}</small></span></div>
      ${
@@ -4430,10 +4477,18 @@ async function openPodShow(s) {
             <div class="field"><label for="pod-sort">Reihenfolge auf der Box</label><select class="input" id="pod-sort"><option value="${SORT_VALUES[4]}">Neueste zuerst</option><option value="${SORT_VALUES[3]}">Älteste zuerst</option></select></div>
             <div class="section-label" style="margin:0">${esc('Folgen auf der Box')}</div><div id="pod-eps"><p class="help">Lade die Folgen …</p></div>
             <div class="field"><label for="pod-off">Auf der Box speichern (ohne Internet hören)</label><select class="input" id="pod-off">${offlineOptions(0, false)}</select></div>
-            <div class="btns"><button class="btn" data-close>Abbrechen</button><button class="btn primary" data-add>${icon('plus', 18)}Hinzufügen</button></div>`
+            <div class="btns"><button class="btn" data-close>Abbrechen</button><button class="btn" data-pool${inPool ? ' disabled' : ''}>${icon(inPool ? 'check' : 'search', 18)}${esc(inPool ? 'In der Suche' : 'Nur in der Suche')}</button><button class="btn primary" data-add>${icon('plus', 18)}Hinzufügen</button></div>
+            <p class="help" style="margin:0">${esc(`${POOL_HELP} Die Folgen-Auswahl oben gilt dann nicht – es kommen alle Folgen.`)}</p>`
      }`,
     async (sheet, close) => {
       for (const b of sheet.querySelectorAll('[data-close]')) b.onclick = close
+      sheet.querySelector('[data-pool]:not([disabled])')?.addEventListener('click', async (e) => {
+        const btn = e.currentTarget
+        btn.disabled = true
+        const done = await addToPool({ kind: 'podcast', feedUrl: s.feedUrl, name: s.title, artist: s.author ?? '', cover: s.image ?? '' })
+        btn.disabled = false
+        if (done) close()
+      })
       // the feed's episodes, newest first (by date; without one in the feed's order), numbered as the range counts:
       // 0 = the newest
       let episodes = null
@@ -8044,6 +8099,9 @@ async function loadControls() {
   state.values.set('hideO', hidden.has('other'))
   state.values.set('startCat', o.startCategory ?? 'audiobook')
   state.values.set('dispSearch', o.displaySearch === true)
+  // the search pool and what the child put in from it (shown under "Suche")
+  const pool = await api(`${API}/search-pool`)
+  disp.pool = pool.ok ? pool.body : { entries: [], own: [] }
   state.values.set('resume', o.resume)
   state.values.set('listTimer', o.listviewTimer)
   state.values.set('setTimer', o.settingsAccessTimer)
@@ -8053,6 +8111,32 @@ async function loadControls() {
   state.values.set('epNew', o.newEpisodes !== false)
   state.values.set('epNewDays', `${o.newEpisodeDays ?? 7} Tage`)
   state.values.set('epProgress', o.episodeProgress !== false)
+}
+
+// The search pool ("Nur in der Suche") under Bedienung › Suche: what is allowed, with "Entfernen", and what the child
+// put on the start page from it (the parents take those out in the library, as any entry)
+const POOL_KIND = { artist: 'Künstler', album: 'Album', playlist: 'Playlist', show: 'Podcast' }
+const POOL_CAT = { audiobook: 'Hörspiele', music: 'Musik', other: 'Radio & Podcasts' }
+function poolListHtml() {
+  const p = disp.pool ?? { entries: [], own: [] }
+  const thumb = (img) => `<span class="lib-thumb">${img ? `<img src="${esc(img)}" alt="" loading="lazy">` : ''}${icon('music', 18)}</span>`
+  const entries = (p.entries ?? [])
+    .map((e) => {
+      const sub = [POOL_KIND[e.kind] ?? e.kind, e.artist, e.kind === 'artist' ? (e.albums ? `${e.albums.length} Alben` : 'Alben werden geladen') : ''].filter(Boolean).join(' · ')
+      return `<div class="entry lib-row">${thumb(e.cover)}<span class="lbl"><b translate="no">${esc(e.name)}</b><small translate="no">${esc(sub)}</small></span><button class="btn" data-pool-rm="${esc(e.id)}">${esc('Entfernen')}</button></div>`
+    })
+    .join('')
+  const own = (p.own ?? [])
+    .map((o) => {
+      const when = o.addedAt ? new Date(o.addedAt).toLocaleDateString(LOCALE, { dateStyle: 'short' }) : ''
+      const sub = [POOL_KIND[o.kind] ?? o.kind, o.artist, POOL_CAT[o.category] ?? o.category, when].filter(Boolean).join(' · ')
+      return `<div class="entry lib-row">${thumb(o.cover)}<span class="lbl"><b translate="no">${esc(o.name)}</b><small translate="no">${esc(sub)}</small></span></div>`
+    })
+    .join('')
+  return `<div class="field"><label>${esc('Vorrat der Suche')}</label>
+      <p class="help" style="margin:0">${esc('Hinzufügen: Bibliothek › Auf Spotify suchen › „Nur in der Suche“. Nichts davon steht auf der Startseite.')}</p>
+      <div class="rows">${entries || `<p class="help" style="margin:0">${esc('Noch leer.')}</p>`}</div></div>
+    ${own ? `<div class="field"><label>${esc('Vom Kind auf die Startseite geholt')}</label><p class="help" style="margin:0">${esc('Das Kind kann diese am Display wieder entfernen, du in der Bibliothek.')}</p><div class="rows">${own}</div></div>` : ''}`
 }
 
 // The category of each tab (by its hidden key)
@@ -12103,6 +12187,21 @@ const CONTROLLERS = {
   },
   bedienung: {
     load: loadControls,
+    // the search pool's "Entfernen"
+    mount(root, page) {
+      for (const b of root.querySelectorAll('[data-pool-rm]'))
+        b.onclick = async () => {
+          b.disabled = true
+          const r = await api(`${API}/search-pool/remove`, { method: 'POST', body: { id: b.dataset.poolRm } })
+          if (!r.ok) {
+            b.disabled = false
+            return toast('Das hat nicht geklappt', 'info')
+          }
+          toast('Aus der Suche entfernt')
+          await loadControls()
+          renderPage(page, false)
+        }
+    },
     // the tabs of the display (switched on = shown), how long to hold, where it goes on, podcasts
     sections: (page) => {
       const it = (key, over) => schemaItem(page, key, over)
@@ -12133,8 +12232,9 @@ const CONTROLLERS = {
               type: 'toggle',
               key: 'dispSearch',
               label: 'Suche auf dem Display',
-              help: 'Eine Lupe oben links auf der Startseite öffnet eine Suche mit Bildschirmtastatur. Gesucht wird nur in der Bibliothek der Box – in den Reitern, die sichtbar sind.',
+              help: 'Eine Lupe oben links auf der Startseite öffnet eine Suche mit Bildschirmtastatur. Gesucht wird in der Bibliothek der Box – in den Reitern, die sichtbar sind – und im Vorrat unten.',
             },
+            { type: 'html', html: poolListHtml() },
           ],
         },
         {

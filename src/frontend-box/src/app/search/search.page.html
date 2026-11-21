@@ -41,24 +41,103 @@
 
 <ion-content class="search-content" [class.srch-kb-open]="keyboardShown()">
   @if (query().trim().length < 2) {
-    <p class="srch-note">Tippe die ersten Buchstaben ein.</p>
+    @if (own().length) {
+      <!-- what the child put on the start page itself: a tap marks it, a second tap takes it out -->
+      <p class="srch-label">Von dir geholt – zweimal tippen zum Entfernen</p>
+      <div class="srch-hits">
+        @for (o of own(); track o.ident) {
+          <button class="srch-hit srch-own" type="button" [class.srch-artist]="o.kind === 'artist'" [class.srch-removing]="removing() === o.ident" (click)="removeOwn(o)">
+            <span class="srch-cover"><img [src]="coverUrl(o.cover)" alt="" loading="lazy" /><span class="srch-x" aria-hidden="true">✕</span></span>
+            <span class="srch-name">{{ removing() === o.ident ? 'Entfernen?' : o.name }}</span>
+            <span class="srch-sub">{{ categoryLabel[o.category]?.label ?? '' }}</span>
+          </button>
+        }
+      </div>
+    } @else {
+      <p class="srch-note">Tippe die ersten Buchstaben ein.</p>
+    }
   } @else if (loading()) {
     <p class="srch-note">Die Bibliothek wird geladen …</p>
   } @else if (nothingFound()) {
     <p class="srch-note">Nichts gefunden.</p>
   }
-  <div class="srch-hits">
-    @for (hit of hits(); track hit.key) {
-      <button class="srch-hit" type="button" [class.srch-artist]="!!hit.artist" (click)="hitClicked(hit)">
-        <span class="srch-cover"><img [src]="hit.imgSrc | async" alt="" loading="lazy" /></span>
-        <span class="srch-name">{{ hit.name }}</span>
-        @if (hit.sub) {
-          <span class="srch-sub">{{ hit.sub }}</span>
-        }
+  @if (query().trim().length >= 2) {
+    <div class="srch-hits">
+      @for (hit of hits(); track hit.key) {
+        <button class="srch-hit" type="button" [class.srch-artist]="hit.round" (click)="hitClicked(hit)">
+          <span class="srch-cover"><img [src]="hit.imgSrc | async" alt="" loading="lazy" />
+            @if (hit.pool) {
+              <!-- from the pool: not on the start page yet -->
+              <span class="srch-plus" aria-hidden="true">+</span>
+            }
+          </span>
+          <span class="srch-name">{{ hit.name }}</span>
+          @if (hit.sub) {
+            <span class="srch-sub">{{ hit.sub }}</span>
+          }
+        </button>
+      }
+    </div>
+  }
+  @if (note()) {
+    <div class="srch-toast" role="status">{{ note() }}</div>
+  }
+</ion-content>
+
+<!-- a pool hit: play it, or put it on the start page under a tab (an artist: one of its albums, or all of it) -->
+@if (sheet(); as s) {
+  <div class="srch-sheet" role="dialog" aria-modal="true">
+    <div class="srch-sheet-head">
+      <button class="srch-round" type="button" aria-label="Zurück" (click)="sheetBack()">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5M11 6l-6 6 6 6" /></svg>
       </button>
+      <span class="srch-sheet-cover" [class.srch-artist]="!s.album && s.entry.kind === 'artist'"><img [src]="coverUrl(s.album?.cover ?? s.entry.cover)" alt="" /></span>
+      <span class="srch-sheet-title">
+        <b>{{ s.album?.name ?? s.entry.name }}</b>
+        <small>{{ s.album ? s.entry.name : s.entry.kind === 'artist' ? 'Künstler' : s.entry.kind === 'podcast' ? 'Podcast' : s.entry.artist }}</small>
+      </span>
+      <button class="srch-round" type="button" aria-label="Schließen" (click)="closeSheet()">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18" /></svg>
+      </button>
+    </div>
+
+    @if (s.choosing) {
+      <p class="srch-sheet-q">Wohin auf der Startseite?</p>
+      <div class="srch-cats">
+        @for (c of categories(); track c) {
+          <button class="srch-cat" type="button" [disabled]="s.busy" (click)="addTo(c)">
+            <ion-icon [name]="categoryLabel[c].icon"></ion-icon>
+            <span>{{ categoryLabel[c].label }}</span>
+          </button>
+        }
+      </div>
+    } @else if (!s.album && s.entry.kind === 'artist') {
+      <div class="srch-sheet-actions">
+        <button class="srch-act srch-act-main" type="button" (click)="choose('whole')"><span class="srch-act-ic">+</span>Alles von {{ s.entry.name }} holen</button>
+      </div>
+      @if (sheetAlbums().length) {
+        <div class="srch-hits srch-sheet-albums">
+          @for (a of sheetAlbums(); track a.id) {
+            <button class="srch-hit" type="button" (click)="openPoolAlbum(a)">
+              <span class="srch-cover"><img [src]="a.imgSrc" alt="" loading="lazy" /></span>
+              <span class="srch-name">{{ a.name }}</span>
+            </button>
+          }
+        </div>
+      } @else {
+        <p class="srch-sheet-q">{{ s.entry.albums ? 'Alle Alben sind schon auf der Startseite.' : 'Die Alben werden noch geladen.' }}</p>
+      }
+    } @else {
+      <div class="srch-sheet-actions">
+        <!-- (podcasts and Spotify shows: put on the start page only - their episodes come with them there) -->
+        @if (s.album || s.entry.kind === 'album' || s.entry.kind === 'playlist') {
+          <button class="srch-act" type="button" (click)="play()"><span class="srch-act-ic">▶</span>Abspielen</button>
+        }
+        <button class="srch-act srch-act-main" type="button" (click)="choose('one')"><span class="srch-act-ic">+</span>Auf die Startseite</button>
+      </div>
     }
   </div>
-</ion-content>
+}
 
 <!-- the keyboard below the hits; ▼ folds it away (the hits then take the whole page), a tap on the field brings it back -->
 <ion-footer class="srch-footer" [class.srch-kb-hidden]="!keyboardShown()">
