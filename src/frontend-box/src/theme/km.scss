@@ -164,7 +164,8 @@ body.km {
   }
 
   // ---------- resume page: on the theme's background like the album list (the theme files only name the others) ----------
-  .resume-content {
+  .resume-content,
+  .search-content {
     --ion-background-color: transparent !important;
     --background: transparent !important;
   }

@@ -666,85 +666,87 @@ export class MediaService {
   // background: the list is already on the screen and is loaded again because the library changed - only the
   // finished list then, no steps on the way (they made the covers jump or the list shrink for a moment).
   public fetchArtistData(category: CategoryType, background = false): Observable<Artist[]> {
-    return this.fetchMedia(category, undefined, !background, background).pipe(
-      map((media: Media[]) => {
-        // Separate playlists without artists from regular media
-        const regularMedia: Media[] = []
-        const standalonePlaylistsData: Artist[] = []
+    return this.fetchMedia(category, undefined, !background, background).pipe(map((media: Media[]) => this.groupArtists(media)))
+  }
 
-        for (const currentMedia of media) {
-          // A playlist (Spotify or TIDAL) or a radio station without an artist gets an entry of its own (a tap plays
-          // it right away). Without this a station added without a label was not shown at all.
-          if (isStandaloneMedia(currentMedia)) {
-            standalonePlaylistsData.push({
-              name: currentMedia.title || (currentMedia.type === 'radio' ? 'Radio' : 'Unknown Playlist'),
-              albumCount: '1', // Playlists have 1 "album" (themselves)
-              cover: currentMedia.cover || currentMedia.artistcover || '../assets/images/nocover_mupi.png',
-              coverMedia: currentMedia,
-            })
-          } else if (currentMedia.artist) {
-            // Regular media with artist - include in normal grouping
-            regularMedia.push(currentMedia)
-          }
-          // Skip other media without artist (they would cause undefined grouping)
+  // The tiles of the start page from the entries of a category: one per artist (a folder of the SD card or the NAS one
+  // of its own), playlists and stations without an artist each one of their own - sorted by name. (Also the search.)
+  public groupArtists(media: Media[]): Artist[] {
+    // Separate playlists without artists from regular media
+    const regularMedia: Media[] = []
+    const standalonePlaylistsData: Artist[] = []
+
+    for (const currentMedia of media) {
+      // A playlist (Spotify or TIDAL) or a radio station without an artist gets an entry of its own (a tap plays
+      // it right away). Without this a station added without a label was not shown at all.
+      if (isStandaloneMedia(currentMedia)) {
+        standalonePlaylistsData.push({
+          name: currentMedia.title || (currentMedia.type === 'radio' ? 'Radio' : 'Unknown Playlist'),
+          albumCount: '1', // Playlists have 1 "album" (themselves)
+          cover: currentMedia.cover || currentMedia.artistcover || '../assets/images/nocover_mupi.png',
+          coverMedia: currentMedia,
+        })
+      } else if (currentMedia.artist) {
+        // Regular media with artist - include in normal grouping
+        regularMedia.push(currentMedia)
+      }
+      // Skip other media without artist (they would cause undefined grouping)
+    }
+
+    // Process regular media with artist grouping. A folder of the SD card or the NAS is a tile of its own, even
+    // with the name of another one (a NAS "Benjamin Blümchen" next to the one of the SD card: merged, one tap
+    // opened only one of them).
+    const groupOf = (m: Media) => (m.nasPath ? `nas:${m.nasPath}` : m.libraryPath ? `lib:${m.libraryPath}` : `artist:${m.artist}`)
+    const names: Record<string, string> = {}
+    const mediaCounts = regularMedia.reduce<Record<string, number>>((tempCounts, currentMedia) => {
+      const key = groupOf(currentMedia)
+      names[key] = currentMedia.artist
+      tempCounts[key] = (tempCounts[key] || 0) + 1
+      return tempCounts
+    }, {})
+
+    const covers = regularMedia
+      .sort((a, b) => (a.title <= b.title ? -1 : 1))
+      .reduce<Record<string, string>>((tempCovers, currentMedia) => {
+        const key = groupOf(currentMedia)
+        if (!tempCovers[key]) {
+          tempCovers[key] = currentMedia.artistcover || currentMedia.cover
         }
+        return tempCovers
+      }, {})
 
-        // Process regular media with artist grouping. A folder of the SD card or the NAS is a tile of its own, even
-        // with the name of another one (a NAS "Benjamin Blümchen" next to the one of the SD card: merged, one tap
-        // opened only one of them).
-        const groupOf = (m: Media) => (m.nasPath ? `nas:${m.nasPath}` : m.libraryPath ? `lib:${m.libraryPath}` : `artist:${m.artist}`)
-        const names: Record<string, string> = {}
-        const mediaCounts = regularMedia.reduce<Record<string, number>>((tempCounts, currentMedia) => {
-          const key = groupOf(currentMedia)
-          names[key] = currentMedia.artist
-          tempCounts[key] = (tempCounts[key] || 0) + 1
-          return tempCounts
-        }, {})
+    // (a podcast with a new episode: a dot on its tile)
+    const hasNew = new Set(regularMedia.filter((m) => m.episodeNew).map(groupOf))
 
-        const covers = regularMedia
-          .sort((a, b) => (a.title <= b.title ? -1 : 1))
-          .reduce<Record<string, string>>((tempCovers, currentMedia) => {
-            const key = groupOf(currentMedia)
-            if (!tempCovers[key]) {
-              tempCovers[key] = currentMedia.artistcover || currentMedia.cover
-            }
-            return tempCovers
-          }, {})
+    const coverMedia = regularMedia
+      .sort((a, b) => (a.title <= b.title ? -1 : 1))
+      .reduce<Record<string, Media>>((tempMedia, currentMedia) => {
+        const key = groupOf(currentMedia)
+        if (!tempMedia[key]) {
+          tempMedia[key] = currentMedia
+        }
+        return tempMedia
+      }, {})
 
-        // (a podcast with a new episode: a dot on its tile)
-        const hasNew = new Set(regularMedia.filter((m) => m.episodeNew).map(groupOf))
+    // Build Array of Artist objects sorted by Artist name
+    const regularArtists: Artist[] = Object.keys(mediaCounts)
+      .sort()
+      .map((key) => {
+        const artist: Artist = {
+          name: names[key],
+          albumCount: mediaCounts[key].toString(),
+          cover: covers[key],
+          coverMedia: coverMedia[key],
+          ...(hasNew.has(key) ? { hasNew: true } : {}),
+        }
+        return artist
+      })
 
-        const coverMedia = regularMedia
-          .sort((a, b) => (a.title <= b.title ? -1 : 1))
-          .reduce<Record<string, Media>>((tempMedia, currentMedia) => {
-            const key = groupOf(currentMedia)
-            if (!tempMedia[key]) {
-              tempMedia[key] = currentMedia
-            }
-            return tempMedia
-          }, {})
+    // Combine regular artists with standalone playlists
+    const allArtists = [...regularArtists, ...standalonePlaylistsData]
 
-        // Build Array of Artist objects sorted by Artist name
-        const regularArtists: Artist[] = Object.keys(mediaCounts)
-          .sort()
-          .map((key) => {
-            const artist: Artist = {
-              name: names[key],
-              albumCount: mediaCounts[key].toString(),
-              cover: covers[key],
-              coverMedia: coverMedia[key],
-              ...(hasNew.has(key) ? { hasNew: true } : {}),
-            }
-            return artist
-          })
-
-        // Combine regular artists with standalone playlists
-        const allArtists = [...regularArtists, ...standalonePlaylistsData]
-
-        // Sort the combined array by name
-        return allArtists.sort((a, b) => (a.name <= b.name ? -1 : 1))
-      }),
-    )
+    // Sort the combined array by name
+    return allArtists.sort((a, b) => (a.name <= b.name ? -1 : 1))
   }
 
   public fetchActiveResumeData(): Observable<Media[]> {

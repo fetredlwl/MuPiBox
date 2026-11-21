@@ -18,6 +18,7 @@ import {
   bookOutline,
   musicalNotesOutline,
   radioOutline,
+  searchOutline,
   serverOutline,
   timerOutline,
 } from 'ionicons/icons'
@@ -92,6 +93,8 @@ export class HomePage extends SwiperIonicEventsHelper {
   ]
   protected hiddenCategories: WritableSignal<string[]> = signal([])
   protected configLoaded: WritableSignal<boolean> = signal(false)
+  // the magnifier for the search in the library (app › Bedienung › Suche, off by default)
+  protected readonly searchEnabled = signal(false)
   // (the NAS tab also goes when all shown NAS folders are in a category of their own: nothing is left for it)
   protected nasTabWanted: WritableSignal<boolean> = signal(true)
   protected visibleCategories = computed(() =>
@@ -124,7 +127,7 @@ export class HomePage extends SwiperIonicEventsHelper {
     private coverFlip: CoverFlipService,
   ) {
     super()
-    addIcons({ timerOutline, bookOutline, musicalNotesOutline, radioOutline, serverOutline })
+    addIcons({ timerOutline, bookOutline, musicalNotesOutline, radioOutline, serverOutline, searchOutline })
 
     this.http.get<MupiboxConfig>(`${environment.backend.apiUrl}/config`).subscribe({
       next: (config) => {
@@ -137,6 +140,7 @@ export class HomePage extends SwiperIonicEventsHelper {
         if (Array.isArray(hidden)) {
           this.hiddenCategories.set(hidden)
         }
+        this.searchEnabled.set(config?.mupibox?.displaySearch === true)
         // The tab the parents chose to start with (app › Bedienung) - unless a tab was chosen here already
         const start = this.categories.find((c) => c.key === config?.mupibox?.startCategory)
         if (start && !this.categoryChosen) {
@@ -313,5 +317,9 @@ export class HomePage extends SwiperIonicEventsHelper {
 
   protected resume(): void {
     this.router.navigate(['/resume'])
+  }
+
+  protected search(): void {
+    this.router.navigate(['/search'])
   }
 }

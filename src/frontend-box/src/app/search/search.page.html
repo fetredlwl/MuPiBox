@@ -1,0 +1,66 @@
+<ion-header class="search-header" [class.km-r2]="r2()">
+  @if (r2()) {
+    <!-- km themes / coverflow, design round 2: back, the search field, WiFi/battery - all 64 px high on one line -->
+    <div class="km-bar">
+      <button class="km-hbtn" type="button" data-mupi-back aria-label="Zurück" (click)="goBack()">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5M11 6l-6 6 6 6" /></svg>
+      </button>
+      <ng-container *ngTemplateOutlet="field"></ng-container>
+      <mupi-km-status-group></mupi-km-status-group>
+    </div>
+  } @else {
+    <ion-toolbar color="light">
+      <ion-buttons slot="start">
+        <ion-button aria-label="Zurück" (click)="goBack()">
+          <ion-icon slot="icon-only" name="arrow-back-outline"></ion-icon>
+        </ion-button>
+      </ion-buttons>
+      <div class="srch-toolbar-field"><ng-container *ngTemplateOutlet="field"></ng-container></div>
+      <span slot="end" class="mupihat-icon-container"><mupi-status></mupi-status></span>
+    </ion-toolbar>
+  }
+</ion-header>
+
+<!-- the search field: what was typed (a tap brings the keyboard back), ✕ empties it -->
+<ng-template #field>
+  <div class="srch-field" role="searchbox" [attr.aria-label]="'Suche'" (click)="showKeyboard()">
+    <svg class="srch-glass" viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5" /><path d="M15.5 15.5 21 21" /></svg>
+    @if (query()) {
+      <span class="srch-text">{{ query() }}</span>
+    } @else {
+      <span class="srch-placeholder">Name eintippen</span>
+    }
+    <span class="srch-caret" [class.srch-caret-on]="keyboardShown()"></span>
+    @if (query()) {
+      <button class="srch-clear" type="button" aria-label="Löschen" (click)="clear(); $event.stopPropagation()">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18" /></svg>
+      </button>
+    }
+  </div>
+</ng-template>
+
+<ion-content class="search-content" [class.srch-kb-open]="keyboardShown()">
+  @if (query().trim().length < 2) {
+    <p class="srch-note">Tippe die ersten Buchstaben ein.</p>
+  } @else if (loading()) {
+    <p class="srch-note">Die Bibliothek wird geladen …</p>
+  } @else if (nothingFound()) {
+    <p class="srch-note">Nichts gefunden.</p>
+  }
+  <div class="srch-hits">
+    @for (hit of hits(); track hit.key) {
+      <button class="srch-hit" type="button" [class.srch-artist]="!!hit.artist" (click)="hitClicked(hit)">
+        <span class="srch-cover"><img [src]="hit.imgSrc | async" alt="" loading="lazy" /></span>
+        <span class="srch-name">{{ hit.name }}</span>
+        @if (hit.sub) {
+          <span class="srch-sub">{{ hit.sub }}</span>
+        }
+      </button>
+    }
+  </div>
+</ion-content>
+
+<!-- the keyboard below the hits; ▼ folds it away (the hits then take the whole page), a tap on the field brings it back -->
+<ion-footer class="srch-footer" [class.srch-kb-hidden]="!keyboardShown()">
+  <div #keyboard class="simple-keyboard"></div>
+</ion-footer>

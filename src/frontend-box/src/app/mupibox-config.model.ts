@@ -12,6 +12,8 @@ export interface MupiboxConfig {
     hiddenCategories?: string[]
     // The tab the display opens with (app > Bedienung > Startet mit): audiobook (default), music, nas or other
     startCategory?: string
+    // A magnifier in the start page's header opens the search in the box's library (app > Bedienung > Suche)
+    displaySearch?: boolean
     // Hides the horizontal scrollbar of the cover lists (Admin > Mupi-conf > Theme)
     hideScrollbar?: boolean
     // The scrollbar of the cover lists in every theme: 'standard' (the theme's own) or 'full' (across the width and

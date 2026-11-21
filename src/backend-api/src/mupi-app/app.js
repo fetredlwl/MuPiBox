@@ -8043,6 +8043,7 @@ async function loadControls() {
   state.values.set('hideN', hidden.has('nas'))
   state.values.set('hideO', hidden.has('other'))
   state.values.set('startCat', o.startCategory ?? 'audiobook')
+  state.values.set('dispSearch', o.displaySearch === true)
   state.values.set('resume', o.resume)
   state.values.set('listTimer', o.listviewTimer)
   state.values.set('setTimer', o.settingsAccessTimer)
@@ -12126,6 +12127,17 @@ const CONTROLLERS = {
           ],
         },
         {
+          title: 'Suche',
+          items: [
+            {
+              type: 'toggle',
+              key: 'dispSearch',
+              label: 'Suche auf dem Display',
+              help: 'Eine Lupe oben links auf der Startseite öffnet eine Suche mit Bildschirmtastatur. Gesucht wird nur in der Bibliothek der Box – in den Reitern, die sichtbar sind.',
+            },
+          ],
+        },
+        {
           title: 'Haltezeiten',
           items: [
             it('listTimer', { help: 'So lange drückt man auf ein Cover, bis die Titelliste aufgeht.' }),
@@ -12195,6 +12207,7 @@ const CONTROLLERS = {
       if (key === 'listTimer') return saveDisplayOptions({ listviewTimer: v }, `Titelliste nach ${fmtSec(v)}`)
       if (key === 'setTimer') return saveDisplayOptions({ settingsAccessTimer: v }, `Einstellungen nach ${fmtSec(v)}`)
       if (key === 'outPick') return saveDisplayOptions({ outputPicker: !!v }, v ? 'Kinder können am Display umschalten' : 'Umschalten nur in der App')
+      if (key === 'dispSearch') return saveDisplayOptions({ displaySearch: !!v }, v ? 'Suche auf dem Display an' : 'Suche auf dem Display aus')
       if (key === 'epResume') return saveDisplayOptions({ episodeResume: !!v }, v ? 'Folgen gehen an der letzten Stelle weiter' : 'Folgen beginnen immer von vorn')
       if (key === 'epDays') {
         const days = EP_DAYS.find(([l]) => l === v)?.[1]

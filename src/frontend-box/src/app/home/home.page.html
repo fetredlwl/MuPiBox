@@ -3,10 +3,16 @@
     <!-- km themes, design round 2: everything 64 px high on one line - history, categories, "Läuft gerade" (when
          something plays on), WiFi/battery with the listening time below; a long press on that group opens the
          settings as before -->
-    <div class="km-bar">
+    <div class="km-bar" [class.km-has-search]="searchEnabled()">
       <button class="km-hbtn" type="button" (click)="resume()">
         <svg class="km-resume-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 12a7.5 7.5 0 1 0 2.2-5.3" /><path d="M4 3.5v4h4" /><path d="M12 8v4.2l2.8 1.8" /></svg>
       </button>
+      <!-- the search (app › Bedienung › Suche): next to the history; with "Läuft gerade" the tabs get narrower for it -->
+      @if (searchEnabled()) {
+        <button class="km-hbtn" type="button" aria-label="Suchen" (click)="search()">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5" /><path d="M15.5 15.5 21 21" /></svg>
+        </button>
+      }
       @if (configLoaded()) {
         <div class="km-tabs-wrap" [class.km-mini]="pillShown()">
           <div class="km-tabs" role="tablist">
@@ -31,6 +37,11 @@
           <ion-icon slot="icon-only" name="timer-outline"></ion-icon>
         }
       </ion-button>
+      @if (searchEnabled()) {
+        <ion-button aria-label="Suchen" (click)="search()">
+          <ion-icon slot="icon-only" name="search-outline"></ion-icon>
+        </ion-button>
+      }
     </ion-buttons>
     @if (configLoaded()) {
       <!-- Hidden categories are left out; the remaining buttons share the width equally,

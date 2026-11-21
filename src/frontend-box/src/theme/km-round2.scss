@@ -117,6 +117,12 @@ body.cf {
     width: 80px;
   }
 
+  // with the search's magnifier next to the history and "Läuft gerade" shown: 64 per tab, so the pill keeps about
+  // the width it has without the magnifier (800 px: ~210 instead of ~150)
+  .km-has-search .km-mini .km-tab {
+    width: 64px;
+  }
+
   // page title in the header (album list, player): next to the round button
   .km-htitle {
     flex: 1;

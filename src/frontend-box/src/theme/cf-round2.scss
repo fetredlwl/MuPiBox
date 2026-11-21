@@ -69,6 +69,11 @@ body.cf {
     width: 64px;
   }
 
+  // the search's magnifier (48 + gap) next to the history: with "Läuft gerade" 52 per tab, the pill keeps its width
+  .km-has-search .km-mini .km-tab {
+    width: 52px;
+  }
+
   .km-htitle .km-ht1 {
     font-size: 22px;
   }

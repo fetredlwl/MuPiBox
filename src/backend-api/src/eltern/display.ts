@@ -101,6 +101,8 @@ export function registerDisplayRoutes(router: Router, deps: DisplayDeps): void {
       hiddenCategories: Array.isArray(mb.hiddenCategories) ? (mb.hiddenCategories as unknown[]).filter((c) => CATEGORIES.includes(String(c))) : [],
       // (the tab the display opens with; a hidden one: the display takes the first shown tab)
       startCategory: CATEGORIES.includes(String(mb.startCategory)) ? String(mb.startCategory) : 'audiobook',
+      // (the magnifier on the display's start page: a search in the box's library - off until the parents switch it on)
+      displaySearch: mb.displaySearch === true,
       resume: num(mb.resume, 1, 99) ?? 9,
       listviewTimer: num(mb.listviewTimer, 0.5, 5, 0.5) ?? 2.5,
       settingsAccessTimer: num(mb.settingsAccessTimer, 1, 10, 0.5) ?? 3,
@@ -133,7 +135,7 @@ export function registerDisplayRoutes(router: Router, deps: DisplayDeps): void {
     const mb: Record<string, unknown> = {}
     const chromium: Record<string, unknown> = {}
     const bad = (what: string) => res.status(400).json({ error: `invalid ${what}` })
-    for (const key of ['coverflowShowNames', 'hideScrollbar', 'episodeResume', 'newEpisodes', 'episodeProgress', 'outputPicker']) {
+    for (const key of ['coverflowShowNames', 'hideScrollbar', 'episodeResume', 'newEpisodes', 'episodeProgress', 'outputPicker', 'displaySearch']) {
       if (body[key] === undefined) continue
       if (typeof body[key] !== 'boolean') return bad(key)
       mb[key] = body[key]
@@ -238,7 +240,7 @@ export function registerDisplayRoutes(router: Router, deps: DisplayDeps): void {
       // (as the admin interface: with dietpi's login environment, so chromium finds its display)
       detached('sudo /usr/local/bin/mupibox/setting_update.sh >/dev/null 2>&1; sudo -i -u dietpi bash -c "setsid nohup /usr/local/bin/mupibox/restart_kiosk.sh >/dev/null 2>&1 < /dev/null &"')
       result.restartKiosk = true
-    } else if (['coverflowShowNames', 'hideScrollbar', 'scrollbarStyle', 'hiddenCategories', 'startCategory', 'listviewTimer', 'settingsAccessTimer'].some((k) => k in mb)) {
+    } else if (['coverflowShowNames', 'hideScrollbar', 'scrollbarStyle', 'hiddenCategories', 'startCategory', 'listviewTimer', 'settingsAccessTimer', 'displaySearch'].some((k) => k in mb)) {
       result.reloaded = await reloadDisplayPage()
     }
     res.json(result)

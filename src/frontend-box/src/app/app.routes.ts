@@ -16,6 +16,11 @@ export const routes: Routes = [
     loadComponent: () => import('./text-preview/text-preview.page').then((m) => m.TextPreviewPage),
   },
   {
+    // the search in the box's library (the magnifier on the start page, app › Bedienung › Suche)
+    path: 'search',
+    loadComponent: () => import('./search/search.page').then((m) => m.SearchPage),
+  },
+  {
     path: 'resume',
     loadComponent: () => import('./resume/resume.page').then((m) => m.ResumePage),
   },
