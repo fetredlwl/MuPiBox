@@ -319,8 +319,8 @@ function versionBadge() {
   const num = /\d+(?:\.\d+)+/.exec(v?.installed ?? '')?.[0]
   // (a branch installed directly has no number: "DEV <branch> <date>")
   const dev = !num && v?.installed?.startsWith('DEV')
-  const sub = !v ? '' : v.update ? `Update: ${v.update.version}` : v.channel === 'dev' ? 'Entwicklerversion' : v.channel === 'beta' ? 'Beta' : 'Aktuell'
-  const kind = v?.update ? ' new' : v?.channel === 'dev' ? ' dev' : ''
+  const sub = !v ? '' : v.update ? `Update: ${v.update.version}` : v.channel === 'fork' ? 'Fork' : v.channel === 'dev' ? 'Entwicklerversion' : v.channel === 'beta' ? 'Beta' : 'Aktuell'
+  const kind = v?.update ? ' new' : v?.channel === 'dev' || v?.channel === 'fork' ? ' dev' : ''
   return `<button type="button" class="ver-badge${kind}" data-ver-badge data-go="updates" aria-label="${esc(`MuPiBox Classic ${num ?? ''} – Updates`)}"><span class="ed" translate="no">CLASSIC</span><span class="num"><b translate="no">${num ? `v${esc(num)}` : dev ? 'DEV' : '…'}</b>${sub ? `<small>${esc(sub)}</small>` : ''}</span><span class="go">${icon('chevron', 16)}</span></button>`
 }
 
@@ -11112,8 +11112,8 @@ function mountBackup(root) {
 /* Updates */
 
 const upd = { info: null, job: null, offline: false, showOut: false }
-const CHANNEL_LABEL = { stable: 'Stabil', beta: 'Beta', dev: 'Entwicklung' }
-const JOB_LABEL = { stable: 'MuPiBox-Update · Stabil', beta: 'MuPiBox-Update · Beta', dev: 'MuPiBox-Update · Entwicklung', os: 'Betriebssystem-Update' }
+const CHANNEL_LABEL = { stable: 'Stabil', beta: 'Beta', dev: 'Entwicklung', fork: 'Fork' }
+const JOB_LABEL = { stable: 'MuPiBox-Update · Stabil', beta: 'MuPiBox-Update · Beta', dev: 'MuPiBox-Update · Entwicklung', fork: 'MuPiBox-Update · Fork', os: 'Betriebssystem-Update' }
 const jobRunning = () => upd.job?.phase === 'running' || upd.job?.phase === 'rebooting'
 
 function cmpVersion(a, b) {
@@ -11171,19 +11171,28 @@ function updatesTop() {
       if (!rel) return ''
       const same = mine && cmpVersion(rel.version, mine) === 0 && i.channel === c
       const older = mine && cmpVersion(rel.version, mine) < 0
-      const label = same ? 'Neu installieren' : older ? 'Installieren (älter)' : 'Installieren'
-      const kind = c === 'dev' ? 'danger' : c === 'stable' && !same && !older ? 'primary' : ''
+      // (a fork installed: the stable channel is the way back to the official version)
+      const back = i.channel === 'fork' && c === 'stable'
+      const label = back ? 'Zurück zur offiziellen Version' : same ? 'Neu installieren' : older ? 'Installieren (älter)' : 'Installieren'
+      const kind = c === 'dev' ? 'danger' : c === 'stable' && (back || (!same && !older)) ? 'primary' : ''
       const ver = c === 'dev' && i.devDate ? `${rel.version} · Stand ${i.devDate}` : rel.version
       return `<div class="row"><span class="lbl"><b>${esc(CHANNEL_LABEL[c])} · ${esc(ver)}</b><small>${esc(rel.info)}</small></span>
         <button class="btn ${kind}" data-upd="${c}" ${busy ? 'disabled' : ''}>${label}</button></div>`
     })
     .join('')
+  // the fork's branch (not from the official repository): its last commit, the official version it is based on
+  const f = i?.fork
+  const forkRow = f
+    ? `<div class="row"><span class="lbl"><b>${esc(`Fork · ${f.branch} · Stand ${f.date}`)}</b><small>${esc(`${f.repo} · ${f.sha}${f.base ? ` · auf Basis von ${f.base}` : ''}${f.installed ? ' · installiert' : ''}`)}</small></span>
+        <button class="btn danger" data-upd="fork" ${busy ? 'disabled' : ''}>${f.installed ? 'Neu installieren' : 'Installieren'}</button></div>`
+    : ''
   return [
     updJobCard(),
     `<section class="card"><h2>MuPiBox</h2><dl class="kv"><div><dt>Installiert</dt><dd>${esc(i?.installed || '–')}</dd></div></dl>
       ${i?.update ? `<div class="note">${icon('sync', 18)}<span>Neue Version ${esc(i.update.version)} verfügbar.</span></div>` : ''}
       ${rows || `<p class="help">Die Versionen des offiziellen Repositorys ließen sich nicht laden (keine Internetverbindung?).</p>`}
-      <p class="help" style="margin:0">Aus dem offiziellen MuPiBox-Repository (splitti/MuPiBox). Die Box ist dabei 10–30 Minuten nicht nutzbar und startet danach von selbst neu. Einstellungen und Bibliothek bleiben erhalten und werden vorher zusätzlich auf der Box gesichert.</p></section>`,
+      ${forkRow}
+      <p class="help" style="margin:0">Aus dem offiziellen MuPiBox-Repository (splitti/MuPiBox)${f ? `, der Fork aus ${esc(f.repo)} (nicht vom MuPiBox-Team; zurück mit „Stabil“)` : ''}. Die Box ist dabei 10–30 Minuten nicht nutzbar und startet danach von selbst neu. Einstellungen und Bibliothek bleiben erhalten und werden vorher zusätzlich auf der Box gesichert.</p></section>`,
     // (the system and the backup one below the other: beside the long MuPiBox card on a wide screen, no gap between)
     `<div class="col-stack"><section class="card"><h2>Betriebssystem</h2><p class="help">Aktualisiert die Pakete des Systems (apt). Dauert auf älteren Raspberry Pis bis zu 30 Minuten; die Box läuft dabei weiter. Danach neu starten.</p>
       <div class="btns"><button class="btn" data-upd="os" ${busy ? 'disabled' : ''}>Betriebssystem aktualisieren</button></div></section>
@@ -11200,6 +11209,10 @@ async function startUpdate(kind, page) {
   if (kind === 'os') {
     title = 'Betriebssystem aktualisieren?'
     text = 'Die Pakete des Systems werden aktualisiert. Das dauert einige Minuten bis eine halbe Stunde; die Box läuft dabei weiter. Am besten am Netzteil.'
+  } else if (kind === 'fork') {
+    const f = i?.fork
+    title = 'Fork installieren?'
+    text = `Zweig „${f?.branch ?? ''}“ aus ${f?.repo ?? ''} (Stand ${f?.date ?? ''}) – nicht vom MuPiBox-Team. Die Box zeigt 10–30 Minuten eine Wartungsanzeige und startet danach von selbst neu. Am besten am Netzteil. Zurück zur offiziellen Version geht es mit „Stabil“.`
   } else {
     title = `MuPiBox ${rel.version} installieren?`
     text = `${CHANNEL_LABEL[kind]}-Version aus dem offiziellen Repository. Die Box zeigt 10–30 Minuten eine Wartungsanzeige und startet danach von selbst neu. Am besten am Netzteil.`

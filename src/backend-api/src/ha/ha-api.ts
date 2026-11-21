@@ -673,7 +673,8 @@ export function buildApp(deps: HaDeps): Express {
     const mine = parseInstalled(installed)
     const latest = await officialVersions().catch(() => null)
     if (!latest) return fail(res, 503, 'temporarily_unavailable', 'The versions could not be read (internet?)')
-    const newer = latest[mine.channel]
+    // (a fork has no official version of its own channel)
+    const newer = mine.channel === 'fork' ? null : latest[mine.channel]
     res.json({
       update_available: !!(newer && mine.number && compareVersions(newer.version, mine.number) > 0),
       channel: mine.channel,

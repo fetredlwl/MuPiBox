@@ -25,6 +25,13 @@ const UNIT = 'mupibox-update'
 const CHANNELS = ['stable', 'beta', 'dev'] as const
 type Channel = (typeof CHANNELS)[number]
 
+// Fork: this fork's own channel beside the official ones. It installs the fork's branch with the update script's
+// branch mode (start_mupibox_update.sh branch <branch> <owner/repo> <label>); the official channels stay as they are -
+// "Stabil" is the way back. The label starts with FORK, so the installed version is told apart from the official
+// channels (no "update available" from them for a fork, see parseInstalled).
+export const FORK = { repo: 'fetredlwl/MuPiBox', branch: 'wishes' } as const
+export type InstalledChannel = Channel | 'fork'
+
 function run(cmd: string, args: string[], timeoutMs = 30000): Promise<{ ok: boolean; stdout: string; stderr: string }> {
   return new Promise((resolve) => {
     execFile(cmd, args, { timeout: timeoutMs, maxBuffer: 4 * 1024 * 1024 }, (err, stdout, stderr) =>
@@ -33,12 +40,19 @@ function run(cmd: string, args: string[], timeoutMs = 30000): Promise<{ ok: bool
   })
 }
 
-// $1 = stable | beta | dev | os. Its state for the app in state (key=value), progress (percent, tab, step) and
-// output.txt; they stay after the restart, so the app can tell how the last update went.
+// $1 = stable | beta | dev | os | fork (fork: $2 the repository, $3 the branch, $4 the version label). Its state for
+// the app in state (key=value), progress (percent, tab, step) and output.txt; they stay after the restart, so the app
+// can tell how the last update went.
 export const RUN_SH = `#!/bin/bash
-# The app's update (backend-api eltern/updates.ts), run as the systemd unit ${UNIT}: $1 = stable | beta | dev | os
+# The app's update (backend-api eltern/updates.ts), run as the systemd unit ${UNIT}: $1 = stable | beta | dev | os | fork
 D=${STATE_DIR}
 KIND="$1"
+FORK_REPO="$2"
+FORK_BRANCH="$3"
+FORK_LABEL="$4"
+# (the update script of the official repository; a fork's from the fork's branch, as its README installs a branch)
+SCRIPT_URL="${REPO_RAW}/update/start_mupibox_update.sh"
+[ "$KIND" = "fork" ] && SCRIPT_URL="https://raw.githubusercontent.com/$FORK_REPO/$FORK_BRANCH/update/start_mupibox_update.sh"
 PHASE=running
 STARTED=$(date +%s)
 FINISHED=
@@ -85,7 +99,7 @@ progress 1 "Download"
 # (up to four tries: curl's own --retry leaves out a connection cut in the middle, "partial file")
 GOT=0
 for TRY in 1 2 3 4; do
-	if curl -fsSL --connect-timeout 20 -m 120 -o "$D/start_mupibox_update.sh" "${REPO_RAW}/update/start_mupibox_update.sh" && bash -n "$D/start_mupibox_update.sh"; then
+	if curl -fsSL --connect-timeout 20 -m 120 -o "$D/start_mupibox_update.sh" "$SCRIPT_URL" && bash -n "$D/start_mupibox_update.sh"; then
 		GOT=1
 		break
 	fi
@@ -108,7 +122,11 @@ ls -1t /home/dietpi/mupibox-backups/before-update-*.zip 2>/dev/null | tail -n +4
 
 cd /home/dietpi
 # (the update's lock held for this run: up to the restart below - see take_update_lock in start_mupibox_update.sh)
-MUPIBOX_UPDATE_LOCK_FOR=$$ PATH="$D/bin:$PATH" bash "$D/start_mupibox_update.sh" "$KIND"
+if [ "$KIND" = "fork" ]; then
+	MUPIBOX_UPDATE_LOCK_FOR=$$ PATH="$D/bin:$PATH" bash "$D/start_mupibox_update.sh" branch "$FORK_BRANCH" "$FORK_REPO" "$FORK_LABEL"
+else
+	MUPIBOX_UPDATE_LOCK_FOR=$$ PATH="$D/bin:$PATH" bash "$D/start_mupibox_update.sh" "$KIND"
+fi
 RC=$?
 # done: the script moves its log away at its very end (/boot/mupibox_update.log); an aborted run leaves it there
 if [ "$RC" = "0" ] && [ ! -e /boot/mupibox_update.log ] && [ "$(cut -f1 "$D/progress")" = "100" ]; then
@@ -197,10 +215,58 @@ async function devDate(): Promise<string | null> {
   return devDateCache?.date || null
 }
 
-/** "4.2.4 stable", "3.2.5 BETA", "DEV 5.0.2 2026-09-01" -> its number and channel */
-export function parseInstalled(v: string): { number: string | null; channel: Channel } {
+// The fork's branch as it is on GitHub now: its last commit (short id, day) and the official version it is based on
+// (the stable one in the fork's version.json). Asked every 10 minutes at most - GitHub answers 60 questions an hour
+// from one home network without a login.
+export interface ForkRelease {
+  repo: string
+  branch: string
+  sha: string
+  date: string
+  base: string | null
+  label: string
+}
+let forkCache: { at: number; info: ForkRelease } | null = null
+
+export async function forkRelease(fresh = false): Promise<ForkRelease | null> {
+  if (fresh || !forkCache || Date.now() - forkCache.at > 600_000) {
+    try {
+      const r = await fetch(`https://api.github.com/repos/${FORK.repo}/branches/${FORK.branch}`, {
+        signal: AbortSignal.timeout(8000),
+        headers: { Accept: 'application/vnd.github+json' },
+      })
+      if (r.ok) {
+        const b = (await r.json()) as { commit?: { sha?: string; commit?: { committer?: { date?: string } } } }
+        const full = String(b.commit?.sha ?? '')
+        const sha = full.slice(0, 7)
+        const date = String(b.commit?.commit?.committer?.date ?? '').slice(0, 10)
+        let base: string | null = null
+        try {
+          const v = await fetch(`https://raw.githubusercontent.com/${FORK.repo}/${full}/version.json`, { signal: AbortSignal.timeout(8000) })
+          if (v.ok) {
+            const stable = ((await v.json()) as { release?: { stable?: { version?: string }[] } }).release?.stable ?? []
+            const last = String(stable[stable.length - 1]?.version ?? '')
+            if (/^\d+(?:\.\d+)+$/.test(last)) base = last
+          }
+        } catch {
+          // without the base the label has no number
+        }
+        if (/^[0-9a-f]{40}$/.test(full) && /^\d{4}-\d{2}-\d{2}$/.test(date)) {
+          const label = ['FORK', base, FORK.branch, sha, date].filter(Boolean).join(' ')
+          forkCache = { at: Date.now(), info: { repo: FORK.repo, branch: FORK.branch, sha, date, base, label } }
+        }
+      }
+    } catch {
+      // no internet: the last answer, if any
+    }
+  }
+  return forkCache?.info ?? null
+}
+
+/** "4.2.4 stable", "3.2.5 BETA", "DEV 5.0.2 2026-09-01", "FORK 5.0.17 wishes 1a2b3c4 2026-11-22" -> its number and channel */
+export function parseInstalled(v: string): { number: string | null; channel: InstalledChannel } {
   const number = /\d+(?:\.\d+)+/.exec(v)?.[0] ?? null
-  const channel: Channel = /\bdev/i.test(v) ? 'dev' : /\bbeta\b/i.test(v) ? 'beta' : 'stable'
+  const channel: InstalledChannel = /^\s*fork\b/i.test(v) ? 'fork' : /\bdev/i.test(v) ? 'dev' : /\bbeta\b/i.test(v) ? 'beta' : 'stable'
   return { number, channel }
 }
 
@@ -261,15 +327,17 @@ export function registerUpdateRoutes(router: Router, deps: UpdatesDeps): void {
   /** GET /api/app/updates - the installed version, the official ones, whether there is a newer one, the last job */
   router.get('/updates', requireSession, async (_req, res) => {
     const installed = String((deps.getMupiboxConfig()?.mupibox as Record<string, unknown> | undefined)?.version ?? '')
-    const [latest, date, job] = await Promise.all([officialVersions(), devDate(), jobState()])
+    const [latest, date, job, fork] = await Promise.all([officialVersions(), devDate(), jobState(), forkRelease()])
     const mine = parseInstalled(installed)
-    const newer = latest?.[mine.channel]
+    // (a fork has no newer official version of its own channel: going back is the stable channel's button)
+    const newer = mine.channel === 'fork' ? null : latest?.[mine.channel]
     res.json({
       installed,
       channel: mine.channel,
       latest,
       devDate: date,
       update: newer && mine.number && compareVersions(newer.version, mine.number) > 0 ? { channel: mine.channel, version: newer.version } : null,
+      fork: fork ? { ...fork, installed: mine.channel === 'fork' && installed.includes(` ${fork.sha} `) } : null,
       job,
     })
   })
@@ -279,12 +347,23 @@ export function registerUpdateRoutes(router: Router, deps: UpdatesDeps): void {
     res.json({ job: await jobState() })
   })
 
-  /** POST /api/app/updates/start {kind: stable|beta|dev|os} */
+  /** POST /api/app/updates/start {kind: stable|beta|dev|os|fork} */
   router.post('/updates/start', requireSession, requireCsrf, async (req, res) => {
     const kind = String((req.body ?? {}).kind ?? '')
-    if (![...CHANNELS, 'os'].includes(kind)) {
+    if (![...CHANNELS, 'os', 'fork'].includes(kind)) {
       res.status(400).json({ error: 'invalid kind' })
       return
+    }
+    // (the fork: its branch asked again now - the label names the commit that is installed; repository and branch are
+    // the fixed ones above, never from the request)
+    let forkArgs: string[] = []
+    if (kind === 'fork') {
+      const f = await forkRelease(true)
+      if (!f || !/^[A-Za-z0-9 ._-]{1,80}$/.test(f.label)) {
+        res.status(503).json({ error: 'the fork could not be reached' })
+        return
+      }
+      forkArgs = [f.repo, f.branch, f.label]
     }
     const active = (await run('systemctl', ['is-active', UNIT], 5000)).stdout.trim()
     if (active === 'active' || active === 'activating') {
@@ -307,7 +386,7 @@ export function registerUpdateRoutes(router: Router, deps: UpdatesDeps): void {
     } finally {
       await fsp.rm(tmp, { recursive: true, force: true })
     }
-    const r = await run('sudo', ['systemd-run', `--unit=${UNIT}`, '--collect', '--quiet', '--working-directory=/home/dietpi', '/bin/bash', `${STATE_DIR}/run.sh`, kind], 15000)
+    const r = await run('sudo', ['systemd-run', `--unit=${UNIT}`, '--collect', '--quiet', '--working-directory=/home/dietpi', '/bin/bash', `${STATE_DIR}/run.sh`, kind, ...forkArgs], 15000)
     if (!r.ok) {
       res.status(500).json({ error: `could not start the update ${r.stderr.slice(0, 200)}` })
       return

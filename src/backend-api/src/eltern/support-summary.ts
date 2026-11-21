@@ -189,7 +189,7 @@ export async function supportSummary(cfg: MupiboxConfig | undefined): Promise<st
   const { channel } = parseInstalled(installed)
   // (a release only as the update writes it - "5.0.13 stable", "DEV 5.0.13 <date>": a dotted number elsewhere is a
   // branch's name, e.g. an address in it)
-  const number = /^(?:(?:DEV|BETA)\s+)?(\d+\.\d+(?:\.\d+)?)(?=\s|$)/i.exec(installed.trim())?.[1] ?? null
+  const number = /^(?:(?:DEV|BETA|FORK)\s+)?(\d+\.\d+(?:\.\d+)?)(?=\s|$)/i.exec(installed.trim())?.[1] ?? null
   const model = (await fsp.readFile('/sys/firmware/devicetree/base/model', 'utf8').catch(() => '')).replace(/\0/g, '').trim()
   const osName = /^PRETTY_NAME="?([^"\n]*)"?$/m.exec(await fsp.readFile('/etc/os-release', 'utf8').catch(() => ''))?.[1] ?? ''
   const dietpi = await fsp.readFile('/boot/dietpi/.version', 'utf8').catch(() => '')
@@ -215,7 +215,7 @@ export async function supportSummary(cfg: MupiboxConfig | undefined): Promise<st
   const mem = os.totalmem() / 1024 ** 3
   const memText = mem < 0.75 ? `${Math.round((mem * 1024) / 64) * 64} MB` : `${de(Math.round(mem))} GB`
   const lines = [
-    `MuPiBox ${number ?? branchState(installed)} · ${{ stable: 'Stable', beta: 'Beta', dev: 'Dev' }[channel]}`,
+    `MuPiBox ${number ?? branchState(installed)} · ${{ stable: 'Stable', beta: 'Beta', dev: 'Dev', fork: 'Fork' }[channel]}`,
     `Updates: ${await updates()}`,
     `Gerät: ${model || 'unbekannt'} · ${memText}`,
     `System: ${dv[0] && dv[1] ? `DietPi ${dv[0]}.${dv[1]}${dv[2] && dv[2] !== '0' ? `.${dv[2]}` : ''} · ` : ''}${osName || os.release()} (${os.machine()})`,
