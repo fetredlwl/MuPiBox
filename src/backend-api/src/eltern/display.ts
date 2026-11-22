@@ -103,6 +103,8 @@ export function registerDisplayRoutes(router: Router, deps: DisplayDeps): void {
       startCategory: CATEGORIES.includes(String(mb.startCategory)) ? String(mb.startCategory) : 'audiobook',
       // (the magnifier on the display's start page: a search in the box's library - off until the parents switch it on)
       displaySearch: mb.displaySearch === true,
+      // ("Nur in der Suche" in the parents' app: its buttons and the pool's list - off: hidden, the pool is kept)
+      appSearchPool: mb.appSearchPool === true,
       resume: num(mb.resume, 1, 99) ?? 9,
       listviewTimer: num(mb.listviewTimer, 0.5, 5, 0.5) ?? 2.5,
       settingsAccessTimer: num(mb.settingsAccessTimer, 1, 10, 0.5) ?? 3,
@@ -135,7 +137,7 @@ export function registerDisplayRoutes(router: Router, deps: DisplayDeps): void {
     const mb: Record<string, unknown> = {}
     const chromium: Record<string, unknown> = {}
     const bad = (what: string) => res.status(400).json({ error: `invalid ${what}` })
-    for (const key of ['coverflowShowNames', 'hideScrollbar', 'episodeResume', 'newEpisodes', 'episodeProgress', 'outputPicker', 'displaySearch']) {
+    for (const key of ['coverflowShowNames', 'hideScrollbar', 'episodeResume', 'newEpisodes', 'episodeProgress', 'outputPicker', 'displaySearch', 'appSearchPool']) {
       if (body[key] === undefined) continue
       if (typeof body[key] !== 'boolean') return bad(key)
       mb[key] = body[key]

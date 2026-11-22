@@ -25,6 +25,7 @@ import { CategoryType, isSyncManaged, Media, MediaSorting } from '../media'
 import { HeaderVisibilityService } from '../header-visibility.service'
 import { MediaService } from '../media.service'
 import { MediaUnavailableComponent } from '../media-unavailable/media-unavailable.component'
+import { SpotifyBlockService } from '../spotify-block.service'
 import { StatusComponent } from '../status/status.component'
 import { KmStatusGroupComponent } from '../km-header/km-status-group.component'
 import { NowPlayingPillComponent } from '../now-playing-pill/now-playing-pill.component'
@@ -83,6 +84,9 @@ export class MedialistPage extends SwiperIonicEventsHelper {
     const type = this.artist()?.coverMedia?.type
     return (!this.isLoading() && this.media()?.length === 0 && (type === 'rss' || type === 'nas')) || this.spotifyUnavailable()
   })
+  // (fork "wishes") Spotify blocks the box and does not play: its albums grey, a tap tells why
+  private readonly spotifyBlock = inject(SpotifyBlockService)
+
   protected swiperData: Signal<SwiperData<Media>[]> = computed(() => {
     return this.media()?.map((media) => {
       return {
@@ -106,6 +110,7 @@ export class MedialistPage extends SwiperIonicEventsHelper {
         isNew: media.episodeNew === true,
         progress: media.episodeProgress,
         done: media.episodeDone === true,
+        dim: this.spotifyBlock.blocks(media),
       }
     })
   })
@@ -271,6 +276,11 @@ export class MedialistPage extends SwiperIonicEventsHelper {
   }
 
   protected coverClicked(clickedMedia: Media): void {
+    // (Spotify does not play now: the note instead)
+    if (this.spotifyBlock.blocks(clickedMedia)) {
+      this.spotifyBlock.tell()
+      return
+    }
     // (a placeholder of an artist, a search or a show: nothing to play)
     if (clickedMedia.unavailable && !clickedMedia.id && !clickedMedia.playlistid && !clickedMedia.showid && !clickedMedia.audiobookid) {
       return

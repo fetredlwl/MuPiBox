@@ -38,6 +38,7 @@ import { StatusComponent } from '../status/status.component'
 import { BackgroundPlaybackService } from '../background-playback.service'
 import { KmStatusGroupComponent } from '../km-header/km-status-group.component'
 import { NowPlayingPillComponent } from '../now-playing-pill/now-playing-pill.component'
+import { SpotifyBlockService } from '../spotify-block.service'
 import { SwiperComponent, SwiperData } from '../swiper/swiper.component'
 import { SwiperIonicEventsHelper } from '../swiper/swiper-ionic-events-helper'
 import { KmThemeService } from '../theme/km-theme.service'
@@ -75,6 +76,8 @@ export class HomePage extends SwiperIonicEventsHelper {
   protected readonly r2 = inject(KmThemeService).roundTwo
   // "Läuft gerade" in the header (design round 2): the categories take 80 instead of 96 px each while it is there
   private readonly background = inject(BackgroundPlaybackService)
+  // (fork "wishes") Spotify blocks the box and does not play: its tiles grey, a tap tells why
+  private readonly spotifyBlock = inject(SpotifyBlockService)
   protected readonly pillShown = computed(() => this.r2() && this.background.media() !== null)
 
   // The top bar is folded away by a two-finger swipe (HeaderVisibilityService): the covers are then drawn larger
@@ -247,6 +250,7 @@ export class HomePage extends SwiperIonicEventsHelper {
           data: artist,
           kind: 'artist' as const,
           isNew: artist.hasNew === true,
+          dim: this.spotifyBlock.blocks(artist.coverMedia),
         }
       })
     })
@@ -269,6 +273,11 @@ export class HomePage extends SwiperIonicEventsHelper {
   }
 
   protected async artistCoverClicked(artist: Artist): Promise<void> {
+    // (Spotify does not play now: the note instead)
+    if (this.spotifyBlock.blocks(artist.coverMedia)) {
+      this.spotifyBlock.tell()
+      return
+    }
     // Check if this is a standalone playlist (playlist without artist)
     const isPlayableNasFolder = artist.coverMedia?.type === 'nas' && !artist.coverMedia.nasIsContainer
     const isPlayableLibraryFolder =

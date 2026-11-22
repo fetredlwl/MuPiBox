@@ -3864,15 +3864,17 @@ async function loadSubAlbums(a, box) {
 // (cat: the category chosen last - the next sheet starts with it; artist: one opened from the search, its albums with
 // the way back to the search; have: what is in the library already, see libraryHave)
 // (mine: the account's own and followed playlists - the search finds public ones only)
-const search = { q: '', type: 'Alle', cat: 'audiobook', result: null, busy: false, artist: null, have: new Set(), pool: new Map(), mine: null, mineAll: false }
+const search = { q: '', type: 'Alle', cat: 'audiobook', result: null, busy: false, artist: null, have: new Set(), pool: new Map(), poolOn: false, mine: null, mineAll: false }
 
 // The search pool ("Nur in der Suche", backend search-pool.ts): allowed for the display's search, not on its start
 // page - "kind:spotifyId" -> the pool entry's id (to take it out again)
 // (a podcast by its feed, without http(s):// - as the backend's poolIdent)
 const poolKey = (e) => (e.kind === 'podcast' ? `podcast:${String(e.feedUrl ?? '').replace(/^https?:\/\//i, '')}` : `${e.kind}:${e.spotifyId}`)
+// (off under Bedienung › Suche - "Nur in der Suche" in der App: nothing of it is shown, the pool is kept)
 async function poolKeys() {
   const r = await api(`${API}/search-pool`)
-  return new Map((r.ok ? (r.body?.entries ?? []) : []).map((e) => [poolKey(e), e.id]))
+  search.poolOn = r.ok && r.body?.appEnabled === true
+  return new Map((search.poolOn ? (r.body?.entries ?? []) : []).map((e) => [poolKey(e), e.id]))
 }
 
 // Out of the search again (what the child put on the start page from it stays there - the parents take that out in
@@ -4135,8 +4137,8 @@ function drawSearch() {
     box.innerHTML = `<div class="btns"><button class="btn" id="s-back">${icon('back', 18)}Zurück zur Suche</button></div>
       <section class="card"><div class="ard-head">${a.img ? `<img src="${esc(a.img)}" alt="">` : ''}<span class="lbl"><h2 translate="no" style="margin:0">${esc(a.name)}</h2><small>${esc(subscribed ? 'Künstler auf Spotify · abonniert' : 'Künstler auf Spotify')}</small></span></div>
         <p class="help" style="margin:0">${esc(lib.sync && !lib.sync.enabled ? 'Abonnieren holt alle Folgen auf die Box. Später erscheinende kommen nur mit Smart-Sync von selbst (Bibliothek › Spotify). Einzelne Alben fügst du unten hinzu.' : 'Abonnieren holt alle Folgen auf die Box und später auch neue. Einzelne Alben fügst du unten hinzu.')}</p>
-        <div class="btns"><button class="btn primary" id="s-sub">${icon(subscribed ? 'check' : 'plus', 18)}${esc(subscribed ? 'Abonniert' : 'Ganzen Künstler abonnieren')}</button>${subscribed && !pooled ? '' : poolButton(pooled, 'data-s-pool')}</div>
-        ${subscribed && !pooled ? '' : `<p class="help" style="margin:0">${esc(pooled ? 'In der Suche am Display. „Aus der Suche nehmen“: das Kind findet ihn nicht mehr – was es schon auf die Startseite geholt hat, bleibt dort.' : POOL_HELP)}</p>`}</section>
+        <div class="btns"><button class="btn primary" id="s-sub">${icon(subscribed ? 'check' : 'plus', 18)}${esc(subscribed ? 'Abonniert' : 'Ganzen Künstler abonnieren')}</button>${!search.poolOn || (subscribed && !pooled) ? '' : poolButton(pooled, 'data-s-pool')}</div>
+        ${!search.poolOn || (subscribed && !pooled) ? '' : `<p class="help" style="margin:0">${esc(pooled ? 'In der Suche am Display. „Aus der Suche nehmen“: das Kind findet ihn nicht mehr – was es schon auf die Startseite geholt hat, bleibt dort.' : POOL_HELP)}</p>`}</section>
       <section class="card"><h2>${esc('Alben')}</h2>${artistControls('s')}<div class="rows" id="s-alist"></div><div id="s-amore"></div></section>`
     const list = () => {
       const el = $('#s-alist', box)
@@ -4381,11 +4383,13 @@ function markHave(key) {
 }
 
 async function openSpotifyAlbum(r) {
-  const pool = {
-    inPool: search.pool.has(`album:${r.id}`),
-    onPool: () => addToPool({ kind: 'album', spotifyId: r.id, name: r.name, artist: r.artist ?? '', cover: r.img ?? '' }),
-    onRemove: () => removeFromPool(`album:${r.id}`, r.name),
-  }
+  const pool = search.poolOn
+    ? {
+        inPool: search.pool.has(`album:${r.id}`),
+        onPool: () => addToPool({ kind: 'album', spotifyId: r.id, name: r.name, artist: r.artist ?? '', cover: r.img ?? '' }),
+        onRemove: () => removeFromPool(`album:${r.id}`, r.name),
+      }
+    : undefined
   addSheet({ title: r.name, sub: r.s, img: r.img, have: search.have.has(`album:${r.id}`), cat: search.cat, pool }, async (category) => {
     const res = await api(`${API}/library/add-album`, { method: 'POST', body: { albumId: r.id, category, name: r.name } })
     if (!res.ok) {
@@ -4405,7 +4409,7 @@ async function openSpotifyAlbum(r) {
 async function openSpotifyPlaylist(r) {
   // (note: a hint of "Meine Playlists" - Smart-Sync brings it already, or Spotify's own)
   // (Spotify's own playlists: not offered for the search - they do not play on the box)
-  const pool = isSpotifyOwnPlaylist(r.id)
+  const pool = !search.poolOn || isSpotifyOwnPlaylist(r.id)
     ? undefined
     : {
         inPool: search.pool.has(`playlist:${r.id}`),
@@ -4574,8 +4578,8 @@ async function openPodShow(s) {
             <div class="field"><label for="pod-sort">Reihenfolge auf der Box</label><select class="input" id="pod-sort"><option value="${SORT_VALUES[4]}">Neueste zuerst</option><option value="${SORT_VALUES[3]}">Älteste zuerst</option></select></div>
             <div class="section-label" style="margin:0">${esc('Folgen auf der Box')}</div><div id="pod-eps"><p class="help">Lade die Folgen …</p></div>
             <div class="field"><label for="pod-off">Auf der Box speichern (ohne Internet hören)</label><select class="input" id="pod-off">${offlineOptions(0, false)}</select></div>
-            <div class="btns"><button class="btn" data-close>Abbrechen</button>${poolButton(inPool, 'data-pool')}<button class="btn primary" data-add>${icon('plus', 18)}Hinzufügen</button></div>
-            <p class="help" style="margin:0">${esc(inPool ? 'In der Suche am Display. „Aus der Suche nehmen“: das Kind findet ihn nicht mehr – was es schon auf die Startseite geholt hat, bleibt dort.' : `${POOL_HELP} Die Folgen-Auswahl oben gilt dann nicht – es kommen alle Folgen.`)}</p>`
+            <div class="btns"><button class="btn" data-close>Abbrechen</button>${search.poolOn ? poolButton(inPool, 'data-pool') : ''}<button class="btn primary" data-add>${icon('plus', 18)}Hinzufügen</button></div>
+            ${search.poolOn ? `<p class="help" style="margin:0">${esc(inPool ? 'In der Suche am Display. „Aus der Suche nehmen“: das Kind findet ihn nicht mehr – was es schon auf die Startseite geholt hat, bleibt dort.' : `${POOL_HELP} Die Folgen-Auswahl oben gilt dann nicht – es kommen alle Folgen.`)}</p>` : ''}`
      }`,
     async (sheet, close) => {
       for (const b of sheet.querySelectorAll('[data-close]')) b.onclick = close
@@ -8213,6 +8217,8 @@ async function loadControls() {
   state.values.set('hideO', hidden.has('other'))
   state.values.set('startCat', o.startCategory ?? 'audiobook')
   state.values.set('dispSearch', o.displaySearch === true)
+  // ("Nur in der Suche" in this app: its buttons and the pool's list below - off: hidden, the pool is kept)
+  state.values.set('appPool', o.appSearchPool === true)
   // the search pool and what the child put in from it (shown under "Suche")
   const pool = await api(`${API}/search-pool`)
   disp.pool = pool.ok ? pool.body : { entries: [], own: [] }
@@ -8260,7 +8266,8 @@ function poolListHtml() {
       <div class="field" style="margin:0"><label>${esc('Pro Seite')}</label><div class="seg" id="pool-size">${POOL_PAGE_SIZES.map((n) => `<button aria-pressed="${n === size}" data-v="${n}">${n || 'Alle'}</button>`).join('')}</div></div>`
           : ''
       }
-      <div class="rows" id="pool-rows"></div><div id="pool-pager"></div></div>
+      <div class="rows" id="pool-rows"></div><div id="pool-pager"></div>
+      ${(p.entries?.length ?? 0) ? `<div class="btns"><button class="btn danger" id="pool-clear">${icon('close', 18)}${esc('Alle Freigaben löschen')}</button></div>` : ''}</div>
     ${(p.own ?? []).length ? `<div class="field"><label>${esc('Vom Kind auf die Startseite geholt')}</label><p class="help" style="margin:0">${esc('Das Kind kann diese am Display wieder entfernen, du hier. Was im Vorrat ist, bleibt dort – das Kind kann es wieder holen.')}</p><div class="rows" id="own-rows"></div><div id="own-pager"></div></div>` : ''}`
 }
 
@@ -8356,6 +8363,22 @@ function wirePoolControls(root, page) {
       poolView.q = q.value
       poolView.page = { entries: 0, own: 0 }
       drawPoolLists(root, page)
+    }
+  // "Alle Freigaben löschen": the whole pool, asked first (what the child put on the start page stays)
+  const clear = $('#pool-clear', root)
+  if (clear)
+    clear.onclick = async () => {
+      const n = disp.pool?.entries?.length ?? 0
+      if (!(await ask('Alle Freigaben löschen?', `${n} Einträge verschwinden aus der Suche am Display. Was das Kind schon auf die Startseite geholt hat, bleibt dort.`, 'Alle löschen'))) return
+      clear.disabled = true
+      const r = await api(`${API}/search-pool/clear`, { method: 'POST' })
+      if (!r.ok) {
+        clear.disabled = false
+        return toast('Das hat nicht geklappt', 'info')
+      }
+      toast('Alle Freigaben gelöscht')
+      await loadControls()
+      renderPage(page, false)
     }
   const seg = $('#pool-size', root)
   if (seg)
@@ -12492,7 +12515,13 @@ const CONTROLLERS = {
               label: 'Suche auf dem Display',
               help: 'Eine Lupe oben links auf der Startseite öffnet eine Suche mit Bildschirmtastatur. Gesucht wird in der Bibliothek der Box – in den Reitern, die sichtbar sind – und im Vorrat unten.',
             },
-            { type: 'html', html: poolListHtml() },
+            {
+              type: 'toggle',
+              key: 'appPool',
+              label: '„Nur in der Suche“ in der App',
+              help: 'Zeigt in der App die Knöpfe „Nur in der Suche“ und den Vorrat unten. Aus: alles davon ausgeblendet, der Vorrat bleibt erhalten – die Suche am Display findet ihn weiter, solange sie an ist.',
+            },
+            ...(state.values.get('appPool') ? [{ type: 'html', html: poolListHtml() }] : []),
           ],
         },
         {
@@ -12566,6 +12595,11 @@ const CONTROLLERS = {
       if (key === 'setTimer') return saveDisplayOptions({ settingsAccessTimer: v }, `Einstellungen nach ${fmtSec(v)}`)
       if (key === 'outPick') return saveDisplayOptions({ outputPicker: !!v }, v ? 'Kinder können am Display umschalten' : 'Umschalten nur in der App')
       if (key === 'dispSearch') return saveDisplayOptions({ displaySearch: !!v }, v ? 'Suche auf dem Display an' : 'Suche auf dem Display aus')
+      if (key === 'appPool') {
+        const ok = await saveDisplayOptions({ appSearchPool: !!v }, v ? '„Nur in der Suche“ in der App an' : '„Nur in der Suche“ in der App ausgeblendet')
+        if (ok) renderPage(page, false)
+        return ok
+      }
       if (key === 'epResume') return saveDisplayOptions({ episodeResume: !!v }, v ? 'Folgen gehen an der letzten Stelle weiter' : 'Folgen beginnen immer von vorn')
       if (key === 'epDays') {
         const days = EP_DAYS.find(([l]) => l === v)?.[1]

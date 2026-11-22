@@ -1,7 +1,7 @@
 // The search pool (search-pool.ts): what the parents allow for the display's search, what the child puts into the
 // library from it and takes out again (only its own), the events for Home Assistant, and the routes' guards.
 import assert from 'node:assert'
-import { mkdtempSync, readFileSync, writeFileSync } from 'node:fs'
+import { mkdtempSync, readdirSync, readFileSync, writeFileSync } from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
 import { beforeEach, describe, it } from 'node:test'
@@ -319,5 +319,38 @@ describe('the routes', () => {
         ['removed', 'podcast'],
       ],
     )
+  })
+})
+
+describe('parents: switch, "Alle Freigaben löschen" and the copies', () => {
+  it('says whether "Nur in der Suche" is shown in the app (off unless switched on)', async () => {
+    const off = await request(app).get('/api/app/search-pool').set('x-test-session', 'yes').expect(200)
+    assert.equal(off.body.appEnabled, false)
+    const app2 = express()
+    app2.use(express.json())
+    registerSearchPoolRoutes(app2, { ...deps, appEnabled: () => true })
+    const on = await request(app2).get('/api/app/search-pool').set('x-test-session', 'yes').expect(200)
+    assert.equal(on.body.appEnabled, true)
+  })
+
+  it('empties the pool, keeps what the child put on the start page, and needs a session', async () => {
+    const a = await pool.add({ kind: 'album', spotifyId: ALBUM_1, name: 'Erstes Album', artist: 'Lena', cover: '' })
+    await pool.add({ kind: 'playlist', spotifyId: PLAYLIST, name: 'Liste', artist: '', cover: '' })
+    assert.equal(await pool.addToLibrary(a.id, undefined, 'music'), 'added')
+    await request(app).post('/api/app/search-pool/clear').expect(401)
+    const r = await request(app).post('/api/app/search-pool/clear').set('x-test-session', 'yes').expect(200)
+    assert.equal(r.body.removed, 2)
+    assert.equal((await pool.entries()).length, 0)
+    // (the child's row stays on the start page)
+    assert.equal(library().length, 2)
+    assert.equal((await pool.own()).length, 1)
+  })
+
+  it('keeps the pool before each write (.bak) and once a day (backup/)', async () => {
+    await pool.add({ kind: 'album', spotifyId: ALBUM_1, name: 'Erstes Album', artist: 'Lena', cover: '' })
+    await pool.add({ kind: 'playlist', spotifyId: PLAYLIST, name: 'Liste', artist: '', cover: '' })
+    const before = JSON.parse(readFileSync(path.join(dir, 'search-pool.json.bak'), 'utf8')) as unknown[]
+    assert.equal(before.length, 1)
+    assert.ok(readdirSync(path.join(dir, 'backup')).some((f) => /^search-pool-\d{4}-\d{2}-\d{2}\.json$/.test(f)))
   })
 })

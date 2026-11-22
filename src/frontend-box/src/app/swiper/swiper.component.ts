@@ -47,6 +47,8 @@ export interface SwiperData<T> {
   isNew?: boolean
   progress?: number
   done?: boolean
+  // (fork "wishes") grey: Spotify blocks the box and this does not play now (a tap tells why, see SpotifyBlockService)
+  dim?: boolean
   // (set by the swiper itself: what the list keeps a slide by - its name, see entryKeys)
   trackKey?: string
 }

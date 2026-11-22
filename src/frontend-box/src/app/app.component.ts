@@ -21,6 +21,7 @@ import { ParentAccessService } from './parent-access/parent-access.service'
 import { PlaytimeBlockedOverlayComponent } from './playtime-blocked-overlay/playtime-blocked-overlay.component'
 import { PlaytimeChipComponent } from './playtime-chip/playtime-chip.component'
 import { buildResumeMedia } from './resume-builder'
+import { SpotifyPauseComponent } from './spotify-pause/spotify-pause.component'
 import { StalePageReloadService } from './stale-page-reload.service'
 import { KmThemeService } from './theme/km-theme.service'
 
@@ -37,6 +38,7 @@ import { KmThemeService } from './theme/km-theme.service'
     HaPairingOverlayComponent,
     DisplayTestOverlayComponent,
     ParentAccessBarComponent,
+    SpotifyPauseComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })

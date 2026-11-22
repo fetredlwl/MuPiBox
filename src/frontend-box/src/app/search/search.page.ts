@@ -34,10 +34,13 @@ import { environment } from 'src/environments/environment'
 import type { Artist } from '../artist'
 import { ArtworkService } from '../artwork.service'
 import { CoverFlipService } from '../cover-flip.service'
+import { type DisplayTextKey, DisplayTextsService } from '../display-texts.service'
 import { KmStatusGroupComponent } from '../km-header/km-status-group.component'
 import type { CategoryType, Media } from '../media'
 import { isStandaloneMedia, MediaService } from '../media.service'
 import type { MupiboxConfig } from '../mupibox-config.model'
+import { SpotifyBlockService } from '../spotify-block.service'
+import { SpotifyPauseComponent } from '../spotify-pause/spotify-pause.component'
 import { StatusComponent } from '../status/status.component'
 import { KmThemeService } from '../theme/km-theme.service'
 import { localizeCoverUrl } from '../utils'
@@ -104,10 +107,11 @@ interface Sheet {
 // The categories searched: those of the start page's tabs with entries of the library. NAS folders are left out
 // (read live from the NAS, slow or asleep); those the parents put into a category are in it.
 const SEARCHED: CategoryType[] = ['audiobook', 'music', 'other']
-const CATEGORY_LABEL: Record<string, { label: string; icon: string }> = {
-  audiobook: { label: 'Hörspiele', icon: 'book-outline' },
-  music: { label: 'Musik', icon: 'musical-notes-outline' },
-  other: { label: 'Radio', icon: 'radio-outline' },
+// (the names in the box's language, display-texts.json)
+const CATEGORY_LABEL: Record<string, { label: DisplayTextKey; icon: string }> = {
+  audiobook: { label: 'searchCatAudiobook', icon: 'book-outline' },
+  music: { label: 'searchCatMusic', icon: 'musical-notes-outline' },
+  other: { label: 'searchCatRadio', icon: 'radio-outline' },
 }
 const MAX_HITS = 40
 
@@ -146,6 +150,7 @@ export function searchRank(name: string, query: string): number | null {
     IonFooter,
     KmStatusGroupComponent,
     StatusComponent,
+    SpotifyPauseComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   // (the keyboard draws its keys itself: its styles must reach them - all of them below app-search, see search.page.scss)
@@ -160,6 +165,9 @@ export class SearchPage implements AfterViewInit, OnDestroy {
   private readonly http = inject(HttpClient)
   private readonly destroyRef = inject(DestroyRef)
   private readonly api = environment.backend.apiUrl
+  // (the texts in the box's language; Spotify's block: its note, Spotify hits grey while it does not play)
+  protected readonly texts = inject(DisplayTextsService)
+  protected readonly spotifyBlock = inject(SpotifyBlockService)
 
   protected readonly r2 = inject(KmThemeService).roundTwo
   private readonly keyboardHost = viewChild<ElementRef<HTMLElement>>('keyboard')
@@ -315,6 +323,7 @@ export class SearchPage implements AfterViewInit, OnDestroy {
    */
   ionViewWillEnter(): void {
     this.loadPool()
+    this.spotifyBlock.refresh()
     if (this.entered) this.loadLibrary()
     this.entered = true
   }
@@ -425,7 +434,24 @@ export class SearchPage implements AfterViewInit, OnDestroy {
     this.navController.navigateRoot('/home', { animationDirection: 'back' })
   }
 
+  /** a tab's name in the box's language */
+  protected catLabel(category: string): string {
+    const key = CATEGORY_LABEL[category]?.label
+    return key ? this.texts.text(key) : ''
+  }
+
+  /** whether a hit is of Spotify (greyed while Spotify does not play) */
+  protected isSpotify(hit: Hit): boolean {
+    if (hit.pool) return hit.pool.kind !== 'podcast'
+    return (hit.media ?? hit.artist?.coverMedia)?.type === 'spotify'
+  }
+
   protected hitClicked(hit: Hit): void {
+    // (Spotify does not play now: the note, nothing opened)
+    if (this.spotifyBlock.player() && this.isSpotify(hit)) {
+      this.spotifyBlock.tell()
+      return
+    }
     if (hit.pool) {
       this.sheet.set({ entry: hit.pool, album: hit.poolAlbum })
     } else if (hit.artist) {
@@ -472,6 +498,10 @@ export class SearchPage implements AfterViewInit, OnDestroy {
   protected play(): void {
     const s = this.sheet()
     if (!s) return
+    if (this.spotifyBlock.player()) {
+      this.spotifyBlock.tell()
+      return
+    }
     const e = s.entry
     const media: Media | undefined = s.album
       ? {
@@ -517,15 +547,15 @@ export class SearchPage implements AfterViewInit, OnDestroy {
       this.closeSheet()
       this.showNote(
         r?.result === 'already'
-          ? `${name} ist schon da.`
-          : `${name} ist jetzt bei ${CATEGORY_LABEL[category]?.label ?? category}.`,
+          ? this.texts.text('searchAlready', { n: name })
+          : this.texts.text('searchAdded', { n: name, c: this.catLabel(category) }),
       )
       this.loadPool()
       // (the lists of the start page are made again with the library: the search's too, a moment later)
       window.setTimeout(() => this.loadLibrary(), 1500)
     } catch {
       this.sheet.set({ ...s, busy: false })
-      this.showNote('Das hat nicht geklappt.')
+      this.showNote(this.texts.text('searchFailed'))
     }
   }
 
@@ -540,10 +570,10 @@ export class SearchPage implements AfterViewInit, OnDestroy {
     try {
       await firstValueFrom(this.http.post(`${this.api}/search-pool/remove-own`, { ident: o.ident }))
       this.own.update((list) => list.filter((x) => x.ident !== o.ident))
-      this.showNote(`${o.name} ist weg.`)
+      this.showNote(this.texts.text('searchGone', { n: o.name }))
       window.setTimeout(() => this.loadLibrary(), 1500)
     } catch {
-      this.showNote('Das hat nicht geklappt.')
+      this.showNote(this.texts.text('searchFailed'))
     }
   }
 

@@ -79,6 +79,31 @@ export const DEFAULT_DISPLAY_TEXTS = {
   displayTestTitle: 'New display',
   displayTestText: 'Do you see this picture? Then tap “Keep”. Otherwise the box goes back to the display before in {s}.',
   displayTestKeep: 'Keep',
+  // (fork "wishes") Spotify blocks the box (SpotifyPauseComponent): only new things (catalog) / Spotify does not play
+  spotifyPauseCatalog: 'Spotify is taking a break – new things come later. Everything on the start page, radio and podcasts keep playing.',
+  spotifyPausePlayer: 'Spotify is not working right now. You can listen to radio and podcasts.',
+  // (fork "wishes") the search on the display (search page): {n} = a name, {c} = a tab
+  searchPlaceholder: 'Type a name',
+  searchStart: 'Type the first letters.',
+  searchLoading: 'Loading the library …',
+  searchNothing: 'Nothing found.',
+  searchOwnLabel: 'Fetched by you – tap twice to remove',
+  searchRemoveQ: 'Remove?',
+  searchArtist: 'Artist',
+  searchPodcast: 'Podcast',
+  searchWhere: 'Where on the start page?',
+  searchGetAll: 'Get everything by {n}',
+  searchAllThere: 'All albums are on the start page already.',
+  searchAlbumsLoading: 'The albums are still loading.',
+  searchPlay: 'Play',
+  searchToStart: 'To the start page',
+  searchAlready: '{n} is here already.',
+  searchAdded: '{n} is now in {c}.',
+  searchGone: '{n} is gone.',
+  searchFailed: 'That did not work.',
+  searchCatAudiobook: 'Audio books',
+  searchCatMusic: 'Music',
+  searchCatRadio: 'Radio',
 }
 export type DisplayTextKey = keyof typeof DEFAULT_DISPLAY_TEXTS
 type TextSet = Partial<Record<DisplayTextKey, string>>

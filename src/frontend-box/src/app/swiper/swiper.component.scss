@@ -621,3 +621,8 @@ swiper-container.coverflow {
     font-size: 22px;
     z-index: 3;
 }
+
+// (fork "wishes") Spotify blocks the box and this does not play now: grey (the stage sets its own opacity inline)
+.mupi-dim {
+  filter: grayscale(1) brightness(0.55);
+}

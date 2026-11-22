@@ -65,6 +65,7 @@ import type { MupiboxConfig } from '../mupibox-config.model'
 import { StatusComponent } from '../status/status.component'
 import { KmStatusGroupComponent } from '../km-header/km-status-group.component'
 import { OutputSwitchComponent } from '../output-switch/output-switch.component'
+import { SpotifyPauseComponent } from '../spotify-pause/spotify-pause.component'
 import { PlayerCmds, PlayerService } from '../player.service'
 import type { PlaytimePlayState } from '../playtime.model'
 import { PlaytimeService } from '../playtime.service'
@@ -118,6 +119,7 @@ export interface TrackListEntry {
     IonItem,
     IonLabel,
     IonSpinner,
+    SpotifyPauseComponent,
   ],
 })
 export class PlayerPage implements OnInit, AfterViewInit {

@@ -28,7 +28,7 @@
     @if (query()) {
       <span class="srch-text">{{ query() }}</span>
     } @else {
-      <span class="srch-placeholder">Name eintippen</span>
+      <span class="srch-placeholder">{{ texts.text('searchPlaceholder') }}</span>
     }
     <span class="srch-caret" [class.srch-caret-on]="keyboardShown()"></span>
     @if (query()) {
@@ -40,31 +40,33 @@
 </ng-template>
 
 <ion-content class="search-content" [class.srch-kb-open]="keyboardShown()">
+  <!-- Spotify blocks the box: nothing new from it, or it does not play at all - radio and podcasts go on -->
+  <mupi-spotify-pause></mupi-spotify-pause>
   @if (query().trim().length < 2) {
     @if (own().length) {
       <!-- what the child put on the start page itself: a tap marks it, a second tap takes it out -->
-      <p class="srch-label">Von dir geholt – zweimal tippen zum Entfernen</p>
+      <p class="srch-label">{{ texts.text('searchOwnLabel') }}</p>
       <div class="srch-hits">
         @for (o of own(); track o.ident) {
           <button class="srch-hit srch-own" type="button" [class.srch-artist]="o.kind === 'artist'" [class.srch-removing]="removing() === o.ident" (click)="removeOwn(o)">
             <span class="srch-cover"><img [src]="coverUrl(o.cover)" alt="" loading="lazy" /><span class="srch-x" aria-hidden="true">✕</span></span>
-            <span class="srch-name">{{ removing() === o.ident ? 'Entfernen?' : o.name }}</span>
-            <span class="srch-sub">{{ categoryLabel[o.category]?.label ?? '' }}</span>
+            <span class="srch-name">{{ removing() === o.ident ? texts.text('searchRemoveQ') : o.name }}</span>
+            <span class="srch-sub">{{ catLabel(o.category) }}</span>
           </button>
         }
       </div>
     } @else {
-      <p class="srch-note">Tippe die ersten Buchstaben ein.</p>
+      <p class="srch-note">{{ texts.text('searchStart') }}</p>
     }
   } @else if (loading()) {
-    <p class="srch-note">Die Bibliothek wird geladen …</p>
+    <p class="srch-note">{{ texts.text('searchLoading') }}</p>
   } @else if (nothingFound()) {
-    <p class="srch-note">Nichts gefunden.</p>
+    <p class="srch-note">{{ texts.text('searchNothing') }}</p>
   }
   @if (query().trim().length >= 2) {
     <div class="srch-hits">
       @for (hit of hits(); track hit.key) {
-        <button class="srch-hit" type="button" [class.srch-artist]="hit.round" (click)="hitClicked(hit)">
+        <button class="srch-hit" type="button" [class.srch-artist]="hit.round" [class.srch-off]="spotifyBlock.player() && isSpotify(hit)" (click)="hitClicked(hit)">
           <span class="srch-cover"><img [src]="hit.imgSrc | async" alt="" loading="lazy" />
             @if (hit.pool) {
               <!-- from the pool: not on the start page yet -->
@@ -91,10 +93,13 @@
       <button class="srch-round" type="button" aria-label="Zurück" (click)="sheetBack()">
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5M11 6l-6 6 6 6" /></svg>
       </button>
-      <span class="srch-sheet-cover" [class.srch-artist]="!s.album && s.entry.kind === 'artist'"><img [src]="coverUrl(s.album?.cover ?? s.entry.cover)" alt="" /></span>
+      <!-- (one album, playlist or podcast: its cover big below instead) -->
+      @if (s.choosing || (!s.album && s.entry.kind === 'artist')) {
+        <span class="srch-sheet-cover" [class.srch-artist]="!s.album && s.entry.kind === 'artist'"><img [src]="coverUrl(s.album?.cover ?? s.entry.cover)" alt="" /></span>
+      }
       <span class="srch-sheet-title">
         <b>{{ s.album?.name ?? s.entry.name }}</b>
-        <small>{{ s.album ? s.entry.name : s.entry.kind === 'artist' ? 'Künstler' : s.entry.kind === 'podcast' ? 'Podcast' : s.entry.artist }}</small>
+        <small>{{ s.album ? s.entry.name : s.entry.kind === 'artist' ? texts.text('searchArtist') : s.entry.kind === 'podcast' ? texts.text('searchPodcast') : s.entry.artist }}</small>
       </span>
       <button class="srch-round" type="button" aria-label="Schließen" (click)="closeSheet()">
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18" /></svg>
@@ -102,18 +107,18 @@
     </div>
 
     @if (s.choosing) {
-      <p class="srch-sheet-q">Wohin auf der Startseite?</p>
+      <p class="srch-sheet-q">{{ texts.text('searchWhere') }}</p>
       <div class="srch-cats">
         @for (c of categories(); track c) {
           <button class="srch-cat" type="button" [disabled]="s.busy" (click)="addTo(c)">
             <ion-icon [name]="categoryLabel[c].icon"></ion-icon>
-            <span>{{ categoryLabel[c].label }}</span>
+            <span>{{ catLabel(c) }}</span>
           </button>
         }
       </div>
     } @else if (!s.album && s.entry.kind === 'artist') {
       <div class="srch-sheet-actions">
-        <button class="srch-act srch-act-main" type="button" (click)="choose('whole')"><span class="srch-act-ic">+</span>Alles von {{ s.entry.name }} holen</button>
+        <button class="srch-act srch-act-main" type="button" (click)="choose('whole')"><span class="srch-act-ic">+</span>{{ texts.text('searchGetAll', { n: s.entry.name }) }}</button>
       </div>
       @if (sheetAlbums().length) {
         <div class="srch-hits srch-sheet-albums">
@@ -125,15 +130,17 @@
           }
         </div>
       } @else {
-        <p class="srch-sheet-q">{{ s.entry.albums ? 'Alle Alben sind schon auf der Startseite.' : 'Die Alben werden noch geladen.' }}</p>
+        <p class="srch-sheet-q">{{ texts.text(s.entry.albums ? 'searchAllThere' : 'searchAlbumsLoading') }}</p>
       }
     } @else {
+      <!-- one album, playlist or podcast: its cover big, the buttons under it -->
+      <div class="srch-sheet-big"><img [src]="coverUrl(s.album?.cover ?? s.entry.cover)" alt="" /></div>
       <div class="srch-sheet-actions">
         <!-- (podcasts and Spotify shows: put on the start page only - their episodes come with them there) -->
         @if (s.album || s.entry.kind === 'album' || s.entry.kind === 'playlist') {
-          <button class="srch-act" type="button" (click)="play()"><span class="srch-act-ic">▶</span>Abspielen</button>
+          <button class="srch-act" type="button" [class.srch-off]="spotifyBlock.player()" (click)="play()"><span class="srch-act-ic">▶</span>{{ texts.text('searchPlay') }}</button>
         }
-        <button class="srch-act srch-act-main" type="button" (click)="choose('one')"><span class="srch-act-ic">+</span>Auf die Startseite</button>
+        <button class="srch-act srch-act-main" type="button" (click)="choose('one')"><span class="srch-act-ic">+</span>{{ texts.text('searchToStart') }}</button>
       </div>
     }
   </div>

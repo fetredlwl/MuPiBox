@@ -7,7 +7,7 @@
           <ion-grid>
             <ion-row class="img-row">
               <ion-col size="12">
-                <ion-card class="ep-anchor">
+                <ion-card class="ep-anchor" [class.mupi-dim]="currentData.dim">
                   @let src = currentData.imgSrc | async;
                   @if (noCover(src)) {
                     <!-- no picture (or it does not load): a card with the folder's name in its colour -->
@@ -43,7 +43,7 @@
       <div class="km-stage" (pointerdown)="stageDown($event)" (pointermove)="stageMove($event)" (pointerup)="stageUp()" (pointerleave)="stageUp()" (pointercancel)="stageUp()">
         @for (it of stageItems(); track it.index) {
           @let src = it.data.imgSrc | async;
-          <button class="km-stage-item" [class.km-folder]="it.data.kind === 'folder'" [class.km-own]="it.data.kind === 'own'" [style.transform]="it.transform" [style.opacity]="it.opacity" [style.z-index]="it.z" (click)="kmStageTap(it.index, it.data)">
+          <button class="km-stage-item" [class.mupi-dim]="it.data.dim" [class.km-folder]="it.data.kind === 'folder'" [class.km-own]="it.data.kind === 'own'" [style.transform]="it.transform" [style.opacity]="it.opacity" [style.z-index]="it.z" (click)="kmStageTap(it.index, it.data)">
             @if (it.data.kind === 'folder') {
               <span class="km-stack"></span><span class="km-stack"></span>
             }

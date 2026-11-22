@@ -456,3 +456,7 @@
     </div>
   </div>
 }
+<!-- (fork "wishes") Spotify blocks the box: a small note at the bottom while something of Spotify is open -->
+@if (media?.type === 'spotify') {
+  <mupi-spotify-pause mode="float"></mupi-spotify-pause>
+}

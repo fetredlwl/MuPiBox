@@ -10,6 +10,7 @@
 import { promises as fsp } from 'node:fs'
 import * as path from 'node:path'
 import type { Express, RequestHandler } from 'express'
+import { backupBeforeWrite } from './file-backup'
 import { withLock } from './file-lock'
 import { localOnly, localOrElternSession } from './request-guard'
 import { spotifyBlock } from './spotify-block'
@@ -69,6 +70,8 @@ export interface SearchPoolDeps {
     | undefined
   /** seconds between the Spotify requests of the background work (Sync-Einstellungen, spotify_sync) - default 15 */
   backgroundSeconds?: () => number
+  /** "Nur in der Suche" shown in the parents' app (Bedienung › Suche, mupibox.appSearchPool) - off: hidden, kept */
+  appEnabled?: () => boolean
   session: RequestHandler
   csrf: RequestHandler
 }
@@ -172,6 +175,12 @@ export class SearchPool {
     this.eventsFile = path.join(deps.configDir, 'search-pool-events.json')
   }
 
+  // (the pool with the copies data.json has: the one before the last write, and one a day for 7 days - backup/)
+  private writePool(list: PoolEntry[]): Promise<void> {
+    backupBeforeWrite(this.poolFile)
+    return writeJson(this.poolFile, list)
+  }
+
   private serial<T>(work: () => Promise<T>): Promise<T> {
     const run = this.queue.then(work)
     this.queue = run.catch(() => undefined)
@@ -207,7 +216,7 @@ export class SearchPool {
         ...input,
         addedAt: new Date().toISOString(),
       }
-      await writeJson(this.poolFile, [...list, added])
+      await this.writePool( [...list, added])
       return { entry: added, isNew: true }
     })
     // (only for a new one: allowed twice in a row, Spotify was asked twice)
@@ -215,12 +224,21 @@ export class SearchPool {
     return entry
   }
 
+  /** "Alle Freigaben löschen": the pool emptied (what the child put on the start page stays there) - how many went */
+  async clear(): Promise<number> {
+    return this.serial(async () => {
+      const list = await this.entries()
+      if (list.length) await this.writePool([])
+      return list.length
+    })
+  }
+
   async remove(id: string): Promise<boolean> {
     return this.serial(async () => {
       const list = await this.entries()
       const rest = list.filter((e) => e.id !== id)
       if (rest.length === list.length) return false
-      await writeJson(this.poolFile, rest)
+      await this.writePool( rest)
       return true
     })
   }
@@ -272,7 +290,7 @@ export class SearchPool {
       const at = list.findIndex((e) => e.id === id)
       if (at < 0) return
       list[at] = { ...list[at], albums, albumsAt: new Date().toISOString() }
-      await writeJson(this.poolFile, list)
+      await this.writePool( list)
     })
   }
 
@@ -467,7 +485,12 @@ export function registerSearchPoolRoutes(app: Express, deps: SearchPoolDeps): Se
   app.get('/api/app/search-pool', deps.session, async (_req, res) => {
     // (loading: an artist whose albums wait in the background queue)
     const entries = (await pool.entries()).map((e) => (pool.isQueued(e.id) ? { ...e, loading: true } : e))
-    res.json({ entries, own: await pool.own() })
+    res.json({ entries, own: await pool.own(), appEnabled: deps.appEnabled?.() === true })
+  })
+
+  /** POST /api/app/search-pool/clear - "Alle Freigaben löschen": the whole pool (the child's start page entries stay) */
+  app.post('/api/app/search-pool/clear', deps.session, deps.csrf, async (_req, res) => {
+    res.json({ ok: true, removed: await pool.clear() })
   })
 
   /**

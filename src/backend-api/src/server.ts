@@ -34,7 +34,7 @@ import { fetchFullPlaylistTracks } from './services/spotify-playlist-full'
 import { getValidAccessToken } from './spotify-sync/auth'
 import { SpotifyApiException } from './spotify-sync/playlists'
 import { loadSpotifySyncConfig, loadSpotifyTokenStore } from './spotify-sync/config-loader'
-import { useQuotaSplit } from './spotify-block'
+import { playerUntilOf, spotifyBlock, useQuotaSplit } from './spotify-block'
 import { createSpotifySyncRouter } from './spotify-sync/routes'
 import { startScheduler } from './spotify-sync/scheduler'
 import type { RunSyncDeps } from './spotify-sync/state-machine'
@@ -1215,6 +1215,8 @@ const searchPool = registerSearchPoolRoutes(app, {
   // (the spacing of the background requests: Sync-Einstellungen, spotify_sync.background_request_seconds)
   backgroundSeconds: () =>
     loadSpotifySyncConfig(getMupiboxConfigSync() as unknown as Parameters<typeof loadSpotifySyncConfig>[0]).background_request_seconds,
+  // ("Nur in der Suche" in the parents' app: Bedienung › Suche)
+  appEnabled: () => (getMupiboxConfigSync()?.mupibox as Record<string, unknown> | undefined)?.appSearchPool === true,
   session: requireSession,
   csrf: requireCsrf,
 })
@@ -1223,6 +1225,12 @@ const searchPool = registerSearchPoolRoutes(app, {
 useQuotaSplit(
   () => loadSpotifySyncConfig(getMupiboxConfigSync() as unknown as Parameters<typeof loadSpotifySyncConfig>[0]).split_quota_block,
 )
+// (fork "wishes") Spotify's block for the display's note: catalog - nothing new from Spotify (searches, lists); player -
+// Spotify does not play either (the display greys its Spotify tiles)
+app.get('/api/spotify-block', localOrElternSession, (_req, res) => {
+  const block = spotifyBlock()
+  res.json({ catalog: !!block, player: playerUntilOf(block) > Date.now(), until: block?.until ?? null })
+})
 
 // Whether the box has no internet right now (network.json, written every minute by get_network.sh)
 let offlineCheck = { at: 0, offline: false }

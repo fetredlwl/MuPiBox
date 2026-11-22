@@ -1,5 +1,5 @@
 import { HttpClient } from '@angular/common/http'
-import { Injectable } from '@angular/core'
+import { Injectable, inject } from '@angular/core'
 import type { ServerHttpApiConfig } from '@backend-api/server.model'
 import { firstValueFrom, type Observable, timeout } from 'rxjs'
 import { shareReplay } from 'rxjs/operators'
@@ -7,6 +7,7 @@ import { environment } from '../environments/environment'
 import { CurrentMediaService } from './current-media.service'
 import { LogService } from './log.service'
 import type { Media } from './media'
+import { SpotifyBlockService } from './spotify-block.service'
 import { SpotifyService } from './spotify.service'
 
 export enum PlayerCmds {
@@ -38,6 +39,9 @@ export enum PlayerCmds {
 })
 export class PlayerService {
   private config: Observable<ServerHttpApiConfig> = null
+
+  // (fork "wishes") Spotify blocks the box and does not play: no start, the note instead (the page goes back)
+  private readonly spotifyBlock = inject(SpotifyBlockService)
 
   constructor(
     private http: HttpClient,
@@ -129,6 +133,10 @@ export class PlayerService {
         break
       }
       case 'spotify': {
+        if (this.spotifyBlock.player()) {
+          this.spotifyBlock.tell()
+          return false
+        }
         const isHealthy = await this.spotifyService.ensurePlayerReady()
 
         if (!isHealthy) {
@@ -167,6 +175,10 @@ export class PlayerService {
 
   async resumeMedia(media: Media): Promise<boolean> {
     let url: string
+    if (this.spotifyBlock.player()) {
+      this.spotifyBlock.tell()
+      return false
+    }
 
     const isHealthy = await this.spotifyService.ensurePlayerReady()
 
