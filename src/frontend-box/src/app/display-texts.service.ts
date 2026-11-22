@@ -79,8 +79,7 @@ export const DEFAULT_DISPLAY_TEXTS = {
   displayTestTitle: 'New display',
   displayTestText: 'Do you see this picture? Then tap “Keep”. Otherwise the box goes back to the display before in {s}.',
   displayTestKeep: 'Keep',
-  // (fork "wishes") Spotify blocks the box (SpotifyPauseComponent): only new things (catalog) / Spotify does not play
-  spotifyPauseCatalog: 'Spotify is taking a break – new things come later. Everything on the start page, radio and podcasts keep playing.',
+  // (fork "wishes") Spotify blocks the box and does not play (SpotifyPauseComponent)
   spotifyPausePlayer: 'Spotify is not working right now. You can listen to radio and podcasts.',
   // (fork "wishes") the search on the display (search page): {n} = a name, {c} = a tab
   searchPlaceholder: 'Type a name',

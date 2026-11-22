@@ -1,0 +1,142 @@
+// (fork "wishes") the album page of the search: cover and buttons side by side, all of it below the 72 px header
+// without scrolling (1024 × 600 and 800 × 480). Colours of the km / coverflow themes, Ionic's own in the others.
+:host {
+  --sa-on: var(--km-on-bg, var(--ion-text-color, #fff));
+  --sa-dim: var(--km-lavender, var(--ion-color-medium, #8e8e93));
+  --sa-btn: var(--km-btn, rgba(var(--ion-color-medium-rgb, 128, 128, 128), 0.25));
+  --sa-on-btn: var(--km-on-btn, var(--sa-on));
+  --sa-accent: var(--km-apricot, var(--ion-color-primary, #3880ff));
+  --sa-ink: var(--km-ink, #fff);
+}
+
+.sa-page {
+  box-sizing: border-box;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  gap: 28px;
+  padding: 20px 28px 24px;
+  color: var(--sa-on);
+}
+
+// the cover as high as the page lets it be, never wider than half of it
+.sa-cover {
+  flex: 0 0 auto;
+  height: min(100%, 46vw);
+  aspect-ratio: 1;
+  border-radius: 22px;
+  overflow: hidden;
+  background: var(--sa-btn);
+  box-shadow: 0 8px 26px rgba(0, 0, 0, 0.45);
+
+  &.sa-round {
+    border-radius: 50%;
+  }
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+}
+
+.sa-side {
+  flex: 1;
+  min-width: 0;
+  max-height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 14px;
+}
+
+.sa-name {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 6px;
+
+  b {
+    font-size: 28px;
+    line-height: 1.15;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  small {
+    font-size: 18px;
+    color: var(--sa-dim);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}
+
+.sa-q {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 600;
+}
+
+.sa-btn {
+  flex: 0 0 auto;
+  height: 64px;
+  border: 0;
+  border-radius: 32px;
+  padding: 0 24px;
+  background: var(--sa-btn);
+  color: var(--sa-on-btn);
+  font-size: 22px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  -webkit-tap-highlight-color: transparent;
+
+  ion-icon {
+    font-size: 32px;
+  }
+
+  &:active {
+    transform: scale(0.97);
+  }
+
+  &[disabled] {
+    opacity: 0.6;
+  }
+}
+
+.sa-main {
+  background: var(--sa-accent);
+  color: var(--sa-ink);
+}
+
+.sa-ic {
+  font-size: 26px;
+}
+
+// Spotify blocks the box and does not play: "Abspielen" grey (a tap tells why)
+.sa-off {
+  filter: grayscale(1);
+  opacity: 0.45;
+}
+
+// a small display: the name smaller, the buttons lower
+@media (max-height: 520px) {
+  .sa-page {
+    gap: 20px;
+    padding: 14px 20px 16px;
+  }
+
+  .sa-name b {
+    font-size: 24px;
+  }
+
+  .sa-btn {
+    height: 56px;
+    font-size: 20px;
+  }
+}

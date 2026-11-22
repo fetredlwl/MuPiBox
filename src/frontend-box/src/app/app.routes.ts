@@ -21,6 +21,16 @@ export const routes: Routes = [
     loadComponent: () => import('./search/search.page').then((m) => m.SearchPage),
   },
   {
+    // (fork "wishes") an artist of the search's pool: its albums, as the start page's album list
+    path: 'search-artist',
+    loadComponent: () => import('./search/search-artist.page').then((m) => m.SearchArtistPage),
+  },
+  {
+    // (fork "wishes") one thing of the pool: play it or put it on the start page
+    path: 'search-album',
+    loadComponent: () => import('./search/search-album.page').then((m) => m.SearchAlbumPage),
+  },
+  {
     path: 'resume',
     loadComponent: () => import('./resume/resume.page').then((m) => m.ResumePage),
   },

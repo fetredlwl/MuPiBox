@@ -21,14 +21,24 @@ export class SpotifyBlockService {
     window.setInterval(() => this.refresh(), 60_000)
   }
 
-  refresh(): void {
-    this.http.get<{ catalog?: boolean; player?: boolean }>(`${environment.backend.apiUrl}/spotify-block`).subscribe({
-      next: (b) => {
-        this.catalog.set(b?.catalog === true)
-        this.player.set(b?.player === true)
-      },
-      // (the backend not reachable: as it was)
-      error: () => {},
+  refresh(): Promise<void> {
+    return new Promise((resolve) =>
+      this.http.get<{ catalog?: boolean; player?: boolean }>(`${environment.backend.apiUrl}/spotify-block`).subscribe({
+        next: (b) => {
+          this.catalog.set(b?.catalog === true)
+          this.player.set(b?.player === true)
+          resolve()
+        },
+        // (the backend not reachable: as it was)
+        error: () => resolve(),
+      }),
+    )
+  }
+
+  /** asked anew, and the note shown when Spotify does not play now (the search, as it opens) */
+  tellIfBlocked(): void {
+    void this.refresh().then(() => {
+      if (this.player()) this.tell()
     })
   }
 
@@ -42,6 +52,5 @@ export class SpotifyBlockService {
     this.told.set(true)
     window.clearTimeout(this.toldTimer)
     this.toldTimer = window.setTimeout(() => this.told.set(false), 6000)
-    this.refresh()
   }
 }

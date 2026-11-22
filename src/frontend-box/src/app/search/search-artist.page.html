@@ -1,0 +1,34 @@
+<!-- (the classes of the start page's album list: every theme draws this page as it draws that one) -->
+<ion-header class="medialist-header search-artist-header" [class.km-r2]="r2()">
+  @if (r2()) {
+    <div class="km-bar">
+      <button class="km-hbtn" type="button" data-mupi-back (click)="goBack()">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5M11 6l-6 6 6 6" /></svg>
+      </button>
+      <div class="km-htitle"><span class="km-ht1">{{ entry()?.name }}</span></div>
+      <button class="srch-getall" type="button" data-mupi-getall (click)="getAll()"><span aria-hidden="true">+</span>{{ texts.text('searchGetAll', { n: entry()?.name ?? '' }) }}</button>
+      <mupi-km-status-group></mupi-km-status-group>
+    </div>
+  } @else {
+    <ion-toolbar color="light">
+      <ion-buttons slot="start">
+        <ion-button data-mupi-back (click)="goBack()">
+          <ion-icon slot="icon-only" name="arrow-back-outline"></ion-icon>
+        </ion-button>
+      </ion-buttons>
+      <ion-title>{{ entry()?.name }}</ion-title>
+      <ion-buttons slot="end">
+        <button class="srch-getall" type="button" data-mupi-getall (click)="getAll()"><span aria-hidden="true">+</span>{{ texts.text('searchGetAll', { n: entry()?.name ?? '' }) }}</button>
+      </ion-buttons>
+      <span slot="end" class="mupihat-icon-container"><mupi-status></mupi-status></span>
+    </ion-toolbar>
+  }
+</ion-header>
+
+<ion-content class="medialist-content">
+  @if (swiperData().length) {
+    <mupi-swiper [data]="swiperData()" [positionKey]="'search|' + (entry()?.id ?? '')" (elementClicked)="albumClicked($event.data)"></mupi-swiper>
+  } @else {
+    <p class="srch-artist-note">{{ texts.text(entry()?.albums ? 'searchAllThere' : 'searchAlbumsLoading') }}</p>
+  }
+</ion-content>

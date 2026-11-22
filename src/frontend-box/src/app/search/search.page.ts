@@ -34,36 +34,20 @@ import { environment } from 'src/environments/environment'
 import type { Artist } from '../artist'
 import { ArtworkService } from '../artwork.service'
 import { CoverFlipService } from '../cover-flip.service'
-import { type DisplayTextKey, DisplayTextsService } from '../display-texts.service'
+import { DisplayTextsService } from '../display-texts.service'
 import { KmStatusGroupComponent } from '../km-header/km-status-group.component'
 import type { CategoryType, Media } from '../media'
 import { isStandaloneMedia, MediaService } from '../media.service'
 import type { MupiboxConfig } from '../mupibox-config.model'
 import { SpotifyBlockService } from '../spotify-block.service'
-import { SpotifyPauseComponent } from '../spotify-pause/spotify-pause.component'
 import { StatusComponent } from '../status/status.component'
 import { KmThemeService } from '../theme/km-theme.service'
 import { localizeCoverUrl } from '../utils'
+import { CATEGORY_LABEL, type PoolAlbum, type PoolEntry, SearchFlowService } from './search-flow.service'
 
 // The search pool ("Nur in der Suche", backend search-pool.ts): allowed by the parents, not on the start page
-// (podcast: an RSS feed, feedUrl instead of spotifyId - put on the start page only: its episodes come with it)
-type PoolKind = 'artist' | 'album' | 'playlist' | 'show' | 'podcast'
-interface PoolAlbum {
-  id: string
-  name: string
-  cover: string
-  release: string
-}
-interface PoolEntry {
-  id: string
-  kind: PoolKind
-  spotifyId: string
-  feedUrl?: string
-  name: string
-  artist: string
-  cover: string
-  albums?: PoolAlbum[]
-}
+// (podcast: an RSS feed, feedUrl instead of spotifyId - put on the start page only: its episodes come with it) - its
+// types, playing and putting on the start page: SearchFlowService (shared with the artist and album page)
 // what the child put on the start page from the pool (it may take these out again)
 interface OwnEntry {
   ident: string
@@ -80,7 +64,7 @@ function poolIdent(e: PoolEntry): string {
 }
 
 // One hit: an artist (opens its albums, as on the start page), an album / episode (plays, as in the album list) or
-// something of the pool (opens the sheet: play it, or put it on the start page)
+// something of the pool (opens its own page: play it, or put it on the start page)
 interface Hit {
   key: string
   name: string
@@ -95,24 +79,9 @@ interface Hit {
   rank: number
 }
 
-// The sheet of a pool hit: the entry (an artist: its albums), the album of it chosen, the tabs to choose from
-interface Sheet {
-  entry: PoolEntry
-  album?: PoolAlbum
-  // putting it on the start page: the tab is chosen now ('whole': the whole artist)
-  choosing?: 'one' | 'whole'
-  busy?: boolean
-}
-
 // The categories searched: those of the start page's tabs with entries of the library. NAS folders are left out
 // (read live from the NAS, slow or asleep); those the parents put into a category are in it.
 const SEARCHED: CategoryType[] = ['audiobook', 'music', 'other']
-// (the names in the box's language, display-texts.json)
-const CATEGORY_LABEL: Record<string, { label: DisplayTextKey; icon: string }> = {
-  audiobook: { label: 'searchCatAudiobook', icon: 'book-outline' },
-  music: { label: 'searchCatMusic', icon: 'musical-notes-outline' },
-  other: { label: 'searchCatRadio', icon: 'radio-outline' },
-}
 const MAX_HITS = 40
 
 /** lower case, ß as ss, without accents and umlaut dots: "Blümchen" is found with "blumchen" and "BLÜMCHEN" */
@@ -150,7 +119,6 @@ export function searchRank(name: string, query: string): number | null {
     IonFooter,
     KmStatusGroupComponent,
     StatusComponent,
-    SpotifyPauseComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   // (the keyboard draws its keys itself: its styles must reach them - all of them below app-search, see search.page.scss)
@@ -182,7 +150,6 @@ export class SearchPage implements AfterViewInit, OnDestroy {
   private readonly media = signal<{ category: CategoryType; media: Media }[]>([])
   private readonly pool = signal<PoolEntry[]>([])
   protected readonly own = signal<OwnEntry[]>([])
-  protected readonly sheet = signal<Sheet | null>(null)
   // the child's own entry tapped once: a second tap takes it out (a tap by mistake does nothing)
   protected readonly removing = signal<string | null>(null)
   protected readonly note = signal('')
@@ -257,7 +224,7 @@ export class SearchPage implements AfterViewInit, OnDestroy {
           rank: rank + 0.7,
         })
       }
-      // an artist's albums by their own names (its name finds the artist: its albums are in its sheet)
+      // an artist's albums by their own names (its name finds the artist: its albums are on its page)
       if (entry.kind === 'artist' && rank >= 9) {
         for (const album of entry.albums ?? []) {
           if (inLibrary.has(`album:${album.id}`)) continue
@@ -287,17 +254,9 @@ export class SearchPage implements AfterViewInit, OnDestroy {
     () => !this.loading() && this.query().trim().length >= 2 && this.hits().length === 0,
   )
 
-  // the albums of the artist in the sheet (not those on the start page already)
-  protected readonly sheetAlbums = computed(() => {
-    const s = this.sheet()
-    if (!s || s.entry.kind !== 'artist' || s.album) return []
-    const have = new Set(this.media().map(({ media }) => media.id))
-    return (s.entry.albums ?? [])
-      .filter((a) => !have.has(a.id))
-      .map((a) => ({ ...a, imgSrc: localizeCoverUrl(a.cover || undefined) }))
-  })
-
   protected readonly categoryLabel = CATEGORY_LABEL
+  // (playing, putting on the start page and the tabs: shared with the artist and album page of the search)
+  private readonly flow = inject(SearchFlowService)
   protected readonly coverUrl = (url: string) => localizeCoverUrl(url || undefined)
 
   constructor() {
@@ -311,6 +270,7 @@ export class SearchPage implements AfterViewInit, OnDestroy {
       .subscribe((config) => {
         const hidden = config?.mupibox?.hiddenCategories ?? []
         this.categories.set(SEARCHED.filter((c) => !hidden.includes(c)))
+        this.flow.categories.set(this.categories())
         this.loadLibrary()
       })
     this.poolTimer = window.setInterval(() => this.loadPool(), SearchPage.POOL_REFRESH_MS)
@@ -323,8 +283,16 @@ export class SearchPage implements AfterViewInit, OnDestroy {
    */
   ionViewWillEnter(): void {
     this.loadPool()
-    this.spotifyBlock.refresh()
-    if (this.entered) this.loadLibrary()
+    // (Spotify does not play now: said once in a popup - the page keeps its room)
+    this.spotifyBlock.tellIfBlocked()
+    // back from the artist or album page: what happened there ("… ist jetzt bei Musik")
+    const { note, changed, fromOwnPage } = this.flow.takeNote()
+    if (note) this.showNote(note)
+    // (back from the search's own artist or album page with nothing put on the start page: the hits stay as they were,
+    // nothing is read again; back from elsewhere - the player, the start page - the library may have changed)
+    if (this.entered && !fromOwnPage) this.loadLibrary()
+    // (put on the start page: its lists are made again a moment later)
+    if (changed) window.setTimeout(() => this.loadLibrary(), 1500)
     this.entered = true
   }
 
@@ -436,8 +404,7 @@ export class SearchPage implements AfterViewInit, OnDestroy {
 
   /** a tab's name in the box's language */
   protected catLabel(category: string): string {
-    const key = CATEGORY_LABEL[category]?.label
-    return key ? this.texts.text(key) : ''
+    return this.flow.catLabel(category)
   }
 
   /** whether a hit is of Spotify (greyed while Spotify does not play) */
@@ -453,7 +420,8 @@ export class SearchPage implements AfterViewInit, OnDestroy {
       return
     }
     if (hit.pool) {
-      this.sheet.set({ entry: hit.pool, album: hit.poolAlbum })
+      if (hit.pool.kind === 'artist' && !hit.poolAlbum) this.openPoolArtist(hit.pool)
+      else this.openPoolItem(hit.pool, hit.poolAlbum)
     } else if (hit.artist) {
       this.openArtist(hit.artist, hit.category)
     } else if (hit.media) {
@@ -461,102 +429,20 @@ export class SearchPage implements AfterViewInit, OnDestroy {
     }
   }
 
-  // ---------- the sheet of a pool hit ----------
+  // ---------- a pool hit: a page of its own (the search stays as it is behind it, the back arrow comes back here) ----------
 
-  protected closeSheet(): void {
-    this.sheet.set(null)
+  /** an artist of the pool: its albums not on the start page yet, as the start page's album list shows them */
+  private openPoolArtist(entry: PoolEntry): void {
+    const have = new Set(this.media().map(({ media }) => media.id))
+    const albums = (entry.albums ?? []).filter((a) => !have.has(a.id))
+    this.flow.openedOwnPage()
+    void this.navController.navigateForward(['/search-artist'], { state: { entry, albums } })
   }
 
-  protected openPoolAlbum(album: PoolAlbum): void {
-    const s = this.sheet()
-    if (s) this.sheet.set({ entry: s.entry, album })
-  }
-
-  /** back from an album of the artist to the artist */
-  protected sheetBack(): void {
-    const s = this.sheet()
-    if (!s) return
-    if (s.choosing) this.sheet.set({ ...s, choosing: undefined })
-    else if (s.album && s.entry.kind === 'artist') this.sheet.set({ entry: s.entry })
-    else this.closeSheet()
-  }
-
-  protected choose(what: 'one' | 'whole'): void {
-    const s = this.sheet()
-    if (!s) return
-    // only one tab: no question
-    const cats = this.categories()
-    if (cats.length === 1) {
-      this.sheet.set({ ...s, choosing: what })
-      void this.addTo(cats[0])
-      return
-    }
-    this.sheet.set({ ...s, choosing: what })
-  }
-
-  /** play it from the search, without putting it on the start page */
-  protected play(): void {
-    const s = this.sheet()
-    if (!s) return
-    if (this.spotifyBlock.player()) {
-      this.spotifyBlock.tell()
-      return
-    }
-    const e = s.entry
-    const media: Media | undefined = s.album
-      ? {
-          type: 'spotify',
-          category: 'music',
-          id: s.album.id,
-          title: s.album.name,
-          artist: e.name,
-          cover: s.album.cover,
-        }
-      : e.kind === 'album'
-        ? {
-            type: 'spotify',
-            category: 'music',
-            id: e.spotifyId,
-            title: e.name,
-            artist: e.artist || e.name,
-            cover: e.cover,
-          }
-        : e.kind === 'playlist'
-          ? { type: 'spotify', category: 'music', playlistid: e.spotifyId, title: e.name, cover: e.cover }
-          : undefined
-    if (!media) return
-    this.closeSheet()
-    void this.navController.navigateForward(['/player'], { state: { media }, animation: this.coverFlip.animation })
-  }
-
-  /** on the start page under the chosen tab: the album / playlist, or the whole artist */
-  protected async addTo(category: CategoryType): Promise<void> {
-    const s = this.sheet()
-    if (!s || s.busy) return
-    this.sheet.set({ ...s, busy: true })
-    const albumId = s.choosing === 'whole' ? undefined : s.album?.id
-    const name = s.choosing === 'whole' ? s.entry.name : (s.album?.name ?? s.entry.name)
-    try {
-      const r = await firstValueFrom(
-        this.http.post<{ ok: boolean; result: 'added' | 'already' }>(`${this.api}/search-pool/add-to-library`, {
-          poolId: s.entry.id,
-          albumId,
-          category,
-        }),
-      )
-      this.closeSheet()
-      this.showNote(
-        r?.result === 'already'
-          ? this.texts.text('searchAlready', { n: name })
-          : this.texts.text('searchAdded', { n: name, c: this.catLabel(category) }),
-      )
-      this.loadPool()
-      // (the lists of the start page are made again with the library: the search's too, a moment later)
-      window.setTimeout(() => this.loadLibrary(), 1500)
-    } catch {
-      this.sheet.set({ ...s, busy: false })
-      this.showNote(this.texts.text('searchFailed'))
-    }
+  /** one album (of a pool artist), a playlist, a podcast: big, with "Abspielen" and "Auf die Startseite" */
+  private openPoolItem(entry: PoolEntry, album?: PoolAlbum): void {
+    this.flow.openedOwnPage()
+    void this.navController.navigateForward(['/search-album'], { state: { entry, album } })
   }
 
   // ---------- the child's own entries ----------

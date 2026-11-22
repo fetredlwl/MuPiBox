@@ -40,8 +40,6 @@
 </ng-template>
 
 <ion-content class="search-content" [class.srch-kb-open]="keyboardShown()">
-  <!-- Spotify blocks the box: nothing new from it, or it does not play at all - radio and podcasts go on -->
-  <mupi-spotify-pause></mupi-spotify-pause>
   @if (query().trim().length < 2) {
     @if (own().length) {
       <!-- what the child put on the start page itself: a tap marks it, a second tap takes it out -->
@@ -85,66 +83,6 @@
     <div class="srch-toast" role="status">{{ note() }}</div>
   }
 </ion-content>
-
-<!-- a pool hit: play it, or put it on the start page under a tab (an artist: one of its albums, or all of it) -->
-@if (sheet(); as s) {
-  <div class="srch-sheet" role="dialog" aria-modal="true">
-    <div class="srch-sheet-head">
-      <button class="srch-round" type="button" aria-label="Zurück" (click)="sheetBack()">
-        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5M11 6l-6 6 6 6" /></svg>
-      </button>
-      <!-- (one album, playlist or podcast: its cover big below instead) -->
-      @if (s.choosing || (!s.album && s.entry.kind === 'artist')) {
-        <span class="srch-sheet-cover" [class.srch-artist]="!s.album && s.entry.kind === 'artist'"><img [src]="coverUrl(s.album?.cover ?? s.entry.cover)" alt="" /></span>
-      }
-      <span class="srch-sheet-title">
-        <b>{{ s.album?.name ?? s.entry.name }}</b>
-        <small>{{ s.album ? s.entry.name : s.entry.kind === 'artist' ? texts.text('searchArtist') : s.entry.kind === 'podcast' ? texts.text('searchPodcast') : s.entry.artist }}</small>
-      </span>
-      <button class="srch-round" type="button" aria-label="Schließen" (click)="closeSheet()">
-        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18" /></svg>
-      </button>
-    </div>
-
-    @if (s.choosing) {
-      <p class="srch-sheet-q">{{ texts.text('searchWhere') }}</p>
-      <div class="srch-cats">
-        @for (c of categories(); track c) {
-          <button class="srch-cat" type="button" [disabled]="s.busy" (click)="addTo(c)">
-            <ion-icon [name]="categoryLabel[c].icon"></ion-icon>
-            <span>{{ catLabel(c) }}</span>
-          </button>
-        }
-      </div>
-    } @else if (!s.album && s.entry.kind === 'artist') {
-      <div class="srch-sheet-actions">
-        <button class="srch-act srch-act-main" type="button" (click)="choose('whole')"><span class="srch-act-ic">+</span>{{ texts.text('searchGetAll', { n: s.entry.name }) }}</button>
-      </div>
-      @if (sheetAlbums().length) {
-        <div class="srch-hits srch-sheet-albums">
-          @for (a of sheetAlbums(); track a.id) {
-            <button class="srch-hit" type="button" (click)="openPoolAlbum(a)">
-              <span class="srch-cover"><img [src]="a.imgSrc" alt="" loading="lazy" /></span>
-              <span class="srch-name">{{ a.name }}</span>
-            </button>
-          }
-        </div>
-      } @else {
-        <p class="srch-sheet-q">{{ texts.text(s.entry.albums ? 'searchAllThere' : 'searchAlbumsLoading') }}</p>
-      }
-    } @else {
-      <!-- one album, playlist or podcast: its cover big, the buttons under it -->
-      <div class="srch-sheet-big"><img [src]="coverUrl(s.album?.cover ?? s.entry.cover)" alt="" /></div>
-      <div class="srch-sheet-actions">
-        <!-- (podcasts and Spotify shows: put on the start page only - their episodes come with them there) -->
-        @if (s.album || s.entry.kind === 'album' || s.entry.kind === 'playlist') {
-          <button class="srch-act" type="button" [class.srch-off]="spotifyBlock.player()" (click)="play()"><span class="srch-act-ic">▶</span>{{ texts.text('searchPlay') }}</button>
-        }
-        <button class="srch-act srch-act-main" type="button" (click)="choose('one')"><span class="srch-act-ic">+</span>{{ texts.text('searchToStart') }}</button>
-      </div>
-    }
-  </div>
-}
 
 <!-- the keyboard below the hits; ▼ folds it away (the hits then take the whole page), a tap on the field brings it back -->
 <ion-footer class="srch-footer" [class.srch-kb-hidden]="!keyboardShown()">

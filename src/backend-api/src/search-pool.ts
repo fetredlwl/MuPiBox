@@ -435,10 +435,16 @@ export function registerSearchPoolRoutes(app: Express, deps: SearchPoolDeps): Se
 
   /** GET /api/search-pool - the pool for the display's search (artists with their albums) */
   app.get('/api/search-pool', localOrElternSession, async (_req, res) => {
-    const list = await pool.entries()
-    pool.refreshStale(list)
-    res.json({ entries: list })
+    // (no request to Spotify from here: the display asks every 30 s and each time it comes back to the search - the
+    // albums are refreshed by the timer below)
+    res.json({ entries: await pool.entries() })
   })
+
+  // the pool artists' albums older than a day: checked every 6 hours (first 10 minutes after the start), in the
+  // background one after the other - not when the display looks at the pool
+  const refresh = () => void pool.entries().then((list) => pool.refreshStale(list), () => undefined)
+  setTimeout(refresh, 10 * 60_000).unref()
+  setInterval(refresh, 6 * 3600_000).unref()
 
   /** GET /api/search-pool/own - what the child put into the library (it may take these out again) */
   app.get('/api/search-pool/own', localOrElternSession, async (_req, res) => {

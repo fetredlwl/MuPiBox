@@ -1,0 +1,12 @@
+{
+  "name": "mupibox-display-check",
+  "private": true,
+  "description": "Display check of the fork wishes: the search on the box display at the box's sizes (see check.mjs)",
+  "type": "module",
+  "scripts": {
+    "check": "node check.mjs"
+  },
+  "dependencies": {
+    "puppeteer-core": "23.11.1"
+  }
+}
