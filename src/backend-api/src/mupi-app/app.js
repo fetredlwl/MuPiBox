@@ -12224,7 +12224,7 @@ const CONTROLLERS = {
         ...sec,
         items: sec.items.map((it) => (it.key === 'syncOn' ? { ...it, help: 'Aus = kein Abgleich der Playlists, auch nicht von Hand (Knopf, Telegram /resync), und keine später erschienenen Folgen von selbst. Was du unter „Verwaltete Inhalte“ abonnierst oder hinzufügst, kommt trotzdem auf die Box. Die Inhalte auf der Box bleiben.' } : it)),
       }))
-      // (fork "wishes") the spacing of the background requests, after the sync interval - saved with "Speichern"
+      // (fork "wishes") the spacing of the background requests, after the sync interval - saved at once (change)
       const bg = {
         title: 'Hintergrund-Abfragen',
         help: 'Wie lange die Box zwischen zwei Anfragen an Spotify wartet, wenn sie im Hintergrund viele Seiten holt – z. B. alle Alben eines Künstlers, der „Nur in der Suche“ freigegeben ist (bei großen Künstlern über 10 Seiten). Zu viele Anfragen auf einmal: Spotify sperrt die Box für Stunden.',
@@ -12247,6 +12247,16 @@ const CONTROLLERS = {
       secs.splice(at >= 0 ? at + 1 : secs.length, 0, bg, quota)
       return secs
     },
+    // (fork "wishes") the spacing of the background requests and the quota switch: saved at once, each in its own box -
+    // "Speichern" is the sync's button, in another box
+    async change(key, v) {
+      const body = key === 'bgSec' ? { background_request_seconds: Number(v) || 15 } : key === 'quotaSplit' ? { split_quota_block: !!v } : null
+      if (!body) return
+      const r = await api(`${SYNC_API}/config`, { method: 'POST', body })
+      const saved = key === 'quotaSplit' ? (v ? 'Kontingente getrennt – gilt ab der nächsten Sperre' : 'Kontingente nicht mehr getrennt') : 'Gespeichert'
+      toast(r.ok ? saved : r.body?.error ?? 'Nicht gespeichert', r.ok ? 'ok' : 'info')
+      return r.ok
+    },
     byLabel: {
       async Speichern() {
         const prefix = String(state.values.get('prefix') ?? '').trim()
@@ -12254,7 +12264,7 @@ const CONTROLLERS = {
         if (!prefixOk(prefix)) return
         const r = await api(`${SYNC_API}/config`, {
           method: 'POST',
-          body: { enabled: !!state.values.get('syncOn'), playlist_prefix: prefix, polling_interval_seconds: minutes * 60, background_request_seconds: Number(state.values.get('bgSec')) || 15, split_quota_block: !!state.values.get('quotaSplit') },
+          body: { enabled: !!state.values.get('syncOn'), playlist_prefix: prefix, polling_interval_seconds: minutes * 60 },
         })
         toast(r.ok ? 'Gespeichert' : r.body?.error ?? 'Nicht gespeichert', r.ok ? 'ok' : 'info')
       },
