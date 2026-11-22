@@ -81,9 +81,15 @@ async function directories(term: string, lang: string): Promise<PodcastHit[]> {
 
 /** the app's "Vorschläge für Kinder": Apple's children's charts, for German with the ARD's children's shows */
 async function kidsTips(lang: string): Promise<PodcastHit[]> {
-  const [apple, ard] = await Promise.allSettled([topKidsPodcasts(lang), lang === 'de' ? ardKidsShows() : Promise.resolve([])])
+  const [apple, ard] = await Promise.allSettled([
+    topKidsPodcasts(lang),
+    lang === 'de' ? ardKidsShows() : Promise.resolve([]),
+  ])
   if (apple.status === 'rejected' && ard.status === 'rejected') throw new Error('directory_unavailable')
-  return mergeHits(apple.status === 'fulfilled' ? apple.value : [], ard.status === 'fulfilled' ? ard.value.map(ardToHit) : [])
+  return mergeHits(
+    apple.status === 'fulfilled' ? apple.value : [],
+    ard.status === 'fulfilled' ? ard.value.map(ardToHit) : [],
+  )
 }
 
 const normal = (q: string) => q.toLowerCase().normalize('NFKC').replace(/\s+/g, ' ').trim()

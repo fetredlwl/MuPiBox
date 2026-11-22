@@ -55,7 +55,10 @@ beforeEach(() => {
     now: () => now,
     tips: async (lang) => {
       asked.push(`tips|${lang}`)
-      return [hit('Tipp Tiger', 'https://example.invalid/tiger.xml'), hit('Erwachsenentipp', 'https://example.invalid/e.xml', false)]
+      return [
+        hit('Tipp Tiger', 'https://example.invalid/tiger.xml'),
+        hit('Erwachsenentipp', 'https://example.invalid/e.xml', false),
+      ]
     },
     search: async (term, lang) => {
       asked.push(`${lang}|${term}`)
@@ -145,7 +148,10 @@ describe('podcasts for children in the display search', () => {
     now += 7 * 60 * 60 * 1000
     await request(app).get('/api/search-podcasts/tips').expect(200)
     assert.equal(asked.length, 2)
-    const add = await request(app).post('/api/search-podcasts/add').send({ feedUrl: 'https://example.invalid/tiger.xml', category: 'other' }).expect(200)
+    const add = await request(app)
+      .post('/api/search-podcasts/add')
+      .send({ feedUrl: 'https://example.invalid/tiger.xml', category: 'other' })
+      .expect(200)
     assert.equal(add.body.result, 'added')
     ;(cfg.mupibox as Record<string, unknown>).displayPodcasts = false
     await request(app).get('/api/search-podcasts/tips').expect(403)
