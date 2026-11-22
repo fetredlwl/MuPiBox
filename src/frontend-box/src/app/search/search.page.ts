@@ -179,6 +179,10 @@ export class SearchPage implements AfterViewInit, OnDestroy {
   protected readonly removing = signal<string | null>(null)
   protected readonly note = signal('')
   private noteTimer = 0
+  // (the pool asked again while the page is open: allowed in the app meanwhile, it shows without leaving the search)
+  private poolTimer = 0
+  private entered = false
+  private static readonly POOL_REFRESH_MS = 30_000
 
   protected readonly hits = computed<Hit[]>(() => {
     const q = this.query().trim()
@@ -230,6 +234,8 @@ export class SearchPage implements AfterViewInit, OnDestroy {
     const cover = (url: string) => of(localizeCoverUrl(url || undefined))
     for (const entry of this.pool()) {
       if (inLibrary.has(poolIdent(entry))) continue
+      // (a playlist Spotify made itself, allowed before the app refused them: it would not play - the player waited)
+      if (entry.kind === 'playlist' && /^37i9dQZF/.test(entry.spotifyId)) continue
       const rank = Math.min(searchRank(entry.name, q) ?? 9, entry.artist ? (searchRank(entry.artist, q) ?? 9) + 0.2 : 9)
       if (rank < 9) {
         hits.push({
@@ -299,7 +305,18 @@ export class SearchPage implements AfterViewInit, OnDestroy {
         this.categories.set(SEARCHED.filter((c) => !hidden.includes(c)))
         this.loadLibrary()
       })
+    this.poolTimer = window.setInterval(() => this.loadPool(), SearchPage.POOL_REFRESH_MS)
+  }
+
+  /**
+   * Every time the page shows (the first time too): the pool and the child's own entries asked again - the page stays
+   * in the navigation stack behind an album list or the player, and the parents may have allowed something meanwhile.
+   * Coming back, the library too (the parents or the child may have changed it).
+   */
+  ionViewWillEnter(): void {
     this.loadPool()
+    if (this.entered) this.loadLibrary()
+    this.entered = true
   }
 
   // the library of the shown tabs (the lists the start page keeps: no new lookups at Spotify)
@@ -383,6 +400,7 @@ export class SearchPage implements AfterViewInit, OnDestroy {
   ngOnDestroy(): void {
     this.keyboard?.destroy()
     window.clearTimeout(this.noteTimer)
+    window.clearInterval(this.poolTimer)
   }
 
   private keyPressed(button: string): void {

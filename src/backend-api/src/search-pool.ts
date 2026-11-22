@@ -70,6 +70,9 @@ export interface SearchPoolDeps {
 }
 
 const SPOTIFY_ID = /^[A-Za-z0-9]{22}$/
+// Playlists Spotify makes itself ("This Is …", mixes, editorial ones): Spotify does not hand them to apps like the box
+// any more - the player waited for one for ever and the display stood still. Not taken into the pool.
+export const isSpotifyOwnPlaylist = (id: string): boolean => /^37i9dQZF/.test(id)
 const ALBUMS_MAX_AGE_MS = 24 * 3600_000
 const EVENTS_KEPT = 50
 
@@ -440,6 +443,7 @@ export function registerSearchPoolRoutes(app: Express, deps: SearchPoolDeps): Se
     if (!POOL_KINDS.includes(kind) || !name) return fail(res, 400, 'invalid request')
     if (kind === 'podcast' ? !isFeedUrl(feedUrl ?? '') : !SPOTIFY_ID.test(spotifyId))
       return fail(res, 400, 'invalid request')
+    if (kind === 'playlist' && isSpotifyOwnPlaylist(spotifyId)) return fail(res, 422, 'spotify_own_playlist')
     const cover = text(b.cover, 500)
     if (cover && !/^https?:\/\//.test(cover)) return fail(res, 400, 'invalid cover')
     const entry = await pool.add({

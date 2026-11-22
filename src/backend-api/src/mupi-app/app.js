@@ -3869,10 +3869,13 @@ async function poolKeys() {
   return new Set((r.ok ? (r.body?.entries ?? []) : []).map(poolKey))
 }
 
+// (a playlist Spotify made itself - "This Is …", mixes: Spotify does not hand it to the box, it would not play)
+const isSpotifyOwnPlaylist = (id) => /^37i9dQZF/.test(String(id ?? ''))
+
 async function addToPool(item) {
   const r = await api(`${API}/search-pool`, { method: 'POST', body: item })
   if (!r.ok) {
-    toast('Das hat nicht geklappt', 'info')
+    toast(r.body?.error === 'spotify_own_playlist' ? 'Diese Playlist ist von Spotify selbst – sie spielt auf der Box nicht' : 'Das hat nicht geklappt', 'info')
     return false
   }
   search.pool.add(poolKey(item))
@@ -4314,7 +4317,8 @@ async function openSpotifyAlbum(r) {
 // A playlist: an entry of the library as a pasted link makes it (the box fetches its tracks when it plays)
 async function openSpotifyPlaylist(r) {
   // (note: a hint of "Meine Playlists" - Smart-Sync brings it already, or Spotify's own)
-  const pool = { inPool: search.pool.has(`playlist:${r.id}`), onPool: () => addToPool({ kind: 'playlist', spotifyId: r.id, name: r.name, cover: r.img ?? '' }) }
+  // (Spotify's own playlists: not offered for the search - they do not play on the box)
+  const pool = isSpotifyOwnPlaylist(r.id) ? undefined : { inPool: search.pool.has(`playlist:${r.id}`), onPool: () => addToPool({ kind: 'playlist', spotifyId: r.id, name: r.name, cover: r.img ?? '' }) }
   addSheet({ title: r.name, sub: r.s, img: r.img, text: r.note, have: search.have.has(`playlist:${r.id}`), cat: search.cat === 'audiobook' ? 'music' : search.cat, place: true, pool }, async (category, folder) => {
     // (no artist: a tile of its own on the box, named as the playlist)
     const body = { type: 'spotify', playlistid: r.id, spotify_url: `https://open.spotify.com/playlist/${r.id}`, title: r.name, ...(folder ? { artist: folder } : {}), category, source: 'manual' }

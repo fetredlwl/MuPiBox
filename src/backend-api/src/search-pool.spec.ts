@@ -193,6 +193,21 @@ describe('the routes', () => {
       .expect(404)
   })
 
+  it("refuses Spotify's own playlists (they do not play on the box)", async () => {
+    const res = await request(app)
+      .post('/api/app/search-pool')
+      .set('x-test-session', 'yes')
+      .send({ kind: 'playlist', spotifyId: '37i9dQZF1E35dROyEj8PNG', name: 'This Is …' })
+      .expect(422)
+    assert.equal(res.body.error, 'spotify_own_playlist')
+    assert.equal((await pool.entries()).length, 0)
+    await request(app)
+      .post('/api/app/search-pool')
+      .set('x-test-session', 'yes')
+      .send({ kind: 'playlist', spotifyId: PLAYLIST, name: 'Eigene' })
+      .expect(200)
+  })
+
   it('podcasts: a feed in the pool becomes an RSS row as the app adds one, and comes out again', async () => {
     await request(app)
       .post('/api/app/search-pool')
