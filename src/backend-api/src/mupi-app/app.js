@@ -8164,26 +8164,148 @@ async function loadControls() {
 // put on the start page from it (the parents take those out in the library, as any entry)
 const POOL_KIND = { artist: 'Künstler', album: 'Album', playlist: 'Playlist', show: 'Podcast', podcast: 'Podcast' }
 const POOL_CAT = { audiobook: 'Hörspiele', music: 'Musik', other: 'Radio & Podcasts' }
+// The two lists can get long (many artists): a search field, pages of 5 / 10 / 20 / 50 or all (remembered on this
+// device) and paging - drawn into their boxes by drawPoolLists, the rest of the page stays (the field keeps its focus)
+const POOL_PAGE_SIZES = [5, 10, 20, 50, 0]
+const poolView = { q: '', size: null, page: { entries: 0, own: 0 } }
+function poolPageSize() {
+  if (poolView.size === null) {
+    let saved = 10
+    try {
+      saved = Number(localStorage.getItem('mupi-pool-page-size') ?? 10)
+    } catch {
+      // (private mode: the default)
+    }
+    poolView.size = POOL_PAGE_SIZES.includes(saved) ? saved : 10
+  }
+  return poolView.size
+}
+
 function poolListHtml() {
   const p = disp.pool ?? { entries: [], own: [] }
-  const thumb = (img) => `<span class="lib-thumb">${img ? `<img src="${esc(img)}" alt="" loading="lazy">` : ''}${icon('music', 18)}</span>`
-  const entries = (p.entries ?? [])
-    .map((e) => {
-      const sub = [POOL_KIND[e.kind] ?? e.kind, e.artist, e.kind === 'artist' ? (e.albums ? `${e.albums.length} Alben` : 'Alben werden geladen') : ''].filter(Boolean).join(' · ')
-      return `<div class="entry lib-row">${thumb(e.cover)}<span class="lbl"><b translate="no">${esc(e.name)}</b><small translate="no">${esc(sub)}</small></span><button class="btn" data-pool-rm="${esc(e.id)}">${esc('Entfernen')}</button></div>`
-    })
-    .join('')
-  const own = (p.own ?? [])
-    .map((o) => {
-      const when = o.addedAt ? new Date(o.addedAt).toLocaleDateString(LOCALE, { dateStyle: 'short' }) : ''
-      const sub = [POOL_KIND[o.kind] ?? o.kind, o.artist, POOL_CAT[o.category] ?? o.category, when].filter(Boolean).join(' · ')
-      return `<div class="entry lib-row">${thumb(o.cover)}<span class="lbl"><b translate="no">${esc(o.name)}</b><small translate="no">${esc(sub)}</small></span><button class="btn" data-own-rm="${esc(o.ident)}" data-own-name="${esc(o.name)}">${esc('Entfernen')}</button></div>`
-    })
-    .join('')
+  const size = poolPageSize()
+  const many = (p.entries?.length ?? 0) + (p.own?.length ?? 0) > 5
   return `<div class="field"><label>${esc('Vorrat der Suche')}</label>
       <p class="help" style="margin:0">${esc('Hinzufügen: Bibliothek › Auf Spotify suchen › „Nur in der Suche“. Nichts davon steht auf der Startseite.')}</p>
-      <div class="rows">${entries || `<p class="help" style="margin:0">${esc('Noch leer.')}</p>`}</div></div>
-    ${own ? `<div class="field"><label>${esc('Vom Kind auf die Startseite geholt')}</label><p class="help" style="margin:0">${esc('Das Kind kann diese am Display wieder entfernen, du hier. Was im Vorrat ist, bleibt dort – das Kind kann es wieder holen.')}</p><div class="rows">${own}</div></div>` : ''}`
+      ${
+        many
+          ? `<div class="search">${icon('search')}<input class="input" id="pool-q" type="search" placeholder="${esc('Im Vorrat suchen')}" autocomplete="off" value="${esc(poolView.q)}"></div>
+      <div class="field" style="margin:0"><label>${esc('Pro Seite')}</label><div class="seg" id="pool-size">${POOL_PAGE_SIZES.map((n) => `<button aria-pressed="${n === size}" data-v="${n}">${n || 'Alle'}</button>`).join('')}</div></div>`
+          : ''
+      }
+      <div class="rows" id="pool-rows"></div><div id="pool-pager"></div></div>
+    ${(p.own ?? []).length ? `<div class="field"><label>${esc('Vom Kind auf die Startseite geholt')}</label><p class="help" style="margin:0">${esc('Das Kind kann diese am Display wieder entfernen, du hier. Was im Vorrat ist, bleibt dort – das Kind kann es wieder holen.')}</p><div class="rows" id="own-rows"></div><div id="own-pager"></div></div>` : ''}`
+}
+
+// one page of a list (filtered by the search field) and its pager; page: the list's page in poolView
+function poolPage(list, which) {
+  const size = poolPageSize()
+  const pages = size ? Math.max(1, Math.ceil(list.length / size)) : 1
+  poolView.page[which] = Math.min(Math.max(0, poolView.page[which]), pages - 1)
+  const at = poolView.page[which]
+  const shown = size ? list.slice(at * size, at * size + size) : list
+  const pager =
+    pages > 1
+      ? `<div class="btns" style="align-items:center"><button class="btn" data-pg="${which}:-1"${at === 0 ? ' disabled' : ''}>${icon('back', 18)}${esc('Zurück')}</button><span class="help" style="margin:0 8px">${esc(`Seite ${at + 1} von ${pages} · ${list.length} Einträge`)}</span><button class="btn" data-pg="${which}:1"${at >= pages - 1 ? ' disabled' : ''}>${esc('Weiter')}${icon('chevron', 18)}</button></div>`
+      : ''
+  return { shown, pager }
+}
+
+function drawPoolLists(root, page) {
+  const p = disp.pool ?? { entries: [], own: [] }
+  const q = norm(poolView.q.trim())
+  const hit = (...texts) => !q || texts.some((t) => norm(String(t ?? '')).includes(q))
+  const thumb = (img) => `<span class="lib-thumb">${img ? `<img src="${esc(img)}" alt="" loading="lazy">` : ''}${icon('music', 18)}</span>`
+  const entries = [...(p.entries ?? [])].filter((e) => hit(e.name, e.artist)).sort((a, b) => String(a.name).localeCompare(String(b.name), 'de', { numeric: true }))
+  const own = (p.own ?? []).filter((o) => hit(o.name, o.artist))
+  const rowsEl = $('#pool-rows', root)
+  if (rowsEl) {
+    const { shown, pager } = poolPage(entries, 'entries')
+    rowsEl.innerHTML =
+      shown
+        .map((e) => {
+          const sub = [POOL_KIND[e.kind] ?? e.kind, e.artist, e.kind === 'artist' ? (e.albums ? `${e.albums.length} Alben` : 'Alben werden geladen') : ''].filter(Boolean).join(' · ')
+          return `<div class="entry lib-row">${thumb(e.cover)}<span class="lbl"><b translate="no">${esc(e.name)}</b><small translate="no">${esc(sub)}</small></span><button class="btn" data-pool-rm="${esc(e.id)}">${esc('Entfernen')}</button></div>`
+        })
+        .join('') || `<p class="help" style="margin:0">${esc(q ? 'Nichts gefunden.' : 'Noch leer.')}</p>`
+    $('#pool-pager', root).innerHTML = pager
+  }
+  const ownEl = $('#own-rows', root)
+  if (ownEl) {
+    const { shown, pager } = poolPage(own, 'own')
+    ownEl.innerHTML =
+      shown
+        .map((o) => {
+          const when = o.addedAt ? new Date(o.addedAt).toLocaleDateString(LOCALE, { dateStyle: 'short' }) : ''
+          const sub = [POOL_KIND[o.kind] ?? o.kind, o.artist, POOL_CAT[o.category] ?? o.category, when].filter(Boolean).join(' · ')
+          return `<div class="entry lib-row">${thumb(o.cover)}<span class="lbl"><b translate="no">${esc(o.name)}</b><small translate="no">${esc(sub)}</small></span><button class="btn" data-own-rm="${esc(o.ident)}" data-own-name="${esc(o.name)}">${esc('Entfernen')}</button></div>`
+        })
+        .join('') || `<p class="help" style="margin:0">${esc('Nichts gefunden.')}</p>`
+    $('#own-pager', root).innerHTML = pager
+  }
+  for (const img of root.querySelectorAll('#pool-rows img, #own-rows img')) img.addEventListener('error', () => img.remove(), { once: true })
+  for (const b of root.querySelectorAll('[data-pg]'))
+    b.onclick = () => {
+      const [which, step] = b.dataset.pg.split(':')
+      poolView.page[which] += Number(step)
+      drawPoolLists(root, page)
+    }
+  // "Entfernen" of the pool
+  for (const b of root.querySelectorAll('[data-pool-rm]'))
+    b.onclick = async () => {
+      b.disabled = true
+      const r = await api(`${API}/search-pool/remove`, { method: 'POST', body: { id: b.dataset.poolRm } })
+      if (!r.ok) {
+        b.disabled = false
+        return toast('Das hat nicht geklappt', 'info')
+      }
+      toast('Aus der Suche entfernt')
+      await loadControls()
+      renderPage(page, false)
+    }
+  // what the child put on the start page: off it again (a library entry - asked first)
+  for (const b of root.querySelectorAll('[data-own-rm]'))
+    b.onclick = async () => {
+      const name = b.dataset.ownName || 'Eintrag'
+      if (!(await ask(`„${name}“ entfernen?`, 'Der Eintrag verschwindet von der Startseite der Box. Ist er im Vorrat, kann das Kind ihn über die Suche wieder holen.', 'Entfernen'))) return
+      b.disabled = true
+      const r = await api(`${API}/search-pool/remove-own`, { method: 'POST', body: { ident: b.dataset.ownRm } })
+      if (!r.ok) {
+        b.disabled = false
+        return toast('Das hat nicht geklappt', 'info')
+      }
+      toast(`Von der Startseite entfernt: ${name}`)
+      libChanged()
+      await loadControls()
+      renderPage(page, false)
+    }
+}
+
+// the search field and "pro Seite": wired once per drawing of the page
+function wirePoolControls(root, page) {
+  const q = $('#pool-q', root)
+  if (q)
+    q.oninput = () => {
+      poolView.q = q.value
+      poolView.page = { entries: 0, own: 0 }
+      drawPoolLists(root, page)
+    }
+  const seg = $('#pool-size', root)
+  if (seg)
+    seg.onclick = (e) => {
+      const b = e.target.closest('button')
+      if (!b) return
+      poolView.size = Number(b.dataset.v)
+      poolView.page = { entries: 0, own: 0 }
+      try {
+        localStorage.setItem('mupi-pool-page-size', String(poolView.size))
+      } catch {
+        // (private mode: for this visit only)
+      }
+      for (const x of seg.children) x.setAttribute('aria-pressed', String(x === b))
+      drawPoolLists(root, page)
+    }
+  drawPoolLists(root, page)
 }
 
 // The category of each tab (by its hidden key)
@@ -12234,36 +12356,9 @@ const CONTROLLERS = {
   },
   bedienung: {
     load: loadControls,
-    // the search pool's "Entfernen"
+    // the search pool's lists: search field, pages, "Entfernen" (drawPoolLists)
     mount(root, page) {
-      for (const b of root.querySelectorAll('[data-pool-rm]'))
-        b.onclick = async () => {
-          b.disabled = true
-          const r = await api(`${API}/search-pool/remove`, { method: 'POST', body: { id: b.dataset.poolRm } })
-          if (!r.ok) {
-            b.disabled = false
-            return toast('Das hat nicht geklappt', 'info')
-          }
-          toast('Aus der Suche entfernt')
-          await loadControls()
-          renderPage(page, false)
-        }
-      // what the child put on the start page: off it again (a library entry - asked first)
-      for (const b of root.querySelectorAll('[data-own-rm]'))
-        b.onclick = async () => {
-          const name = b.dataset.ownName || 'Eintrag'
-          if (!(await ask(`„${name}“ entfernen?`, 'Der Eintrag verschwindet von der Startseite der Box. Ist er im Vorrat, kann das Kind ihn über die Suche wieder holen.', 'Entfernen'))) return
-          b.disabled = true
-          const r = await api(`${API}/search-pool/remove-own`, { method: 'POST', body: { ident: b.dataset.ownRm } })
-          if (!r.ok) {
-            b.disabled = false
-            return toast('Das hat nicht geklappt', 'info')
-          }
-          toast(`Von der Startseite entfernt: ${name}`)
-          libChanged()
-          await loadControls()
-          renderPage(page, false)
-        }
+      wirePoolControls(root, page)
     },
     // the tabs of the display (switched on = shown), how long to hold, where it goes on, podcasts
     sections: (page) => {
