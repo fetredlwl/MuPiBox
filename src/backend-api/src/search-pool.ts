@@ -464,5 +464,21 @@ export function registerSearchPoolRoutes(app: Express, deps: SearchPoolDeps): Se
     res.json({ ok: await pool.remove(id) })
   })
 
+  /** POST /api/app/search-pool/remove-own {ident} - the parents take off the start page what the child put there */
+  app.post('/api/app/search-pool/remove-own', deps.session, deps.csrf, async (req, res) => {
+    const ident = text(req.body?.ident, 600)
+    if (!/^(album|artist|playlist|show):[A-Za-z0-9]{22}$/.test(ident) && !/^podcast:\S{4,500}$/.test(ident))
+      return fail(res, 400, 'invalid request')
+    try {
+      const result = await pool.removeOwn(ident)
+      if (result === 'unknown') return fail(res, 404, 'not one of the child')
+      if (result === 'locked') return fail(res, 409, 'library busy')
+      res.json({ ok: true })
+    } catch (err) {
+      console.error(`${new Date().toLocaleString()}: [search-pool] remove (parents) failed:`, err)
+      fail(res, 500, 'could not remove')
+    }
+  })
+
   return pool
 }

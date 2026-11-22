@@ -8162,7 +8162,7 @@ async function loadControls() {
 
 // The search pool ("Nur in der Suche") under Bedienung › Suche: what is allowed, with "Entfernen", and what the child
 // put on the start page from it (the parents take those out in the library, as any entry)
-const POOL_KIND = { artist: 'Künstler', album: 'Album', playlist: 'Playlist', show: 'Podcast' }
+const POOL_KIND = { artist: 'Künstler', album: 'Album', playlist: 'Playlist', show: 'Podcast', podcast: 'Podcast' }
 const POOL_CAT = { audiobook: 'Hörspiele', music: 'Musik', other: 'Radio & Podcasts' }
 function poolListHtml() {
   const p = disp.pool ?? { entries: [], own: [] }
@@ -8177,13 +8177,13 @@ function poolListHtml() {
     .map((o) => {
       const when = o.addedAt ? new Date(o.addedAt).toLocaleDateString(LOCALE, { dateStyle: 'short' }) : ''
       const sub = [POOL_KIND[o.kind] ?? o.kind, o.artist, POOL_CAT[o.category] ?? o.category, when].filter(Boolean).join(' · ')
-      return `<div class="entry lib-row">${thumb(o.cover)}<span class="lbl"><b translate="no">${esc(o.name)}</b><small translate="no">${esc(sub)}</small></span></div>`
+      return `<div class="entry lib-row">${thumb(o.cover)}<span class="lbl"><b translate="no">${esc(o.name)}</b><small translate="no">${esc(sub)}</small></span><button class="btn" data-own-rm="${esc(o.ident)}" data-own-name="${esc(o.name)}">${esc('Entfernen')}</button></div>`
     })
     .join('')
   return `<div class="field"><label>${esc('Vorrat der Suche')}</label>
       <p class="help" style="margin:0">${esc('Hinzufügen: Bibliothek › Auf Spotify suchen › „Nur in der Suche“. Nichts davon steht auf der Startseite.')}</p>
       <div class="rows">${entries || `<p class="help" style="margin:0">${esc('Noch leer.')}</p>`}</div></div>
-    ${own ? `<div class="field"><label>${esc('Vom Kind auf die Startseite geholt')}</label><p class="help" style="margin:0">${esc('Das Kind kann diese am Display wieder entfernen, du in der Bibliothek.')}</p><div class="rows">${own}</div></div>` : ''}`
+    ${own ? `<div class="field"><label>${esc('Vom Kind auf die Startseite geholt')}</label><p class="help" style="margin:0">${esc('Das Kind kann diese am Display wieder entfernen, du hier. Was im Vorrat ist, bleibt dort – das Kind kann es wieder holen.')}</p><div class="rows">${own}</div></div>` : ''}`
 }
 
 // The category of each tab (by its hidden key)
@@ -12245,6 +12245,22 @@ const CONTROLLERS = {
             return toast('Das hat nicht geklappt', 'info')
           }
           toast('Aus der Suche entfernt')
+          await loadControls()
+          renderPage(page, false)
+        }
+      // what the child put on the start page: off it again (a library entry - asked first)
+      for (const b of root.querySelectorAll('[data-own-rm]'))
+        b.onclick = async () => {
+          const name = b.dataset.ownName || 'Eintrag'
+          if (!(await ask(`„${name}“ entfernen?`, 'Der Eintrag verschwindet von der Startseite der Box. Ist er im Vorrat, kann das Kind ihn über die Suche wieder holen.', 'Entfernen'))) return
+          b.disabled = true
+          const r = await api(`${API}/search-pool/remove-own`, { method: 'POST', body: { ident: b.dataset.ownRm } })
+          if (!r.ok) {
+            b.disabled = false
+            return toast('Das hat nicht geklappt', 'info')
+          }
+          toast(`Von der Startseite entfernt: ${name}`)
+          libChanged()
           await loadControls()
           renderPage(page, false)
         }

@@ -193,6 +193,28 @@ describe('the routes', () => {
       .expect(404)
   })
 
+  it('parents: take off the start page what the child put there (only that, with a session)', async () => {
+    const p = await pool.add({ kind: 'album', spotifyId: ALBUM_1, name: 'Erstes Album', artist: 'Lena', cover: '' })
+    assert.equal(await pool.addToLibrary(p.id, undefined, 'music'), 'added')
+    await request(app)
+      .post('/api/app/search-pool/remove-own')
+      .send({ ident: `album:${ALBUM_1}` })
+      .expect(401)
+    // (the parents' own row stays: not the child's)
+    await request(app)
+      .post('/api/app/search-pool/remove-own')
+      .set('x-test-session', 'yes')
+      .send({ ident: `album:${'Z'.repeat(22)}` })
+      .expect(404)
+    await request(app)
+      .post('/api/app/search-pool/remove-own')
+      .set('x-test-session', 'yes')
+      .send({ ident: `album:${ALBUM_1}` })
+      .expect(200)
+    assert.equal(library().length, 1)
+    assert.equal((await pool.own()).length, 0)
+  })
+
   it("refuses Spotify's own playlists (they do not play on the box)", async () => {
     const res = await request(app)
       .post('/api/app/search-pool')
