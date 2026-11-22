@@ -671,6 +671,37 @@ export class SpotifyApiService {
     })
   }
 
+  /**
+   * (fork "wishes") One page of a search for the display's wishes: albums, artists and shows, 10 each at most (Spotify's
+   * limit for apps under its 2026 rules). Not cached here - wishes.ts keeps each page a day on the SD card, without the
+   * background refreshes of this service's cache. During a block nothing is asked (rateLimitedRequest).
+   */
+  async searchWishPage(
+    query: string,
+    offset: number,
+  ): Promise<{
+    albums: { id: string; name: string; artist: string; cover: string }[]
+    artists: { id: string; name: string; cover: string }[]
+    shows: { id: string; name: string; artist: string; cover: string }[]
+    more: boolean
+  }> {
+    const o = Math.max(0, Math.min(Math.floor(offset) || 0, 990))
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const r = (await this.rateLimitedRequest(() => this.spotifyApi.search(query, ['album', 'artist', 'show'] as any, 'DE', 10 as any, o))) as any
+    const img = (images: { url?: string }[] | undefined) => images?.[1]?.url ?? images?.[0]?.url ?? ''
+    const more = (page: { total?: number } | undefined) => (page?.total ?? 0) > o + 10
+    return {
+      albums: (r.albums?.items ?? [])
+        .filter((a: any) => a?.id)
+        .map((a: any) => ({ id: a.id, name: a.name, artist: a.artists?.[0]?.name ?? '', cover: img(a.images) })),
+      artists: (r.artists?.items ?? []).filter((a: any) => a?.id).map((a: any) => ({ id: a.id, name: a.name, cover: img(a.images) })),
+      shows: (r.shows?.items ?? [])
+        .filter((s: any) => s?.id)
+        .map((s: any) => ({ id: s.id, name: s.name, artist: s.publisher ?? '', cover: img(s.images) })),
+      more: more(r.albums) || more(r.artists) || more(r.shows),
+    }
+  }
+
   async getArtistAlbums(
     artistId: string,
     albumTypes = 'album,single,compilation',

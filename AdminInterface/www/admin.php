@@ -93,6 +93,7 @@
 					'home/dietpi/MuPiBox/sysmedia/images/bootscreen-custom/color',
 					// the search pool of the fork "wishes" ("Nur in der Suche")
 					'home/dietpi/.mupibox/Sonos-Kids-Controller-master/server/config/search-pool.json',
+					'home/dietpi/.mupibox/Sonos-Kids-Controller-master/server/config/wishes.json',
 				];
 				$allowedExactDirs = ['etc/', 'etc/mupibox/', 'home/', 'home/dietpi/', 'home/dietpi/MuPiBox/', 'home/dietpi/MuPiBox/themes/',
 					'home/dietpi/MuPiBox/sysmedia/', 'home/dietpi/MuPiBox/sysmedia/images/',

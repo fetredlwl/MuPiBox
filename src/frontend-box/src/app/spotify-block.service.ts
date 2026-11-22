@@ -14,6 +14,8 @@ export class SpotifyBlockService {
   readonly player = signal(false)
   /** a tap on something of Spotify while it does not play: the note is shown for a moment (SpotifyPauseComponent) */
   readonly told = signal(false)
+  /** what the note says: Spotify does not play, or (a search on Spotify) it answers nothing new now */
+  readonly toldWhat = signal<'player' | 'catalog'>('player')
   private toldTimer?: number
 
   constructor() {
@@ -48,7 +50,8 @@ export class SpotifyBlockService {
   }
 
   /** the note "Spotify geht gerade nicht – Radio und Podcasts gehen" for a few seconds */
-  tell(): void {
+  tell(what: 'player' | 'catalog' = 'player'): void {
+    this.toldWhat.set(what)
     this.told.set(true)
     window.clearTimeout(this.toldTimer)
     this.toldTimer = window.setTimeout(() => this.told.set(false), 6000)

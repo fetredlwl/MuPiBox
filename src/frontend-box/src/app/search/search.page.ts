@@ -43,6 +43,7 @@ import { SpotifyBlockService } from '../spotify-block.service'
 import { StatusComponent } from '../status/status.component'
 import { KmThemeService } from '../theme/km-theme.service'
 import { localizeCoverUrl } from '../utils'
+import { NearEndDirective } from './near-end.directive'
 import {
   CATEGORY_LABEL,
   type KidsPodcast,
@@ -50,6 +51,7 @@ import {
   type PoolAlbum,
   type PoolEntry,
   SearchFlowService,
+  type WishItem,
 } from './search-flow.service'
 
 // The search pool ("Nur in der Suche", backend search-pool.ts): allowed by the parents, not on the start page
@@ -129,6 +131,7 @@ export function searchRank(name: string, query: string): number | null {
     IonFooter,
     KmStatusGroupComponent,
     StatusComponent,
+    NearEndDirective,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   // (the keyboard draws its keys itself: its styles must reach them - all of them below app-search, see search.page.scss)
@@ -286,6 +289,18 @@ export class SearchPage implements AfterViewInit, OnDestroy {
       : null,
   )
 
+  // ---------- wishes from Spotify (backend wishes.ts; switched on in the app, Bedienung › Suche) ----------
+  // asked only when the child taps "Bei Spotify suchen", 10 of each kind; the next page when the end of the hits comes
+  // into view; every page kept on the display (back, the same text again: nothing asked) and a day on the box
+  protected readonly wishesOn = signal(false)
+  private readonly wishFor = signal('')
+  private readonly wishItems = signal<WishItem[]>([])
+  protected readonly wishMore = signal(false)
+  protected readonly wishBusy = signal(false)
+  protected readonly wishShown = computed(() =>
+    this.wishFor() && this.wishFor() === normalizeForSearch(this.query()).trim() ? this.wishItems() : null,
+  )
+
   protected readonly nothingFound = computed(
     () => !this.loading() && this.query().trim().length >= 2 && this.hits().length === 0,
   )
@@ -308,6 +323,8 @@ export class SearchPage implements AfterViewInit, OnDestroy {
         this.categories.set(SEARCHED.filter((c) => !hidden.includes(c)))
         this.podcastsOn.set((config?.mupibox as { displayPodcasts?: boolean } | undefined)?.displayPodcasts === true)
         if (this.podcastsOn()) this.loadTips()
+        this.wishesOn.set((config?.mupibox as { displayWishes?: boolean } | undefined)?.displayWishes === true)
+        if (this.wishesOn()) this.flow.loadWished()
         this.flow.categories.set(this.categories())
         this.loadLibrary()
       })
@@ -493,6 +510,54 @@ export class SearchPage implements AfterViewInit, OnDestroy {
     } finally {
       this.podBusy.set(false)
     }
+  }
+
+  /** "Bei Spotify suchen": the first page for the typed text (kept on the display: tapped again, nothing is asked) */
+  protected async searchWishes(): Promise<void> {
+    const q = normalizeForSearch(this.query()).trim()
+    if (q.length < 2 || this.wishBusy()) return
+    // (Spotify answers nothing new now: said, nothing asked)
+    if (this.spotifyBlock.catalog()) {
+      this.spotifyBlock.tell('catalog')
+      return
+    }
+    this.wishBusy.set(true)
+    const r = await this.flow.searchWishes(q)
+    this.wishBusy.set(false)
+    if (r === 'blocked') return this.spotifyBlock.tell('catalog')
+    if (r === 'failed') return this.showNote(this.texts.text('searchFailed'))
+    this.wishItems.set(r.items)
+    this.wishMore.set(r.more)
+    this.wishFor.set(q)
+  }
+
+  /** the end of the hits came into view: the next page (only when there is one) */
+  protected async moreWishes(): Promise<void> {
+    const q = this.wishFor()
+    if (!q || !this.wishMore() || this.wishBusy()) return
+    this.wishBusy.set(true)
+    const r = await this.flow.searchWishes(q, true)
+    this.wishBusy.set(false)
+    if (typeof r === 'string') {
+      // (no further tries from this list: it says nothing more)
+      this.wishMore.set(false)
+      if (r === 'blocked') this.spotifyBlock.tell('catalog')
+      return
+    }
+    if (this.wishFor() !== q) return
+    this.wishItems.set(r.items)
+    this.wishMore.set(r.more)
+  }
+
+  protected isWished(w: WishItem): boolean {
+    return this.flow.wished().has(`${w.kind}:${w.id}`)
+  }
+
+  /** a hit of Spotify: an artist its albums, an album / a show its page with "Wünschen" */
+  protected openWish(w: WishItem): void {
+    this.flow.openedOwnPage()
+    if (w.kind === 'artist') void this.navController.navigateForward(['/search-artist'], { state: { wishArtist: w } })
+    else void this.navController.navigateForward(['/search-album'], { state: { wish: w } })
   }
 
   /** a podcast for children: its page, "Auf die Startseite" (no approval needed) */

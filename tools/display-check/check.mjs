@@ -13,6 +13,12 @@
 //       page without approval (no "play" on the way), then among what the child fetched itself
 //   R7  tips for children before anything is typed: asked once, children's shows only, addable without approval; with
 //       the child's own entries both rows fit above the keyboard (1024 × 600)
+//   R8  wishes from Spotify: asked only by the tile, 10 a kind; the next page only at the end of the hits; an artist's
+//       albums 10 at a time, the next only when swiped to the end; back and again ask nothing; a wish (no "play", no
+//       "start page") goes to the parents; exactly the expected requests to Spotify
+//   R9  the wishes' switch off: no Spotify search on the display, nothing asked, all else as before
+//   R10 the parents' app, page "Wünsche": the child's wish is there; approved, it is on the start page under the tab
+//       the child chose, as the child's own (the app opened as on the home network: "Anmeldung verlangen" off)
 //
 // Usage: node check.mjs <www dir> [--shots <dir>]   (needs Chrome; port 8200 and 4300 free)
 // Exit code 0: all rules kept; 1: a rule broken (listed); 2: could not run.
@@ -108,13 +114,45 @@ function makeConfigDir() {
   fs.mkdirSync(path.join(dir, 'cache'))
   fs.copyFileSync(path.join(repo, 'config', 'templates', 'www.json'), path.join(cfg, 'config.json'))
   const box = JSON.parse(fs.readFileSync(path.join(repo, 'config', 'templates', 'mupiboxconfig.json'), 'utf8'))
-  box.mupibox = { ...box.mupibox, displaySearch: true, displayPodcasts: true, hiddenCategories: [] }
+  box.mupibox = {
+    ...box.mupibox,
+    displaySearch: true,
+    displayPodcasts: true,
+    displayWishes: true,
+    hiddenCategories: [],
+  }
   // (R5: an English box - a German text on the page is one not taken from the translations)
   box.displayLanguage = 'en'
   box.spotify_sync = { ...(box.spotify_sync ?? {}), split_quota_block: true }
+  // (the app without a login, as on the home network with "Anmeldung verlangen" off)
+  box.interfacelogin = { ...(box.interfacelogin ?? {}), state: false }
   fs.writeFileSync(path.join(cfg, 'mupiboxconfig.json'), JSON.stringify(box, null, 2))
   fs.writeFileSync(path.join(cfg, 'data.json'), JSON.stringify(library, null, 2))
   fs.writeFileSync(path.join(cfg, 'search-pool.json'), JSON.stringify(pool, null, 2))
+  // (Spotify's answers for the wishes - MUPIBOX_SPOTIFY_FIXTURE; every call is written to spotify-calls.log)
+  const sid = (p, i) => `${p}${String(i).padStart(3, '0')}`.padEnd(22, 'x')
+  const albums = (p, n, from = 0) =>
+    Array.from({ length: n }, (_, i) => ({
+      id: sid(p, from + i),
+      name: `Wunschalbum ${from + i + 1}`,
+      artist: 'Wunsch Künstler',
+      cover: '',
+    }))
+  fs.writeFileSync(
+    path.join(dir, 'spotify.json'),
+    JSON.stringify({
+      search: {
+        0: {
+          albums: albums('wa', 10),
+          artists: [{ id: sid('wk', 1), name: 'Wunsch Künstler', cover: '' }],
+          shows: [{ id: sid('ws', 1), name: 'Wunsch Hörspiel', artist: 'Sender', cover: '' }],
+          more: true,
+        },
+        10: { albums: albums('wa', 3, 10), artists: [], shows: [], more: false },
+      },
+      artists: { [sid('wk', 1)]: albums('wk', 23).map(({ artist: _a, ...a }) => a) },
+    }),
+  )
   // (the directories' answer for any term: one show for children, one for grown-ups - MUPIBOX_PODCAST_FIXTURE)
   const show = (title, feed, kids) => ({
     title,
@@ -176,7 +214,7 @@ function serveWww() {
   }
   const server = http.createServer((req, res) => {
     // (the built display asks its own address for /api, as on the box: passed on to the backend)
-    if ((req.url ?? '').startsWith('/api/')) {
+    if ((req.url ?? '').startsWith('/api/') || /^\/app(\/|$|\?)/.test(req.url ?? '')) {
       const out = http.request(
         {
           host: 'localhost',
@@ -212,7 +250,13 @@ async function startBackend(dir) {
   const server = path.join(repo, 'src', 'backend-api', 'src', 'server.ts')
   const proc = spawn(process.execPath, [tsx, server], {
     cwd: dir,
-    env: { ...process.env, NODE_ENV: 'development', MUPIBOX_PODCAST_FIXTURE: path.join(dir, 'podcasts.json') },
+    env: {
+      ...process.env,
+      NODE_ENV: 'development',
+      MUPIBOX_PODCAST_FIXTURE: path.join(dir, 'podcasts.json'),
+      MUPIBOX_SPOTIFY_FIXTURE: path.join(dir, 'spotify.json'),
+      MUPIBOX_SPOTIFY_FIXTURE_LOG: path.join(dir, 'spotify-calls.log'),
+    },
     stdio: ['ignore', 'pipe', 'pipe'],
   })
   let log = ''
@@ -391,6 +435,12 @@ async function run(browser, dir, size) {
   }
 
   try {
+    await wishes(page, tag, dir)
+  } catch (err) {
+    rule('R8', false, `${tag}: the wish checks stopped (${firstLine(err)})`)
+  }
+
+  try {
     await blocks(page, tag, dir)
   } catch (err) {
     rule('R1', false, `${tag}: the block checks stopped (${firstLine(err)})`)
@@ -403,9 +453,16 @@ async function run(browser, dir, size) {
 
 async function tips(page, tag, asked, size) {
   const tipAsks = () => asked.filter((u) => u.includes('/api/search-podcasts/tips')).length
-  const names = () => page.evaluate(() => [...document.querySelectorAll('app-search .srch-tip .srch-name')].map((e) => e.textContent.trim()))
+  const names = () =>
+    page.evaluate(() =>
+      [...document.querySelectorAll('app-search .srch-tip .srch-name')].map((e) => e.textContent.trim()),
+    )
   const shown = await names()
-  rule('R7', shown.includes('Frosch Funkhaus') && !shown.includes('Erwachsenenfunk'), `${tag}: tips for children on the empty search (${shown.join(', ')})`)
+  rule(
+    'R7',
+    shown.includes('Frosch Funkhaus') && !shown.includes('Erwachsenenfunk'),
+    `${tag}: tips for children on the empty search (${shown.join(', ')})`,
+  )
   rule('R7', tipAsks() === 1, `${tag}: the tips asked once`)
   await shot(page, `${tag}-0-tipps`)
   const opened = await clickText(page, '.srch-tip', 'Frosch Funkhaus')
@@ -413,16 +470,28 @@ async function tips(page, tag, asked, size) {
   await clickText(page, '.sa-btn', 'To the start page')
   await clickText(page, '.sa-btn', 'Radio')
   await wait(800)
-  const own = await page.evaluate(() => [...document.querySelectorAll('app-search .srch-own .srch-name')].map((e) => e.textContent.trim()))
-  rule('R7', (await topTag(page)) === 'app-search' && own.includes('Frosch Funkhaus'), `${tag}: a tip put on the start page without approval`)
+  const own = await page.evaluate(() =>
+    [...document.querySelectorAll('app-search .srch-own .srch-name')].map((e) => e.textContent.trim()),
+  )
+  rule(
+    'R7',
+    (await topTag(page)) === 'app-search' && own.includes('Frosch Funkhaus'),
+    `${tag}: a tip put on the start page without approval`,
+  )
   const after = await names()
-  rule('R7', !after.includes('Frosch Funkhaus') && after.includes('Igel Insel'), `${tag}: a tip on the box is not offered again (${after.join(', ')})`)
+  rule(
+    'R7',
+    !after.includes('Frosch Funkhaus') && after.includes('Igel Insel'),
+    `${tag}: a tip on the box is not offered again (${after.join(', ')})`,
+  )
   await shot(page, `${tag}-0b-tipps-und-eigene`)
   if (size.height >= 600) {
     // both rows above the keyboard: nothing of them below its top, nothing to scroll
     const fit = await page.evaluate(() => {
       const kb = document.querySelector('app-search .simple-keyboard')?.getBoundingClientRect().top ?? innerHeight
-      const rows = [...document.querySelectorAll('app-search .srch-own, app-search .srch-tip')].filter((e) => e.getBoundingClientRect().width > 0)
+      const rows = [...document.querySelectorAll('app-search .srch-own, app-search .srch-tip')].filter(
+        (e) => e.getBoundingClientRect().width > 0,
+      )
       return rows.length > 0 && rows.every((e) => e.getBoundingClientRect().bottom <= kb + 1)
     })
     rule('R7', fit, `${tag}: the child's own and the tips fit above the keyboard`)
@@ -433,11 +502,227 @@ async function tips(page, tag, asked, size) {
   await clickText(page, '.srch-own', 'Remove?')
 }
 
+/** the calls to (invented) Spotify so far */
+const spotifyCalls = (dir) => {
+  try {
+    return fs.readFileSync(path.join(dir, 'spotify-calls.log'), 'utf8').split('\n').filter(Boolean)
+  } catch {
+    return []
+  }
+}
+
+async function wishes(page, tag, dir) {
+  // (the podcast part ended with an empty search: the text again)
+  await type(page, ['F', 'R', 'I'])
+  const before = spotifyCalls(dir).length
+  const calls = () => spotifyCalls(dir).slice(before)
+  // the first run asks Spotify; the second (another display size, the display started afresh) finds every page kept on
+  // the box: nothing asked at all
+  const first = before === 0
+  const want = (n) => (first ? n : 0)
+  const kept = first ? '' : ' - kept on the box, nothing asked'
+  rule('R8', calls().length === 0, `${tag}: Spotify not asked while typing`)
+  rule('R8', (await visibleCount(page, '.srch-wish-btn')) === 1, `${tag}: the tile "search Spotify" is there`)
+  await page.click('app-search .srch-wish-btn')
+  await wait(1500)
+  const tiles = () => page.evaluate(() => document.querySelectorAll('app-search .srch-wish').length)
+  rule(
+    'R8',
+    calls().length === want(1) && (await tiles()) === 12,
+    `${tag}: the tile gives one page (${calls().length} calls, ${await tiles()} hits)${kept}`,
+  )
+  await shot(page, `${tag}-6-wuensche`)
+  // to the end of the hits: the next page, then nothing more
+  const toEnd = () =>
+    page.evaluate(() => {
+      for (const row of document.querySelectorAll('app-search .srch-hits')) row.scrollLeft = row.scrollWidth
+      document.querySelector('app-search .srch-end')?.scrollIntoView({ block: 'nearest', inline: 'nearest' })
+    })
+  await toEnd()
+  await wait(1500)
+  rule(
+    'R8',
+    calls().length === want(2) && (await tiles()) === 15,
+    `${tag}: the next page only at the end of the hits (${calls().length} calls, ${await tiles()} hits)${kept}`,
+  )
+  await toEnd()
+  await wait(1000)
+  rule('R8', calls().length === want(2), `${tag}: no more pages than there are`)
+  // the artist: 10 albums, the next 10 only when swiped to the end
+  if (!(await clickText(page, '.srch-wish', 'Wunsch Künstler')) || (await topTag(page)) !== 'app-search-artist')
+    throw new Error('no page for the artist')
+  await wait(800)
+  rule('R8', calls().length === want(3), `${tag}: the artist's first 10 albums${kept} (${calls().length} calls)`)
+  // swiping as a finger does (the coverflow and the km stage alike): to the left until more come or the end is reached
+  const swipe = async () => {
+    const box = await page.evaluate(() => {
+      const el = document.querySelector('app-search-artist ion-content')
+      const r = el?.getBoundingClientRect()
+      return r ? { x: r.left + r.width / 2, y: r.top + r.height / 2, w: r.width } : null
+    })
+    if (!box) throw new Error('no covers on the artist page')
+    await page.mouse.move(box.x + box.w * 0.3, box.y)
+    await page.mouse.down()
+    for (let i = 1; i <= 10; i++) await page.mouse.move(box.x + box.w * 0.3 - (box.w * 0.6 * i) / 10, box.y)
+    await page.mouse.up()
+    await wait(700)
+  }
+  const name = () =>
+    page.evaluate(
+      () =>
+        document
+          .querySelector('app-search-artist .km-stage-item, app-search-artist swiper-slide')
+          ?.closest('mupi-swiper')?.textContent?.length ?? 0,
+    )
+  let swipes = 0
+  while (calls().length < want(4) && swipes++ < 12) await swipe()
+  if (!first) for (let i = 0; i < 6; i++) await swipe()
+  rule(
+    'R8',
+    calls().length === want(4),
+    `${tag}: the next 10 albums when swiped to the end${kept} (${calls().length} calls)`,
+  )
+  swipes = 0
+  while (calls().length < want(5) && swipes++ < 12) await swipe()
+  for (let i = 0; i < 6; i++) await swipe()
+  rule(
+    'R8',
+    calls().length === want(5),
+    `${tag}: all 23 albums in 3 pages, no more asked${kept} (${calls().length} calls)`,
+  )
+  void name
+  // an album: only "wish", the tab, back to the search, the parents' list
+  if (!(await clickFrontCover(page)) || (await topTag(page)) !== 'app-search-album')
+    throw new Error('no page for the album')
+  const words = await page.evaluate((top) => eval(top)?.innerText ?? '', TOP)
+  const o = await overflow(page)
+  rule('R3', !o.scrolls && !o.below, `${tag}: wish page fits the screen`)
+  if (first) {
+    rule(
+      'R8',
+      words.includes('Wish for it') && !words.includes('Play') && !words.includes('To the start page'),
+      `${tag}: an album of Spotify can be wished, not played or put on the start page`,
+    )
+    await clickText(page, '.sa-btn', 'Wish for it')
+    await clickText(page, '.sa-btn', 'Music')
+    await wait(1000)
+    const note = await page.evaluate(() => document.querySelector('app-search .srch-toast')?.textContent ?? '')
+    rule(
+      'R8',
+      (await topTag(page)) === 'app-search' && /Wish sent/.test(note),
+      `${tag}: the wish sent, back at the search ("${note.trim()}")`,
+    )
+  } else {
+    // (the album the first run wished: shown as wished, nothing to tap - then back to the search)
+    rule(
+      'R8',
+      words.includes('Wished') &&
+        !words.includes('Wish for it') &&
+        (await visibleCount(page, '.sa-wished[disabled]')) === 1,
+      `${tag}: an album wished already says so, nothing to tap`,
+    )
+    await page.click('app-search-album [data-mupi-back]')
+    await wait(900)
+    await page.click('app-search-artist [data-mupi-back]')
+    await wait(900)
+    rule('R8', (await topTag(page)) === 'app-search', `${tag}: back to the search`)
+  }
+  const list = JSON.parse(fs.readFileSync(path.join(dir, 'config', 'wishes.json'), 'utf8'))
+  rule(
+    'R8',
+    list.filter((w) => w.status === 'open' && w.category === 'music').length >= 1,
+    `${tag}: the wish waits for the parents under the chosen tab`,
+  )
+  // the same artist again: nothing asked (kept on the display)
+  const asked = calls().length
+  await clickText(page, '.srch-wish', 'Wunsch Künstler')
+  await wait(800)
+  rule(
+    'R8',
+    (await topTag(page)) === 'app-search-artist' && calls().length === asked,
+    `${tag}: the artist again asks nothing`,
+  )
+  await page.click('app-search-artist [data-mupi-back]')
+  await wait(900)
+  rule(
+    'R8',
+    calls().length === want(5),
+    `${tag}: Spotify asked ${calls().length} times in all${first ? ' (2 search pages, 3 album pages)' : kept}`,
+  )
+}
+
+/** R10: the parents' app, page "Wünsche" - the wish of the run before, approved */
+async function appWishes(browser, dir) {
+  const page = await browser.newPage()
+  await page.setViewport({ width: 1280, height: 900, deviceScaleFactor: 1 })
+  try {
+    await page.goto(`http://localhost:${STATIC_PORT}/app/#/wuensche`, { waitUntil: 'networkidle2' })
+    await wait(2500)
+    if (shots) await page.screenshot({ path: path.join(shots, 'app-wuensche.png') })
+    const text = await page.evaluate(() => document.body.innerText)
+    const wished = JSON.parse(fs.readFileSync(path.join(dir, 'config', 'wishes.json'), 'utf8')).find((w) => w.status === 'open')
+    rule('R10', !!wished && text.includes(wished.name) && (await page.$('[data-wish-yes]')) !== null, `app: the wish "${wished?.name}" waits on the page "Wünsche"`)
+    await page.click('[data-wish-yes]')
+    await wait(2000)
+    const rows = JSON.parse(fs.readFileSync(path.join(dir, 'config', 'data.json'), 'utf8'))
+    const row = rows.find((r) => r.id === wished?.spotifyId || r.artistid === wished?.spotifyId || r.showid === wished?.spotifyId)
+    rule('R10', !!row && row.category === wished.category && row.kidAdded === true, `app: approved, on the start page under the child's tab (${row?.category})`)
+    const after = JSON.parse(fs.readFileSync(path.join(dir, 'config', 'wishes.json'), 'utf8')).find((w) => w.id === wished?.id)
+    rule('R10', after?.status === 'approved' && (await page.$(`[data-wish-yes="${wished?.id}"]`)) === null, 'app: the wish is decided, not offered again')
+  } catch (err) {
+    rule('R10', false, `app: the page "Wünsche" could not be checked (${firstLine(err)})`)
+  } finally {
+    await page.close()
+  }
+}
+
+/** R9: the wishes' switch off - no Spotify search, nothing asked, the rest as before */
+async function wishesOff(browser, dir) {
+  const file = path.join(dir, 'config', 'mupiboxconfig.json')
+  const box = JSON.parse(fs.readFileSync(file, 'utf8'))
+  box.mupibox.displayWishes = false
+  fs.writeFileSync(file, JSON.stringify(box, null, 2))
+  await wait(1500)
+  const page = await browser.newPage()
+  await page.setViewport({ width: 1024, height: 600, deviceScaleFactor: 1 })
+  const asked = []
+  page.on('request', (r) => asked.push(r.url()))
+  try {
+    await page.goto(`http://localhost:${STATIC_PORT}/search`, { waitUntil: 'networkidle2' })
+    await wait(2500)
+    rule('R9', (await visibleCount(page, '.srch-tip')) > 0, 'switch off: the tips as before')
+    await type(page, ['F', 'R', 'I'])
+    rule(
+      'R9',
+      (await visibleCount(page, '.srch-wish-btn, .srch-wish')) === 0,
+      'switch off: no Spotify search on the display',
+    )
+    rule(
+      'R9',
+      (await visibleCount(page, '.srch-pod-btn:not(.srch-wish-btn)')) === 1,
+      'switch off: the podcasts for children as before',
+    )
+    const opened = await clickText(page, '.srch-hit', 'Fritzi Funkel')
+    rule(
+      'R9',
+      opened && (await topTag(page)) === 'app-search-artist',
+      'switch off: an artist of the pool opens as before',
+    )
+    rule('R9', !asked.some((u) => u.includes('/api/wishes')), 'switch off: nothing asked about wishes')
+  } finally {
+    await page.close()
+  }
+}
+
 async function podcasts(page, tag, asked) {
   const podAsks = () => asked.filter((u) => u.includes('/api/search-podcasts?')).length
   rule('R6', podAsks() === 0, `${tag}: no podcast search while typing`)
-  rule('R6', (await visibleCount(page, '.srch-pod-btn')) === 1, `${tag}: the tile "podcasts for children" is there`)
-  await page.click('app-search .srch-pod-btn')
+  rule(
+    'R6',
+    (await visibleCount(page, '.srch-pod-btn:not(.srch-wish-btn)')) === 1,
+    `${tag}: the tile "podcasts for children" is there`,
+  )
+  await page.click('app-search .srch-pod-btn:not(.srch-wish-btn)')
   await wait(1200)
   rule('R6', podAsks() === 1, `${tag}: the tile asks once`)
   const names = await page.evaluate(() =>
@@ -640,6 +925,8 @@ async function main() {
       { width: 800, height: 480 },
     ])
       await run(browser, dir, size)
+    await appWishes(browser, dir)
+    await wishesOff(browser, dir)
   } catch (err) {
     console.error(`display check could not run: ${err?.message ?? err}`)
     process.exitCode = 2

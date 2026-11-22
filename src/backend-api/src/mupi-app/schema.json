@@ -614,6 +614,16 @@
    ]
   },
   {
+   "id": "wuensche",
+   "slug": "wuensche",
+   "area": "bibliothek",
+   "parent": "bibliothek",
+   "title": "Wünsche",
+   "description": "",
+   "icon": "bulb",
+   "sections": []
+  },
+  {
    "id": "podsuche",
    "slug": "podcast-search",
    "area": "bibliothek",

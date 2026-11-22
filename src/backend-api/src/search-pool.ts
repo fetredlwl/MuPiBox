@@ -46,7 +46,8 @@ export interface PoolEntry {
 export interface PoolEvent {
   id: number
   at: string
-  what: 'added' | 'removed'
+  /** (fork "wishes": 'wish' - the child wished it from Spotify, the parents decide in the app, see wishes.ts) */
+  what: 'added' | 'removed' | 'wish'
   kind: PoolKind
   name: string
   artist: string
@@ -306,6 +307,12 @@ export class SearchPool {
 
   // ---------- the library: what the child put in ----------
 
+  /** what is in the library ("album:<id>", "artist:<id>", …): a wish of something there is not made (wishes.ts) */
+  async libraryIdents(): Promise<Set<string>> {
+    const data = await this.readLibrary()
+    return new Set((data ?? []).map((r) => identOf(r)).filter((i): i is string => !!i))
+  }
+
   private async readLibrary(): Promise<Record<string, unknown>[] | null> {
     const data = await readJson<unknown>(this.deps.dataFile, null)
     return Array.isArray(data) ? (data as Record<string, unknown>[]) : null
@@ -369,10 +376,28 @@ export class SearchPool {
     return this.putInLibrary({ kind: 'podcast', spotifyId: '', ...show }, category, 'kids-podcast')
   }
 
+  /**
+   * A wish the parents approved (wishes.ts): on the start page under the tab the child chose, as one of the child's own
+   * (it may take it out again). No event: the parents did it themselves.
+   */
+  async addWished(
+    what: { kind: 'album' | 'artist' | 'show'; spotifyId: string; name: string; artist: string; cover: string },
+    category: LibraryCategory,
+    wishId: string,
+  ): Promise<'added' | 'already' | 'locked'> {
+    return this.putInLibrary(what, category, wishId, false)
+  }
+
+  /** an event for Home Assistant (/search_events) - the child's wish (wishes.ts) */
+  announce(event: Omit<PoolEvent, 'id' | 'at'>): Promise<void> {
+    return this.note(event)
+  }
+
   private async putInLibrary(
     what: { kind: PoolKind; spotifyId: string; feedUrl?: string; name: string; artist: string; cover: string },
     category: LibraryCategory,
     poolId: string,
+    told = true,
   ): Promise<'added' | 'already' | 'locked'> {
     const row = libraryRow(what, category, poolId)
     const ident = identOf(row)
@@ -387,7 +412,7 @@ export class SearchPool {
       await this.deps.writeLibrary(data)
       return 'added' as const
     })
-    if (result === 'added')
+    if (result === 'added' && told)
       await this.note({
         what: 'added',
         kind: what.kind,

@@ -541,7 +541,11 @@ export function buildApp(deps: HaDeps): Express {
   v1.get('/search_events', requireScope('read'), async (req, res) => {
     const after = Number.parseInt(String(req.query.after ?? '0'), 10) || 0
     const list = deps.searchPoolEvents ? await deps.searchPoolEvents().catch(() => []) : []
-    res.json({ events: list.filter((e) => e.id > after), last_id: list[list.length - 1]?.id ?? 0 })
+    // (fork "wishes": a wish of the child with the link to the app's page "Wünsche" - by the name Home Assistant asks
+    // the box by, the app is on its https port)
+    const host = String(req.headers.host ?? '').replace(/:\d+$/, '')
+    const url = /^[\w.[\]:-]+$/.test(host) ? `https://${host}/app/#/wuensche` : ''
+    res.json({ events: list.filter((e) => e.id > after).map((e) => (e.what === 'wish' && url ? { ...e, url } : e)), last_id: list[list.length - 1]?.id ?? 0 })
   })
 
   v1.get('/state', requireScope('read'), async (_req, res) => {

@@ -54,6 +54,22 @@ export const kidsPodcastEntry = (p: KidsPodcast): PoolEntry => ({
   cover: p.image,
 })
 
+/** (fork "wishes") something on Spotify the child may wish (backend wishes.ts) */
+export type WishKind = 'album' | 'artist' | 'show'
+export interface WishItem {
+  kind: WishKind
+  id: string
+  name: string
+  artist: string
+  cover: string
+}
+/** the pages of a search or of an artist's albums loaded so far (kept on the display: back and again ask nothing) */
+export interface WishPages {
+  items: WishItem[]
+  more: boolean
+  next: number
+}
+
 /** the names of the tabs in the box's language (display-texts.json) and their icons */
 export const CATEGORY_LABEL: Record<string, { label: DisplayTextKey; icon: string }> = {
   audiobook: { label: 'searchCatAudiobook', icon: 'book-outline' },
@@ -72,6 +88,12 @@ export class SearchFlowService {
 
   /** the tabs a pool hit can go to (those shown on the start page; set by the search) */
   readonly categories = signal<CategoryType[]>([])
+  /** the open wishes ("kind:id"): marked "gewünscht", not wished again */
+  readonly wished = signal<Set<string>>(new Set())
+  // the pages loaded on this display (a search by its text, an artist by its id) - kept until the display reloads
+  private readonly searchPages = new Map<string, WishPages>()
+  private readonly artistPages = new Map<string, WishPages>()
+  private readonly asking = new Set<string>()
   /** what the search says when it is shown again (added, already there, failed) */
   private note = ''
   /** the library changed (something was put on the start page): the search reads it again */
@@ -82,6 +104,95 @@ export class SearchFlowService {
   /** the search goes to its artist or album page */
   openedOwnPage(): void {
     this.ownPage = true
+  }
+
+  // ---------- wishes from Spotify (backend wishes.ts) ----------
+
+  /** the open wishes, from the box (no request to Spotify) */
+  loadWished(): void {
+    this.http.get<{ wishes: { kind: string; id: string }[] }>(`${this.api}/wishes/mine`).subscribe({
+      next: (r) => this.wished.set(new Set((r?.wishes ?? []).map((w) => `${w.kind}:${w.id}`))),
+      error: () => {},
+    })
+  }
+
+  /** the pages of a search loaded so far, without asking (undefined: none yet) */
+  searchKept(q: string): WishPages | undefined {
+    return this.searchPages.get(q)
+  }
+
+  artistKept(id: string): WishPages | undefined {
+    return this.artistPages.get(id)
+  }
+
+  /**
+   * The first page of a search, or the next one (more): asked of the box only when not loaded on this display; the box
+   * keeps each page a day. 'blocked': Spotify blocks the catalog now (nothing was asked).
+   */
+  searchWishes(q: string, more = false): Promise<WishPages | 'blocked' | 'failed'> {
+    return this.pages(this.searchPages, `s|${q}`, q, more, (offset) => ({
+      url: `${this.api}/wishes/search`,
+      params: { q, offset },
+    }))
+  }
+
+  artistWishes(id: string, more = false): Promise<WishPages | 'blocked' | 'failed'> {
+    return this.pages(this.artistPages, `a|${id}`, id, more, (offset) => ({
+      url: `${this.api}/wishes/artist`,
+      params: { id, offset },
+    }))
+  }
+
+  private async pages(
+    kept: Map<string, WishPages>,
+    lock: string,
+    key: string,
+    more: boolean,
+    request: (offset: number) => { url: string; params: Record<string, string | number> },
+  ): Promise<WishPages | 'blocked' | 'failed'> {
+    const have = kept.get(key)
+    if (have && !more) return have
+    if (have && !have.more) return have
+    if (this.asking.has(lock)) return have ?? 'failed'
+    if (this.spotifyBlock.catalog()) return 'blocked'
+    const offset = have?.next ?? 0
+    this.asking.add(lock)
+    try {
+      const { url, params } = request(offset)
+      const r = await firstValueFrom(this.http.get<{ items: WishItem[]; more: boolean }>(url, { params }))
+      const pages = { items: [...(have?.items ?? []), ...(r?.items ?? [])], more: r?.more === true, next: offset + 10 }
+      kept.set(key, pages)
+      return pages
+    } catch (err) {
+      const blocked = (err as { error?: { error?: string } })?.error?.error === 'spotify_blocked'
+      if (blocked) void this.spotifyBlock.refresh()
+      return blocked ? 'blocked' : 'failed'
+    } finally {
+      this.asking.delete(lock)
+    }
+  }
+
+  /** the child wishes it for a tab: the box tells the parents; back to the search, which says it was sent */
+  async wish(item: WishItem, category: CategoryType): Promise<void> {
+    try {
+      const r = await firstValueFrom(
+        this.http.post<{ ok: boolean; result: 'wished' | 'already' | 'there' }>(`${this.api}/wishes`, {
+          kind: item.kind,
+          id: item.id,
+          category,
+        }),
+      )
+      this.note =
+        r?.result === 'there'
+          ? this.texts.text('wishThere', { n: item.name })
+          : r?.result === 'already'
+            ? this.texts.text('wishAlready', { n: item.name })
+            : this.texts.text('wishSent', { n: item.name })
+      this.wished.update((s) => new Set([...s, `${item.kind}:${item.id}`]))
+    } catch {
+      this.note = this.texts.text('searchFailed')
+    }
+    void this.navController.navigateBack(['/search'])
   }
 
   catLabel(category: string): string {

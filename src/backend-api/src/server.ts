@@ -56,6 +56,7 @@ import { readEmbeddedPicture } from './embedded-cover'
 import { acquireLock, releaseLock, staleReason } from './file-lock'
 import { registerSearchPodcastsRoutes } from './search-podcasts'
 import { registerSearchPoolRoutes } from './search-pool'
+import { keptWishAlbums, registerWishesRoutes } from './wishes'
 import { type AlbumFillDeps, fillSpotifyAlbums, isBareAlbum, startSpotifyAlbumFill } from './spotify-album-fill'
 import { coverHidden } from './hidden-covers'
 import { OnlineCovers } from './online-covers'
@@ -1233,6 +1234,39 @@ registerSearchPodcastsRoutes(app, {
         tips: async () => JSON.parse(fs.readFileSync(String(process.env.MUPIBOX_PODCAST_FIXTURE), 'utf8')),
       }
     : {}),
+})
+
+// (fork "wishes") wishes from Spotify (Bedienung › Suche › "Wünsche aus Spotify", the app's page "Wünsche");
+// MUPIBOX_SPOTIFY_FIXTURE: invented pages for the development server and tools/display-check, each call written to
+// MUPIBOX_SPOTIFY_FIXTURE_LOG (the check counts them)
+const spotifyFixture = !productionServe && process.env.MUPIBOX_SPOTIFY_FIXTURE ? String(process.env.MUPIBOX_SPOTIFY_FIXTURE) : ''
+const fixtureCall = (what: string) => {
+  if (process.env.MUPIBOX_SPOTIFY_FIXTURE_LOG) fs.appendFileSync(String(process.env.MUPIBOX_SPOTIFY_FIXTURE_LOG), `${what}\n`)
+  return JSON.parse(fs.readFileSync(spotifyFixture, 'utf8'))
+}
+registerWishesRoutes(app, {
+  configDir: configBasePath,
+  cacheDir: path.join(process.cwd(), 'cache'),
+  pool: searchPool,
+  getMupiboxConfig: () => getMupiboxConfigSync() as unknown as Record<string, unknown> | undefined,
+  searchPage: async (q, offset) => {
+    if (spotifyFixture) return fixtureCall(`search ${q} ${offset}`).search[String(offset)]
+    if (!spotifyApiService) throw Object.assign(new Error('no Spotify'), { status: 503 })
+    return spotifyApiService.searchWishPage(q, offset)
+  },
+  artistPage: async (artistId, offset) => {
+    const pick = (images?: { url?: string }[]) => images?.[1]?.url ?? images?.[0]?.url ?? ''
+    if (spotifyFixture) {
+      const all = (fixtureCall(`artist ${artistId} ${offset}`).artists[artistId] ?? []) as { id: string; name: string; cover: string }[]
+      return { items: all.slice(offset, offset + 10), total: all.length }
+    }
+    if (!spotifyApiService) throw Object.assign(new Error('no Spotify'), { status: 503 })
+    const r = await spotifyApiService.getArtistAlbums(artistId, 'album,single,compilation', 10, offset)
+    return { items: r.items.map((a) => ({ id: a.id, name: a.name, cover: pick(a.images as { url?: string }[]) })), total: r.total }
+  },
+  keptAlbums: spotifyFixture ? () => undefined : keptWishAlbums,
+  session: requireSession,
+  csrf: requireCsrf,
 })
 
 // (fork "wishes") whether a quota block of the catalog leaves the box playing: Sync-Einstellungen › Spotify-Sperren

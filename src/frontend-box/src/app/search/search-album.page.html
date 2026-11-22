@@ -43,7 +43,16 @@
         @if (playable()) {
           <button class="sa-btn" type="button" [class.sa-off]="spotifyBlock.player()" (click)="play()"><span class="sa-ic">▶</span>{{ texts.text('searchPlay') }}</button>
         }
-        <button class="sa-btn sa-main" type="button" (click)="toStart()"><span class="sa-ic">+</span>{{ texts.text('searchToStart') }}</button>
+        @if (wish()) {
+          <!-- (wished: the parents decide in the app; nothing played before) -->
+          @if (wished()) {
+            <button class="sa-btn sa-wished" type="button" disabled><span class="sa-ic">★</span>{{ texts.text('wishWished') }}</button>
+          } @else {
+            <button class="sa-btn sa-main sa-wish" type="button" (click)="toStart()"><span class="sa-ic">★</span>{{ texts.text('wishButton') }}</button>
+          }
+        } @else {
+          <button class="sa-btn sa-main" type="button" (click)="toStart()"><span class="sa-ic">+</span>{{ texts.text('searchToStart') }}</button>
+        }
       }
     </div>
   </div>

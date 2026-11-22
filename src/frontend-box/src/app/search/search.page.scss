@@ -347,6 +347,34 @@ app-search {
     color: var(--srch-on);
   }
 
+  // wishes from Spotify: a star in the corner (the parents decide); the end of the list that asks for the next page
+  .srch-star {
+    position: absolute;
+    right: 4px;
+    bottom: 4px;
+    width: 30px;
+    height: 30px;
+    border-radius: 15px;
+    background: #f5b301;
+    color: #2a1d00;
+    display: grid;
+    place-items: center;
+    font-size: 18px;
+    line-height: 1;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
+  }
+
+  .srch-artist .srch-star {
+    right: 10px;
+    bottom: 10px;
+  }
+
+  .srch-end {
+    flex: 0 0 1px;
+    width: 1px;
+    height: 1px;
+  }
+
   // Spotify blocks the box and does not play: its hits grey (a tap tells why)
   .srch-off {
     filter: grayscale(1);

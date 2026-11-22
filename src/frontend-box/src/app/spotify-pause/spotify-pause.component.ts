@@ -73,5 +73,7 @@ export class SpotifyPauseComponent {
   readonly mode = input<'float' | 'toast'>('toast')
 
   protected readonly shown = computed(() => (this.mode() === 'toast' ? this.block.told() : this.block.player()))
-  protected readonly text = computed(() => this.texts.text('spotifyPausePlayer'))
+  protected readonly text = computed(() =>
+    this.texts.text(this.mode() === 'toast' && this.block.toldWhat() === 'catalog' ? 'wishPaused' : 'spotifyPausePlayer'),
+  )
 }

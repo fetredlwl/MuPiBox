@@ -1433,15 +1433,19 @@ function nextQuiet(schedule) {
 }
 
 async function loadNotices(root) {
-  const [hat, sync, access, auth, tools, legacy] = await Promise.all([
+  const [hat, sync, access, auth, tools, legacy, wishes] = await Promise.all([
     api('/api/mupihat'),
     api('/api/spotify-sync/status'),
     api(`${API}/spotify-access`),
     api(`${API}/auth-state`),
     api(`${API}/missing-programs`),
     api(`${API}/legacy-admin`),
+    api(`${API}/wishes`),
   ])
   const notes = []
+  // (fork "wishes") what the child wished from Spotify and waits for the parents
+  const openWishes = wishes.ok ? (wishes.body?.open?.length ?? 0) : 0
+  if (openWishes) notes.push(['bulb', openWishes === 1 ? 'Ein Wunsch wartet' : `${openWishes} Wünsche warten`, 'Antippen, um sie freizugeben oder abzulehnen.', 'wuensche'])
   // the update to 5.0.12 switched the previous admin interface off (no PHP in the home network): said once, until it is
   // closed or switched (System › Experten)
   if (legacy.ok && legacy.body?.offByUpdate && !remembered('mupi-admin-off-notice')) {
@@ -2473,6 +2477,9 @@ async function loadLib() {
     api('/api/online-covers'),
     ...CATS.map(([c]) => api(`/api/library/artists?category=${c}`)),
   ])
+  // (fork "wishes": the tile "Wünsche" - when they are on or some are open)
+  const wishes = await api(`${API}/wishes`)
+  lib.wishes = wishes.ok ? { on: wishes.body?.on === true, open: wishes.body?.open?.length ?? 0 } : null
   lib.items = Array.isArray(data.body) ? data.body : []
   lib.sync = sync.ok ? sync.body : null
   lib.nas = Array.isArray(nas.body) ? nas.body : []
@@ -2551,6 +2558,7 @@ function drawLibTiles() {
     ['verwaltet', 'lib', 'Verwaltete Inhalte', lib.subs ? `${a} ${a === 1 ? 'Abo' : 'Abos'} · ${al} ${al === 1 ? 'Album' : 'Alben'}` : ''],
     ['nas', 'server', 'NAS', lib.nasProfile ? `Profil ${lib.nasProfile}` : `${lib.nas.length} Ordner`],
     ['cover', 'image', 'Cover', lib.covers != null ? `${lib.covers} gefunden` : 'Eigene Bilder'],
+    ...(lib.wishes && (lib.wishes.on || lib.wishes.open) ? [['wuensche', 'bulb', 'Wünsche', lib.wishes.open ? `${lib.wishes.open} offen` : 'Keine offenen']] : []),
   ]
   box.innerHTML = tiles
     .map(([id, ic, t, sub]) => `<button class="lib-tile" data-go="${id}"><span class="tile">${icon(ic, 18)}</span><span class="lbl"><b>${esc(t)}</b><small>${esc(sub)}</small></span></button>`)
@@ -8221,6 +8229,8 @@ async function loadControls() {
   state.values.set('appPool', o.appSearchPool === true)
   // (podcasts for children in the display's search, put on the start page by the child - search-podcasts.ts)
   state.values.set('dispPodcasts', o.displayPodcasts === true)
+  // (wishes from Spotify in the display's search, approved by the parents - wishes.ts)
+  state.values.set('dispWishes', o.displayWishes === true)
   // the search pool and what the child put in from it (shown under "Suche")
   const pool = await api(`${API}/search-pool`)
   disp.pool = pool.ok ? pool.body : { entries: [], own: [] }
@@ -8233,6 +8243,60 @@ async function loadControls() {
   state.values.set('epNew', o.newEpisodes !== false)
   state.values.set('epNewDays', `${o.newEpisodeDays ?? 7} Tage`)
   state.values.set('epProgress', o.episodeProgress !== false)
+}
+
+// (fork "wishes") Wünsche: what the child wished from Spotify on the display (backend wishes.ts) - approved, it goes on
+// the start page under the tab the child chose; Home Assistant links here (#/wuensche)
+const wishesState = { on: false, open: [], decided: [] }
+const WISH_KIND = { album: 'Album', artist: 'Künstler', show: 'Podcast' }
+const WISH_CAT = { audiobook: 'Hörspiele', music: 'Musik', other: 'Radio & Podcasts' }
+
+async function loadWishes() {
+  const r = await api(`${API}/wishes`)
+  if (!r.ok) throw new Error(`wishes ${r.status}`)
+  Object.assign(wishesState, { on: r.body?.on === true, open: r.body?.open ?? [], decided: r.body?.decided ?? [] })
+}
+
+function wishesTop() {
+  const thumb = (img) => `<span class="lib-thumb">${img ? `<img src="${esc(img)}" alt="" loading="lazy">` : ''}${icon('music', 18)}</span>`
+  const when = (iso) => (iso ? new Date(iso).toLocaleString(LOCALE, { dateStyle: 'short', timeStyle: 'short' }) : '')
+  const row = (w, buttons) =>
+    `<div class="entry lib-row">${thumb(w.cover)}<span class="lbl"><b translate="no">${esc(w.name)}</b><small><span translate="no">${esc(w.artist || '')}</span>${w.artist ? ' · ' : ''}${esc(WISH_KIND[w.kind] ?? w.kind)} · ${esc(WISH_CAT[w.category] ?? w.category)} · ${esc(when(w.at))}</small></span>${buttons}</div>`
+  const open = wishesState.open
+  const decided = wishesState.decided.slice(0, 20)
+  return [
+    `<p class="page-intro">${esc('Was das Kind in der Suche am Display bei Spotify gefunden und sich gewünscht hat. Freigegeben kommt es auf die Startseite – unter den Reiter, den das Kind gewählt hat.')}</p>`,
+    ...(wishesState.on ? [] : [`<p class="help">${esc('Wünsche sind ausgeschaltet: Display & Bedienung › Suche › „Wünsche aus Spotify“.')}</p>`]),
+    `<section class="card wide"><h2>${esc('Offene Wünsche')}</h2>${
+      open.length
+        ? `<div class="rows">${open.map((w) => row(w, `<span class="btns" style="flex-wrap:nowrap"><button class="btn" data-wish-no="${esc(w.id)}">${esc('Ablehnen')}</button><button class="btn primary" data-wish-yes="${esc(w.id)}">${icon('check', 18)}${esc('Freigeben')}</button></span>`)).join('')}</div>`
+        : `<p class="help" style="margin:0">${esc('Keine offenen Wünsche.')}</p>`
+    }</section>`,
+    ...(decided.length
+      ? [`<section class="card wide"><h2>${esc('Entschieden')}</h2><div class="rows">${decided.map((w) => row(w, `<span class="in-lib">${esc(w.status === 'approved' ? 'Freigegeben' : 'Abgelehnt')}</span>`)).join('')}</div></section>`]
+      : []),
+  ]
+}
+
+function mountWishes(root, page) {
+  for (const img of root.querySelectorAll('.lib-thumb img')) img.addEventListener('error', () => img.remove(), { once: true })
+  const decide = async (b, approve) => {
+    const w = wishesState.open.find((x) => x.id === (approve ? b.dataset.wishYes : b.dataset.wishNo))
+    if (!w) return
+    b.disabled = true
+    const r = await api(`${API}/wishes/decide`, { method: 'POST', body: { id: w.id, approve } })
+    if (!r.ok) {
+      b.disabled = false
+      return toast('Das hat nicht geklappt', 'info')
+    }
+    toast(approve ? `Freigegeben: ${w.name} – steht unter ${WISH_CAT[w.category] ?? w.category}` : `Abgelehnt: ${w.name}`)
+    if (approve) libChanged()
+    lib.items = null
+    await loadWishes()
+    renderPage(page, false)
+  }
+  for (const b of root.querySelectorAll('[data-wish-yes]')) b.onclick = () => decide(b, true)
+  for (const b of root.querySelectorAll('[data-wish-no]')) b.onclick = () => decide(b, false)
 }
 
 // The search pool ("Nur in der Suche") under Bedienung › Suche: what is allowed, with "Entfernen", and what the child
@@ -11977,6 +12041,7 @@ const CONTROLLERS = {
       })
     },
   },
+  wuensche: { load: loadWishes, top: wishesTop, sections: () => [], mount: mountWishes },
   verwaltet: {
     load: loadManaged,
     top: managedTop,
@@ -12525,6 +12590,12 @@ const CONTROLLERS = {
             },
             {
               type: 'toggle',
+              key: 'dispWishes',
+              label: 'Wünsche aus Spotify',
+              help: 'In der Suche am Display sucht eine Kachel „Bei Spotify suchen“ nach Alben, Künstlern und Podcasts. Das Kind kann sich etwas wünschen und den Reiter wählen; du gibst es in der App frei (Bibliothek › Wünsche), Home Assistant bekommt eine Nachricht mit Link. Spotify wird erst beim Tippen auf die Kachel gefragt, jeweils 10 Treffer, weitere erst beim Weiterblättern; jede Seite merkt sich die Box einen Tag. Aus: keine Spotify-Suche am Display, alles andere bleibt.',
+            },
+            {
+              type: 'toggle',
               key: 'dispPodcasts',
               label: 'Podcasts für Kinder in der Suche',
               help: 'In der Suche am Display sucht eine Kachel „Podcasts für Kinder“ in Apples Podcast-Verzeichnis (bei Deutsch auch in der ARD Audiothek) – nur Sendungen der Kinder-Kategorien. Das Kind kann sie ohne Freigabe auf die Startseite holen und selbst wieder entfernen. Gesucht wird erst beim Tippen auf die Kachel; der Suchbegriff geht dabei an Apple bzw. die ARD.',
@@ -12603,6 +12674,7 @@ const CONTROLLERS = {
       if (key === 'setTimer') return saveDisplayOptions({ settingsAccessTimer: v }, `Einstellungen nach ${fmtSec(v)}`)
       if (key === 'outPick') return saveDisplayOptions({ outputPicker: !!v }, v ? 'Kinder können am Display umschalten' : 'Umschalten nur in der App')
       if (key === 'dispSearch') return saveDisplayOptions({ displaySearch: !!v }, v ? 'Suche auf dem Display an' : 'Suche auf dem Display aus')
+      if (key === 'dispWishes') return saveDisplayOptions({ displayWishes: !!v }, v ? 'Wünsche aus Spotify an' : 'Wünsche aus Spotify aus')
       if (key === 'dispPodcasts') return saveDisplayOptions({ displayPodcasts: !!v }, v ? 'Podcasts für Kinder in der Suche an' : 'Podcasts für Kinder in der Suche aus')
       if (key === 'appPool') {
         const ok = await saveDisplayOptions({ appSearchPool: !!v }, v ? '„Nur in der Suche“ in der App an' : '„Nur in der Suche“ in der App ausgeblendet')

@@ -98,6 +98,9 @@ export class SwiperComponent<T> {
   private static readonly positions = new Map<string, number>()
   public roundImages = input<boolean>(false)
   public elementClicked = output<SwiperData<T>>()
+  /** (fork "wishes") the list stands on one of its last three entries: the page loads the next ones (search › wishes) */
+  public nearEnd = output<void>()
+  private nearEndAt = -1
 
   // Track URLs we've already triggered a preload-fetch for, so we don't
   // re-create Image() objects for the same cover on every slide change.
@@ -379,6 +382,16 @@ export class SwiperComponent<T> {
     this.cachedSwiperPosition = swiper.activeIndex
     this.preloadCoversNear(swiper.activeIndex)
     this.maybeGrow()
+    this.tellNearEnd(swiper.activeIndex)
+  }
+
+  // (once per length of the list: more entries come, the next end is told again)
+  private tellNearEnd(index: number): void {
+    const count = this.data().length
+    if (count > 0 && index >= count - 3 && this.nearEndAt !== count) {
+      this.nearEndAt = count
+      this.nearEnd.emit()
+    }
   }
 
   private preloadCoversNear(activeIndex: number): void {
@@ -687,6 +700,7 @@ export class SwiperComponent<T> {
     this.cachedSwiperPosition = c
     this.preloadCoversNear(c)
     this.maybeGrow()
+    this.tellNearEnd(c)
     if (c !== before && this.kmTheme.stageAutoRead()) {
       this.readText(data[c].name)
     }
@@ -752,6 +766,7 @@ export class SwiperComponent<T> {
     this.cachedSwiperPosition = c
     this.preloadCoversNear(c)
     this.maybeGrow()
+    this.tellNearEnd(c)
   }
 
   // The cover in the middle opens, a side cover comes to the middle.

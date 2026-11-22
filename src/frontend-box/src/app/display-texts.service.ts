@@ -108,6 +108,17 @@ export const DEFAULT_DISPLAY_TEXTS = {
   searchPodcastsLoading: 'Searching …',
   searchPodcastsNone: 'No podcasts for children found.',
   searchTipsLabel: 'Tips for children',
+  // (fork "wishes") wishes from Spotify (search, its artist and album page): {n} = a name
+  wishSearchTile: 'Search Spotify',
+  wishLoading: 'Searching Spotify …',
+  wishNone: 'Nothing found on Spotify.',
+  wishButton: 'Wish for it',
+  wishWhole: 'Wish for everything by {n}',
+  wishWished: 'Wished',
+  wishSent: 'Wish sent: {n}',
+  wishAlready: 'You have wished for {n} already.',
+  wishThere: '{n} is on the box already.',
+  wishPaused: 'Spotify is taking a break – try again later.',
 }
 export type DisplayTextKey = keyof typeof DEFAULT_DISPLAY_TEXTS
 type TextSet = Partial<Record<DisplayTextKey, string>>

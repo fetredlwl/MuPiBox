@@ -85,7 +85,17 @@
         "searchPodcastsButton": "Podcasts for children",
         "searchPodcastsLoading": "Searching …",
         "searchPodcastsNone": "No podcasts for children found.",
-        "searchTipsLabel": "Tips for children"
+        "searchTipsLabel": "Tips for children",
+        "wishSearchTile": "Search Spotify",
+        "wishLoading": "Searching Spotify …",
+        "wishNone": "Nothing found on Spotify.",
+        "wishButton": "Wish for it",
+        "wishWhole": "Wish for everything by {n}",
+        "wishWished": "Wished",
+        "wishSent": "Wish sent: {n}",
+        "wishAlready": "You have wished for {n} already.",
+        "wishThere": "{n} is on the box already.",
+        "wishPaused": "Spotify is taking a break – try again later."
       }
     },
     "de": {
@@ -172,7 +182,17 @@
         "searchPodcastsButton": "Podcasts für Kinder",
         "searchPodcastsLoading": "Suche …",
         "searchPodcastsNone": "Keine Podcasts für Kinder gefunden.",
-        "searchTipsLabel": "Tipps für Kinder"
+        "searchTipsLabel": "Tipps für Kinder",
+        "wishSearchTile": "Bei Spotify suchen",
+        "wishLoading": "Suche bei Spotify …",
+        "wishNone": "Bei Spotify nichts gefunden.",
+        "wishButton": "Wünschen",
+        "wishWhole": "Alles von {n} wünschen",
+        "wishWished": "Gewünscht",
+        "wishSent": "Wunsch gesendet: {n}",
+        "wishAlready": "{n} hast du dir schon gewünscht.",
+        "wishThere": "{n} ist schon auf der Box.",
+        "wishPaused": "Spotify macht gerade Pause – versuch es später noch einmal."
       }
     },
     "fr": {
@@ -259,7 +279,17 @@
         "searchPodcastsButton": "Podcasts pour enfants",
         "searchPodcastsLoading": "Recherche …",
         "searchPodcastsNone": "Aucun podcast pour enfants trouvé.",
-        "searchTipsLabel": "Idées pour les enfants"
+        "searchTipsLabel": "Idées pour les enfants",
+        "wishSearchTile": "Chercher sur Spotify",
+        "wishLoading": "Recherche sur Spotify …",
+        "wishNone": "Rien trouvé sur Spotify.",
+        "wishButton": "Le souhaiter",
+        "wishWhole": "Souhaiter tout de {n}",
+        "wishWished": "Souhaité",
+        "wishSent": "Souhait envoyé : {n}",
+        "wishAlready": "Tu as déjà souhaité {n}.",
+        "wishThere": "{n} est déjà sur la box.",
+        "wishPaused": "Spotify fait une pause – réessaie plus tard."
       }
     },
     "es": {
@@ -346,7 +376,17 @@
         "searchPodcastsButton": "Pódcasts para niños",
         "searchPodcastsLoading": "Buscando …",
         "searchPodcastsNone": "No se encontraron pódcasts para niños.",
-        "searchTipsLabel": "Ideas para niños"
+        "searchTipsLabel": "Ideas para niños",
+        "wishSearchTile": "Buscar en Spotify",
+        "wishLoading": "Buscando en Spotify …",
+        "wishNone": "No se encontró nada en Spotify.",
+        "wishButton": "Pedirlo",
+        "wishWhole": "Pedir todo de {n}",
+        "wishWished": "Pedido",
+        "wishSent": "Deseo enviado: {n}",
+        "wishAlready": "Ya pediste {n}.",
+        "wishThere": "{n} ya está en la caja.",
+        "wishPaused": "Spotify está en pausa: inténtalo más tarde."
       }
     },
     "it": {
@@ -433,7 +473,17 @@
         "searchPodcastsButton": "Podcast per bambini",
         "searchPodcastsLoading": "Ricerca …",
         "searchPodcastsNone": "Nessun podcast per bambini trovato.",
-        "searchTipsLabel": "Consigli per bambini"
+        "searchTipsLabel": "Consigli per bambini",
+        "wishSearchTile": "Cerca su Spotify",
+        "wishLoading": "Cerco su Spotify …",
+        "wishNone": "Niente trovato su Spotify.",
+        "wishButton": "Desiderarlo",
+        "wishWhole": "Desidera tutto di {n}",
+        "wishWished": "Desiderato",
+        "wishSent": "Desiderio inviato: {n}",
+        "wishAlready": "Hai già desiderato {n}.",
+        "wishThere": "{n} è già sul box.",
+        "wishPaused": "Spotify è in pausa – riprova più tardi."
       }
     },
     "nl": {
@@ -520,7 +570,17 @@
         "searchPodcastsButton": "Podcasts voor kinderen",
         "searchPodcastsLoading": "Zoeken …",
         "searchPodcastsNone": "Geen podcasts voor kinderen gevonden.",
-        "searchTipsLabel": "Tips voor kinderen"
+        "searchTipsLabel": "Tips voor kinderen",
+        "wishSearchTile": "Op Spotify zoeken",
+        "wishLoading": "Zoeken op Spotify …",
+        "wishNone": "Niets gevonden op Spotify.",
+        "wishButton": "Wensen",
+        "wishWhole": "Alles van {n} wensen",
+        "wishWished": "Gewenst",
+        "wishSent": "Wens verstuurd: {n}",
+        "wishAlready": "Je hebt {n} al gewenst.",
+        "wishThere": "{n} staat al op de box.",
+        "wishPaused": "Spotify heeft even pauze – probeer het later nog eens."
       }
     },
     "sv": {
@@ -607,7 +667,17 @@
         "searchPodcastsButton": "Poddar för barn",
         "searchPodcastsLoading": "Söker …",
         "searchPodcastsNone": "Inga poddar för barn hittades.",
-        "searchTipsLabel": "Tips för barn"
+        "searchTipsLabel": "Tips för barn",
+        "wishSearchTile": "Sök på Spotify",
+        "wishLoading": "Söker på Spotify …",
+        "wishNone": "Inget hittades på Spotify.",
+        "wishButton": "Önska",
+        "wishWhole": "Önska allt av {n}",
+        "wishWished": "Önskat",
+        "wishSent": "Önskan skickad: {n}",
+        "wishAlready": "Du har redan önskat dig {n}.",
+        "wishThere": "{n} finns redan på boxen.",
+        "wishPaused": "Spotify tar en paus – försök igen senare."
       }
     },
     "da": {
@@ -694,7 +764,17 @@
         "searchPodcastsButton": "Podcasts for børn",
         "searchPodcastsLoading": "Søger …",
         "searchPodcastsNone": "Ingen podcasts for børn fundet.",
-        "searchTipsLabel": "Tips til børn"
+        "searchTipsLabel": "Tips til børn",
+        "wishSearchTile": "Søg på Spotify",
+        "wishLoading": "Søger på Spotify …",
+        "wishNone": "Intet fundet på Spotify.",
+        "wishButton": "Ønske",
+        "wishWhole": "Ønske alt af {n}",
+        "wishWished": "Ønsket",
+        "wishSent": "Ønske sendt: {n}",
+        "wishAlready": "Du har allerede ønsket dig {n}.",
+        "wishThere": "{n} er allerede på boksen.",
+        "wishPaused": "Spotify holder pause – prøv igen senere."
       }
     },
     "nb": {
@@ -781,7 +861,17 @@
         "searchPodcastsButton": "Podkaster for barn",
         "searchPodcastsLoading": "Søker …",
         "searchPodcastsNone": "Ingen podkaster for barn funnet.",
-        "searchTipsLabel": "Tips for barn"
+        "searchTipsLabel": "Tips for barn",
+        "wishSearchTile": "Søk på Spotify",
+        "wishLoading": "Søker på Spotify …",
+        "wishNone": "Ingenting funnet på Spotify.",
+        "wishButton": "Ønske",
+        "wishWhole": "Ønske alt av {n}",
+        "wishWished": "Ønsket",
+        "wishSent": "Ønske sendt: {n}",
+        "wishAlready": "Du har allerede ønsket deg {n}.",
+        "wishThere": "{n} er allerede på boksen.",
+        "wishPaused": "Spotify tar en pause – prøv igjen senere."
       }
     },
     "fi": {
@@ -868,7 +958,17 @@
         "searchPodcastsButton": "Lasten podcastit",
         "searchPodcastsLoading": "Haetaan …",
         "searchPodcastsNone": "Lasten podcasteja ei löytynyt.",
-        "searchTipsLabel": "Vinkkejä lapsille"
+        "searchTipsLabel": "Vinkkejä lapsille",
+        "wishSearchTile": "Hae Spotifysta",
+        "wishLoading": "Haetaan Spotifysta …",
+        "wishNone": "Spotifysta ei löytynyt mitään.",
+        "wishButton": "Toivo tätä",
+        "wishWhole": "Toivo kaikki: {n}",
+        "wishWished": "Toivottu",
+        "wishSent": "Toive lähetetty: {n}",
+        "wishAlready": "Olet jo toivonut: {n}.",
+        "wishThere": "{n} on jo laitteessa.",
+        "wishPaused": "Spotify pitää taukoa – yritä myöhemmin uudelleen."
       }
     },
     "pl": {
@@ -955,7 +1055,17 @@
         "searchPodcastsButton": "Podcasty dla dzieci",
         "searchPodcastsLoading": "Szukam …",
         "searchPodcastsNone": "Nie znaleziono podcastów dla dzieci.",
-        "searchTipsLabel": "Propozycje dla dzieci"
+        "searchTipsLabel": "Propozycje dla dzieci",
+        "wishSearchTile": "Szukaj na Spotify",
+        "wishLoading": "Szukam na Spotify …",
+        "wishNone": "Nic nie znaleziono na Spotify.",
+        "wishButton": "Poproś o to",
+        "wishWhole": "Poproś o wszystko od {n}",
+        "wishWished": "Poproszono",
+        "wishSent": "Prośba wysłana: {n}",
+        "wishAlready": "Już prosiłeś o {n}.",
+        "wishThere": "{n} już jest na boxie.",
+        "wishPaused": "Spotify ma przerwę – spróbuj później."
       }
     },
     "pt": {
@@ -1042,7 +1152,17 @@
         "searchPodcastsButton": "Podcasts para crianças",
         "searchPodcastsLoading": "A procurar …",
         "searchPodcastsNone": "Nenhum podcast para crianças encontrado.",
-        "searchTipsLabel": "Sugestões para crianças"
+        "searchTipsLabel": "Sugestões para crianças",
+        "wishSearchTile": "Pesquisar no Spotify",
+        "wishLoading": "A pesquisar no Spotify …",
+        "wishNone": "Nada encontrado no Spotify.",
+        "wishButton": "Pedir",
+        "wishWhole": "Pedir tudo de {n}",
+        "wishWished": "Pedido",
+        "wishSent": "Pedido enviado: {n}",
+        "wishAlready": "Já pediste {n}.",
+        "wishThere": "{n} já está na caixa.",
+        "wishPaused": "O Spotify está em pausa – tenta mais tarde."
       }
     },
     "tr": {
@@ -1129,7 +1249,17 @@
         "searchPodcastsButton": "Çocuklar için podcast’ler",
         "searchPodcastsLoading": "Aranıyor …",
         "searchPodcastsNone": "Çocuklar için podcast bulunamadı.",
-        "searchTipsLabel": "Çocuklar için öneriler"
+        "searchTipsLabel": "Çocuklar için öneriler",
+        "wishSearchTile": "Spotify’da ara",
+        "wishLoading": "Spotify’da aranıyor …",
+        "wishNone": "Spotify’da bir şey bulunamadı.",
+        "wishButton": "Dile",
+        "wishWhole": "{n} ile ilgili her şeyi dile",
+        "wishWished": "Dilendi",
+        "wishSent": "Dilek gönderildi: {n}",
+        "wishAlready": "{n} için zaten dilek tuttun.",
+        "wishThere": "{n} zaten kutuda.",
+        "wishPaused": "Spotify mola veriyor – daha sonra tekrar dene."
       }
     },
     "uk": {
@@ -1216,7 +1346,17 @@
         "searchPodcastsButton": "Подкасти для дітей",
         "searchPodcastsLoading": "Пошук …",
         "searchPodcastsNone": "Подкастів для дітей не знайдено.",
-        "searchTipsLabel": "Поради для дітей"
+        "searchTipsLabel": "Поради для дітей",
+        "wishSearchTile": "Шукати в Spotify",
+        "wishLoading": "Пошук у Spotify …",
+        "wishNone": "У Spotify нічого не знайдено.",
+        "wishButton": "Побажати",
+        "wishWhole": "Побажати все від {n}",
+        "wishWished": "Побажано",
+        "wishSent": "Бажання надіслано: {n}",
+        "wishAlready": "Ти вже побажав {n}.",
+        "wishThere": "{n} вже є на боксі.",
+        "wishPaused": "Spotify має перерву – спробуй пізніше."
       }
     },
     "ru": {
@@ -1303,7 +1443,17 @@
         "searchPodcastsButton": "Подкасты для детей",
         "searchPodcastsLoading": "Поиск …",
         "searchPodcastsNone": "Подкасты для детей не найдены.",
-        "searchTipsLabel": "Советы для детей"
+        "searchTipsLabel": "Советы для детей",
+        "wishSearchTile": "Искать в Spotify",
+        "wishLoading": "Поиск в Spotify …",
+        "wishNone": "В Spotify ничего не найдено.",
+        "wishButton": "Попросить",
+        "wishWhole": "Попросить всё от {n}",
+        "wishWished": "Запрошено",
+        "wishSent": "Просьба отправлена: {n}",
+        "wishAlready": "Ты уже просил {n}.",
+        "wishThere": "{n} уже есть на боксе.",
+        "wishPaused": "У Spotify перерыв – попробуй позже."
       }
     },
     "cs": {
@@ -1390,7 +1540,17 @@
         "searchPodcastsButton": "Podcasty pro děti",
         "searchPodcastsLoading": "Hledám …",
         "searchPodcastsNone": "Žádné podcasty pro děti nenalezeny.",
-        "searchTipsLabel": "Tipy pro děti"
+        "searchTipsLabel": "Tipy pro děti",
+        "wishSearchTile": "Hledat na Spotify",
+        "wishLoading": "Hledám na Spotify …",
+        "wishNone": "Na Spotify nic nenalezeno.",
+        "wishButton": "Přát si",
+        "wishWhole": "Přát si vše od {n}",
+        "wishWished": "Přáno",
+        "wishSent": "Přání odesláno: {n}",
+        "wishAlready": "{n} už sis přál.",
+        "wishThere": "{n} už je na boxu.",
+        "wishPaused": "Spotify má pauzu – zkus to později."
       }
     },
     "el": {
@@ -1477,7 +1637,17 @@
         "searchPodcastsButton": "Podcasts για παιδιά",
         "searchPodcastsLoading": "Αναζήτηση …",
         "searchPodcastsNone": "Δεν βρέθηκαν podcasts για παιδιά.",
-        "searchTipsLabel": "Προτάσεις για παιδιά"
+        "searchTipsLabel": "Προτάσεις για παιδιά",
+        "wishSearchTile": "Αναζήτηση στο Spotify",
+        "wishLoading": "Αναζήτηση στο Spotify …",
+        "wishNone": "Δεν βρέθηκε τίποτα στο Spotify.",
+        "wishButton": "Ευχή",
+        "wishWhole": "Ευχή για όλα από {n}",
+        "wishWished": "Ζητήθηκε",
+        "wishSent": "Η ευχή στάλθηκε: {n}",
+        "wishAlready": "Έχεις ήδη ζητήσει το {n}.",
+        "wishThere": "Το {n} είναι ήδη στο κουτί.",
+        "wishPaused": "Το Spotify κάνει διάλειμμα – δοκίμασε αργότερα."
       }
     }
   }

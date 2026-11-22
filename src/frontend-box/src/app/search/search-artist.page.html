@@ -5,8 +5,8 @@
       <button class="km-hbtn" type="button" data-mupi-back (click)="goBack()">
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5M11 6l-6 6 6 6" /></svg>
       </button>
-      <div class="km-htitle"><span class="km-ht1">{{ entry()?.name }}</span></div>
-      <button class="srch-getall" type="button" data-mupi-getall (click)="getAll()"><span aria-hidden="true">+</span>{{ texts.text('searchGetAll', { n: entry()?.name ?? '' }) }}</button>
+      <div class="km-htitle"><span class="km-ht1">{{ name() }}</span></div>
+      <ng-container *ngTemplateOutlet="all"></ng-container>
       <mupi-km-status-group></mupi-km-status-group>
     </div>
   } @else {
@@ -16,19 +16,26 @@
           <ion-icon slot="icon-only" name="arrow-back-outline"></ion-icon>
         </ion-button>
       </ion-buttons>
-      <ion-title>{{ entry()?.name }}</ion-title>
-      <ion-buttons slot="end">
-        <button class="srch-getall" type="button" data-mupi-getall (click)="getAll()"><span aria-hidden="true">+</span>{{ texts.text('searchGetAll', { n: entry()?.name ?? '' }) }}</button>
-      </ion-buttons>
+      <ion-title>{{ name() }}</ion-title>
+      <ion-buttons slot="end"><ng-container *ngTemplateOutlet="all"></ng-container></ion-buttons>
       <span slot="end" class="mupihat-icon-container"><mupi-status></mupi-status></span>
     </ion-toolbar>
   }
 </ion-header>
 
+<!-- the whole artist: on the start page (pool) or wished (Spotify) -->
+<ng-template #all>
+  @if (wishArtist()) {
+    <button class="srch-getall srch-wishall" type="button" data-mupi-getall (click)="getAll()"><span aria-hidden="true">★</span>{{ texts.text('wishWhole', { n: name() }) }}</button>
+  } @else {
+    <button class="srch-getall" type="button" data-mupi-getall (click)="getAll()"><span aria-hidden="true">+</span>{{ texts.text('searchGetAll', { n: name() }) }}</button>
+  }
+</ng-template>
+
 <ion-content class="medialist-content">
   @if (swiperData().length) {
-    <mupi-swiper [data]="swiperData()" [positionKey]="'search|' + (entry()?.id ?? '')" (elementClicked)="albumClicked($event.data)"></mupi-swiper>
+    <mupi-swiper [data]="swiperData()" [positionKey]="'search|' + (entry()?.id ?? wishArtist()?.id ?? '')" (elementClicked)="albumClicked($event.data)" (nearEnd)="nearEnd()"></mupi-swiper>
   } @else {
-    <p class="srch-artist-note">{{ texts.text(entry()?.albums ? 'searchAllThere' : 'searchAlbumsLoading') }}</p>
+    <p class="srch-artist-note">{{ texts.text(empty()) }}</p>
   }
 </ion-content>

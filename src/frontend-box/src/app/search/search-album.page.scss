@@ -118,6 +118,18 @@
   font-size: 26px;
 }
 
+// (fork "wishes") "Wünschen" in the star's colour; wished already: shown, nothing to tap
+.sa-wish {
+  background: #f5b301;
+  color: #2a1d00;
+}
+
+.sa-wished {
+  background: var(--sa-btn);
+  color: var(--sa-on-btn);
+  opacity: 0.75;
+}
+
 // Spotify blocks the box and does not play: "Abspielen" grey (a tap tells why)
 .sa-off {
   filter: grayscale(1);
