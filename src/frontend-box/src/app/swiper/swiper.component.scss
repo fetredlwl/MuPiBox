@@ -622,6 +622,25 @@ swiper-container.coverflow {
     z-index: 3;
 }
 
+// (fork "wishes") a sign in the cover's corner (the search: + to fetch, ★ to wish, ✓ on the box)
+.mupi-mark {
+    position: absolute;
+    right: 10px;
+    bottom: 10px;
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    background: var(--km-apricot, var(--ion-color-primary, #3880ff));
+    color: var(--km-ink, #fff);
+    display: grid;
+    place-items: center;
+    font-size: 24px;
+    font-weight: 700;
+    line-height: 1;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.45);
+    z-index: 3;
+}
+
 // (fork "wishes") Spotify blocks the box and this does not play now: grey (the stage sets its own opacity inline)
 .mupi-dim {
   filter: grayscale(1) brightness(0.55);

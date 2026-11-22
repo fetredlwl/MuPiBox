@@ -15,6 +15,9 @@
                   } @else {
                     <img draggable="false" ondragstart="return false;" [attr.data-src]="src" (error)="onCoverError(src)">
                   }
+                  @if (currentData.mark) {
+                    <span class="mupi-mark" aria-hidden="true">{{ currentData.mark }}</span>
+                  }
                   @if (currentData.isNew) {
                     <span class="ep-new" aria-hidden="true"></span>
                   }
@@ -56,6 +59,9 @@
               @if (it.data.kind === 'own') {
                 <span class="km-own-label">{{ displayTexts.text('ownFilesLabel') }}</span>
               }
+                  @if (it.data.mark) {
+                    <span class="mupi-mark" aria-hidden="true">{{ it.data.mark }}</span>
+                  }
                   @if (it.data.isNew) {
                     <span class="ep-new" aria-hidden="true"></span>
                   }
@@ -122,6 +128,9 @@
                     } @else {
                       <img draggable="false" ondragstart="return false;" loading="lazy" src="{{plainSrc}}" (error)="onCoverError(plainSrc)">
                     }
+                  }
+                  @if (currentData.mark) {
+                    <span class="mupi-mark" aria-hidden="true">{{ currentData.mark }}</span>
                   }
                   @if (currentData.isNew) {
                     <span class="ep-new" aria-hidden="true"></span>

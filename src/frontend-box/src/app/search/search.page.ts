@@ -7,9 +7,11 @@ import {
   computed,
   DestroyRef,
   ElementRef,
+  effect,
   inject,
   OnDestroy,
   signal,
+  untracked,
   ViewEncapsulation,
   viewChild,
 } from '@angular/core'
@@ -42,6 +44,7 @@ import type { MupiboxConfig } from '../mupibox-config.model'
 import { PlayerService } from '../player.service'
 import { SpotifyBlockService } from '../spotify-block.service'
 import { StatusComponent } from '../status/status.component'
+import { SwiperComponent, type SwiperData } from '../swiper/swiper.component'
 import { KmThemeService } from '../theme/km-theme.service'
 import { localizeCoverUrl } from '../utils'
 import { NearEndDirective } from './near-end.directive'
@@ -74,6 +77,28 @@ const WAY_LABEL: Record<SearchMode, DisplayTextKey> = {
   podcasts: 'searchPodcastsButton',
   radio: 'searchRadioButton',
 }
+// the tiles' signs (drawn as the icons of the keyboard's row, see search.page.html #wayIcon) - for the covers of the
+// start page's list a picture: the sign on the theme's colour
+const WAY_ICON: Record<SearchMode, string> = {
+  own: '<path d="M4 6h10M4 12h10M4 18h6"/><path d="M17 14l3 3-3 3M20 17h-6"/>',
+  spotify:
+    '<circle cx="12" cy="12" r="9"/><path d="M7.2 9.6c3.3-1 6.9-.7 9.8.9"/><path d="M7.8 12.7c2.7-.8 5.6-.5 8 .8"/><path d="M8.5 15.6c2-.5 4.2-.3 5.9.6"/>',
+  podcasts: '<path d="M4 15v-3a8 8 0 0 1 16 0v3"/><path d="M4 15h3v6H5a1 1 0 0 1-1-1zM20 15h-3v6h2a1 1 0 0 0 1-1z"/>',
+  radio:
+    '<rect x="3" y="9" width="18" height="12" rx="2"/><path d="M7 9 17 4"/><circle cx="15.5" cy="15" r="2.5"/><path d="M6.5 13.5h3M6.5 16.5h3"/>',
+}
+
+// (fork "wishes") What the search lists with the keyboard folded away - in the album list of the start page and of
+// "Weiterhören" (mupi-swiper): the tiles of the start, the hits, what the directories and Spotify found
+type ListItem =
+  | { t: 'way'; m: SearchMode }
+  | { t: 'ask'; m: 'spotify' | 'podcasts' | 'radio' }
+  | { t: 'hit'; hit: Hit }
+  | { t: 'pod'; pod: KidsPodcast }
+  | { t: 'radio'; station: KidsStation }
+  | { t: 'wish'; wish: WishItem }
+  | { t: 'own'; own: OwnEntry }
+
 const MODE_LABEL: Record<SearchMode, DisplayTextKey> = {
   own: 'searchMine',
   spotify: 'searchSpotify',
@@ -146,6 +171,7 @@ export function searchRank(name: string, query: string): number | null {
     KmStatusGroupComponent,
     StatusComponent,
     NearEndDirective,
+    SwiperComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   // (the keyboard draws its keys itself: its styles must reach them - all of them below app-search, see search.page.scss)
@@ -164,7 +190,12 @@ export class SearchPage implements AfterViewInit, OnDestroy {
   protected readonly texts = inject(DisplayTextsService)
   protected readonly spotifyBlock = inject(SpotifyBlockService)
 
-  protected readonly r2 = inject(KmThemeService).roundTwo
+  private readonly kmTheme = inject(KmThemeService)
+  protected readonly r2 = this.kmTheme.roundTwo
+  private readonly host = inject(ElementRef<HTMLElement>)
+  // the list with the keyboard folded away: the start page's album list (its page events from here, see constructor)
+  private readonly swiper = viewChild(SwiperComponent)
+  private readonly shown = signal(false)
   private readonly keyboardHost = viewChild<ElementRef<HTMLElement>>('keyboard')
   private keyboard?: Keyboard
 
@@ -358,6 +389,127 @@ export class SearchPage implements AfterViewInit, OnDestroy {
     this.wishFor() && this.wishFor() === normalizeForSearch(this.query()).trim() ? this.wishItems() : null,
   )
 
+  /** the start of the search: its tiles (round, as the start page's covers) */
+  protected readonly atStart = computed(() => !this.mode() && !this.typed())
+
+  /** what is listed now - as the keyboard's row shows it (search.page.html), for the album list */
+  protected readonly items = computed<ListItem[]>(() => {
+    const typed = this.typed()
+    const pods = (): ListItem[] => {
+      const p = this.podShown()
+      return p ? p.map((pod) => ({ t: 'pod', pod })) : [{ t: 'ask', m: 'podcasts' }]
+    }
+    const stations = (): ListItem[] => {
+      const r = this.radioShown()
+      return r ? r.map((station) => ({ t: 'radio', station })) : [{ t: 'ask', m: 'radio' }]
+    }
+    const wishes = (): ListItem[] => {
+      const w = this.wishShown()
+      return w ? w.map((wish) => ({ t: 'wish', wish })) : [{ t: 'ask', m: 'spotify' }]
+    }
+    switch (this.mode()) {
+      case 'own':
+        return this.ownShown().map((own) => ({ t: 'own', own }))
+      case 'podcasts':
+        return typed ? pods() : this.tipsShown().map((pod) => ({ t: 'pod', pod }))
+      case 'radio':
+        return typed ? stations() : this.radioTipsShown().map((station) => ({ t: 'radio', station }))
+      case 'spotify':
+        return typed ? wishes() : []
+    }
+    if (!typed) {
+      const ways: ListItem[] = []
+      if (this.own().length) ways.push({ t: 'way', m: 'own' })
+      if (this.wishesOn()) ways.push({ t: 'way', m: 'spotify' })
+      if (this.podcastsOn()) ways.push({ t: 'way', m: 'podcasts' })
+      if (this.radioOn()) ways.push({ t: 'way', m: 'radio' })
+      return ways
+    }
+    return [
+      ...this.hits().map((hit): ListItem => ({ t: 'hit', hit })),
+      ...(this.podcastsOn() ? pods() : []),
+      ...(this.radioOn() ? stations() : []),
+      ...(this.wishesOn() ? wishes() : []),
+    ]
+  })
+
+  /** the album list's covers (the tiles' signs drawn in the theme's colours) */
+  protected readonly swiperData = computed<SwiperData<ListItem>[]>(() => {
+    // (again when the theme changed: its colours)
+    this.kmTheme.theme()
+    const cover = (url: string) => of(localizeCoverUrl(url || undefined) ?? '')
+    return this.items().map((item): SwiperData<ListItem> => {
+      switch (item.t) {
+        case 'way':
+          return { name: this.wayName(item.m), imgSrc: of(this.wayPicture(item.m)), data: item }
+        case 'ask': {
+          const busy =
+            item.m === 'spotify' ? this.wishBusy() : item.m === 'podcasts' ? this.podBusy() : this.radioBusy()
+          const name = busy
+            ? this.texts.text(item.m === 'spotify' ? 'wishLoading' : 'searchPodcastsLoading')
+            : this.wayName(item.m)
+          return { name, imgSrc: of(this.wayPicture(item.m)), data: item }
+        }
+        case 'hit':
+          return {
+            name: item.hit.name,
+            imgSrc: item.hit.imgSrc,
+            data: item,
+            dim: this.spotifyBlock.player() && this.isSpotify(item.hit),
+            ...(item.hit.pool ? { mark: '+' } : {}),
+          }
+        case 'pod':
+          return { name: item.pod.title, imgSrc: cover(item.pod.image), data: item, mark: '+' }
+        case 'radio':
+          return { name: item.station.name, imgSrc: cover(item.station.image), data: item, mark: '+' }
+        case 'wish':
+          return {
+            name: item.wish.name,
+            imgSrc: cover(item.wish.cover),
+            data: item,
+            mark: item.wish.there ? '✓' : '★',
+          }
+        case 'own':
+          return { name: item.own.name, imgSrc: cover(item.own.cover), data: item }
+      }
+    })
+  })
+  /** (the names listed - for tools/display-check) */
+  protected readonly swiperNames = computed(() =>
+    this.swiperData()
+      .map((d) => d.name)
+      .join('|'),
+  )
+  /** where the list starts again at its first cover: another tile, another text */
+  protected readonly listKey = computed(() => `search|${this.mode() ?? ''}|${normalizeForSearch(this.query()).trim()}`)
+  /** the notes above the album list: nothing found, nothing to show yet */
+  protected readonly listNotes = computed<DisplayTextKey[]>(() => {
+    const typed = this.typed()
+    const notes: DisplayTextKey[] = []
+    const m = this.mode()
+    if (!m && !typed) return this.waysShown() ? [] : ['searchStart']
+    if (!m) {
+      if (this.loading()) notes.push('searchLoading')
+      else if (this.nothingFound()) notes.push('searchNothing')
+    }
+    if (m === 'own' && !this.ownShown().length) notes.push('searchNothing')
+    if (m === 'spotify' && !typed) notes.push('searchStart')
+    if ((!m || m === 'podcasts') && typed && this.podcastsOn() && this.podShown()?.length === 0)
+      notes.push('searchPodcastsNone')
+    if ((!m || m === 'radio') && typed && this.radioOn() && this.radioShown()?.length === 0)
+      notes.push('searchRadioNone')
+    if ((!m || m === 'spotify') && typed && this.wishesOn() && this.wishShown()?.length === 0) notes.push('wishNone')
+    return notes
+  })
+  /** the tips' label (podcasts / radio, nothing typed) */
+  protected readonly listLabel = computed(() => {
+    const m = this.mode()
+    return (
+      !this.typed() &&
+      ((m === 'podcasts' && this.tipsShown().length) || (m === 'radio' && this.radioTipsShown().length))
+    )
+  })
+
   protected readonly nothingFound = computed(
     () => !this.loading() && this.query().trim().length >= 2 && this.hits().length === 0,
   )
@@ -386,6 +538,54 @@ export class SearchPage implements AfterViewInit, OnDestroy {
         this.loadLibrary()
       })
     this.poolTimer = window.setInterval(() => this.loadPool(), SearchPage.POOL_REFRESH_MS)
+    // The album list is there only while the keyboard is folded away: drawn anew each time - it hears the page's
+    // events from here (an artist's page had the same: covers that came late stayed empty)
+    effect(() => {
+      const swiper = this.swiper()
+      if (swiper && this.shown()) untracked(() => swiper.ionViewDidEnter())
+    })
+  }
+
+  ionViewDidEnter(): void {
+    this.shown.set(true)
+  }
+
+  ionViewWillLeave(): void {
+    this.shown.set(false)
+    this.swiper()?.ionViewWillLeave()
+  }
+
+  /** a cover of the album list tapped (its name is read aloud by the list itself) */
+  protected itemClicked(item: ListItem): void {
+    switch (item.t) {
+      case 'way':
+        return this.enterMode(item.m)
+      case 'ask':
+        return item.m === 'spotify'
+          ? this.wishTileClicked()
+          : item.m === 'podcasts'
+            ? this.podTileClicked()
+            : this.radioTileClicked()
+      case 'hit':
+        return this.hitClicked(item.hit)
+      case 'pod':
+        return this.openKidsPodcast(item.pod)
+      case 'radio':
+        return this.openKidsRadio(item.station)
+      case 'wish':
+        return this.openWish(item.wish)
+      case 'own':
+        return this.openOwn(item.own)
+    }
+  }
+
+  /** a tile's sign as a cover: on the theme's colour (km themes: its apricot and ink), as a picture */
+  private wayPicture(m: SearchMode): string {
+    const st = getComputedStyle(this.host.nativeElement)
+    const bg = st.getPropertyValue('--srch-accent').trim() || '#3880ff'
+    const ink = (st.getPropertyValue('--km-ink').trim() || '#ffffff').replace(/"/g, '')
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><rect width="24" height="24" fill="${bg.replace(/"/g, '')}"/><g transform="translate(6 6) scale(0.5)" fill="none" stroke="${ink}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${WAY_ICON[m]}</g></svg>`
+    return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`
   }
 
   /**
@@ -394,6 +594,7 @@ export class SearchPage implements AfterViewInit, OnDestroy {
    * Coming back, the library too (the parents or the child may have changed it).
    */
   ionViewWillEnter(): void {
+    this.swiper()?.ionViewWillEnter()
     this.loadPool()
     // (Spotify does not play now: said once in a popup - the page keeps its room)
     this.spotifyBlock.tellIfBlocked()

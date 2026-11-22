@@ -22,9 +22,9 @@ import { checkmark, folder, link, play } from 'ionicons/icons'
 import { Observable } from 'rxjs'
 import Swiper from 'swiper'
 import { environment } from '../../environments/environment'
-import type { MupiboxConfig } from '../mupibox-config.model'
 import { CoverFlipService } from '../cover-flip.service'
 import { DisplayTextsService } from '../display-texts.service'
+import type { MupiboxConfig } from '../mupibox-config.model'
 import { noCoverStyle } from '../no-cover'
 import { PlayerService } from '../player.service'
 import { KmThemeService } from '../theme/km-theme.service'
@@ -49,6 +49,8 @@ export interface SwiperData<T> {
   done?: boolean
   // (fork "wishes") grey: Spotify blocks the box and this does not play now (a tap tells why, see SpotifyBlockService)
   dim?: boolean
+  // (fork "wishes") a sign in the cover's corner - the search: "+" may be fetched, "★" may be wished, "✓" on the box
+  mark?: string
   // (set by the swiper itself: what the list keeps a slide by - its name, see entryKeys)
   trackKey?: string
 }
@@ -91,7 +93,9 @@ export class SwiperComponent<T> {
     const k = (h - SwiperComponent.COMPACT_TOP) / (h - SwiperComponent.HEADER_HEIGHT - this.compactRowTop())
     return Number.isFinite(k) ? Math.min(1.3, Math.max(1, k)).toFixed(4) : '1'
   })
-  protected readonly compactShift = computed(() => `${(SwiperComponent.COMPACT_TOP - this.compactRowTop() * Number(this.compactScale())).toFixed(1)}px`)
+  protected readonly compactShift = computed(
+    () => `${(SwiperComponent.COMPACT_TOP - this.compactRowTop() * Number(this.compactScale())).toFixed(1)}px`,
+  )
   // Identifies the list (e.g. category + artist). A page can be rebuilt when the player opens (the album
   // list is), which lost the remembered position with the component; kept per key it survives that.
   public positionKey = input<string | undefined>(undefined)
@@ -166,7 +170,13 @@ export class SwiperComponent<T> {
     // while dragging the position lies between two covers: every cover is where it would be at that position
     // (a cover coming to the middle grows on the way), so the stage follows the finger
     const last = data.length - 1
-    const position = Math.max(-0.4, Math.min(this.stageClamp(this.stageIndex(), data.length) - this.stageDragDx() / SwiperComponent.STAGE_PIXELS_PER_COVER, last + 0.4))
+    const position = Math.max(
+      -0.4,
+      Math.min(
+        this.stageClamp(this.stageIndex(), data.length) - this.stageDragDx() / SwiperComponent.STAGE_PIXELS_PER_COVER,
+        last + 0.4,
+      ),
+    )
     const at = (table: number[], a: number): number => {
       const i = Math.min(Math.floor(a), 2)
       return table[i] + (table[i + 1] - table[i]) * Math.min(a - i, 1)
@@ -627,7 +637,7 @@ export class SwiperComponent<T> {
       const scale = perspective / (perspective - outerZ)
       // Move the outer edge of the cover to its place: one step further out for every cover.
       const step = room / coversOnSide(side)
-      const shift = side * (((coverWidth / 2) + t * (step - unit)) / scale - (coverWidth / 2) * Math.cos(radians))
+      const shift = side * ((coverWidth / 2 + t * (step - unit)) / scale - (coverWidth / 2) * Math.cos(radians))
       slide.style.transform = `perspective(${perspective}px) translateX(${shift}px) translateZ(${z}px) rotateY(${-side * angle}deg)`
       // Covers nearer to the center are drawn on top of the further ones.
       slide.style.zIndex = String(1000 - Math.round(t * 10))
@@ -760,7 +770,8 @@ export class SwiperComponent<T> {
     const target = Math.round(Math.max(0, Math.min(1, f)) * (total - 1))
     // (a long list is rendered bit by bit: a place beyond the rendered part has it rendered up to there first - else
     // the end of a list of 300 stood at the 45th entry)
-    if (target >= this.shownData().length) this.renderableLimit.set(Math.min(total, Math.max(this.renderableLimit(), target + 12)))
+    if (target >= this.shownData().length)
+      this.renderableLimit.set(Math.min(total, Math.max(this.renderableLimit(), target + 12)))
     const c = this.stageClamp(target, this.shownData().length)
     this.stageIndex.set(c)
     this.cachedSwiperPosition = c
@@ -821,7 +832,12 @@ export class SwiperComponent<T> {
       .sort((a, b) => Math.abs(a.index - current) - Math.abs(b.index - current))
     for (const { slide, index } of byDistance) {
       const rect = slide.getBoundingClientRect()
-      if (event.clientX < rect.left || event.clientX > rect.right || event.clientY < rect.top || event.clientY > rect.bottom) {
+      if (
+        event.clientX < rect.left ||
+        event.clientX > rect.right ||
+        event.clientY < rect.top ||
+        event.clientY > rect.bottom
+      ) {
         continue
       }
       if (index !== current) {

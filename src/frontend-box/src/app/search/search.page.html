@@ -141,7 +141,20 @@
   }
 </ng-template>
 
-<ion-content class="search-content" [class.srch-kb-open]="keyboardShown()">
+<ion-content class="search-content medialist-content" [class.srch-kb-open]="keyboardShown()">
+  @if (!keyboardShown()) {
+    <!-- the keyboard folded away: the album list of the start page and of "Weiterhören" - the same covers, names on
+         their bars (a tap reads them aloud), its scrollbar; the tiles of the start round as the start page's covers -->
+    @for (n of listNotes(); track n) {
+      <p class="srch-note">{{ texts.text(n) }}</p>
+    }
+    @if (listLabel()) {
+      <p class="srch-label">{{ texts.text('searchTipsLabel') }}</p>
+    }
+    @if (swiperData().length) {
+      <mupi-swiper class="srch-list" [data]="swiperData()" [roundImages]="atStart()" [positionKey]="listKey()" [attr.data-names]="swiperNames()" (elementClicked)="itemClicked($event.data)" (nearEnd)="moreWishes()"></mupi-swiper>
+    }
+  } @else {
   @switch (mode()) {
     @case ('own') {
       <!-- "Einträge verwalten": what the child put on the start page itself - its page moves or removes it -->
@@ -291,6 +304,7 @@
         </div>
       }
     }
+  }
   }
   @if (note()) {
     <div class="srch-toast" role="status">{{ note() }}</div>

@@ -463,6 +463,82 @@ async function names(page, selector) {
   )
 }
 
+/** what the search lists: its album list (keyboard folded away; data-names) or the keyboard's row */
+async function listNames(page) {
+  return page.evaluate(() => {
+    const list = document.querySelector('app-search mupi-swiper.srch-list')
+    if (list) return (list.getAttribute('data-names') ?? '').split('|').filter(Boolean)
+    return [...document.querySelectorAll('app-search .srch-hits .srch-name')].map((e) => e.textContent.trim())
+  })
+}
+
+/**
+ * Taps what is listed by its name - in the album list as a finger does (the default themes: its cover; the km stage:
+ * covers to the side brought to the middle one by one, then the one in front), in the keyboard's row its tile or hit
+ */
+async function tapListed(page, name) {
+  const how = await page.evaluate((n) => {
+    const list = document.querySelector('app-search mupi-swiper.srch-list')
+    if (!list) {
+      const cell = [...document.querySelectorAll('app-search .srch-way')].find(
+        (c) => c.querySelector('.srch-name')?.textContent.trim() === n,
+      )
+      if (cell) {
+        cell.querySelector('.srch-way-ic').click()
+        return 'row'
+      }
+      const hit = [...document.querySelectorAll('app-search .srch-hits .srch-hit')].find(
+        (h) => h.querySelector('.srch-name')?.textContent.trim() === n,
+      )
+      hit?.click()
+      return hit ? 'row' : 'none'
+    }
+    const slide = [...list.querySelectorAll('swiper-slide')].find(
+      (sl) => sl.querySelector('.title-row')?.textContent.trim() === n,
+    )
+    if (slide) {
+      slide.scrollIntoView({ inline: 'center', block: 'nearest' })
+      slide.querySelector('.img-row ion-card').click()
+      return 'grid'
+    }
+    return list.querySelector('.km-stage') ? 'stage' : 'none'
+  }, name)
+  if (how === 'stage') {
+    const all = await listNames(page)
+    if (!all.includes(name)) return false
+    for (let i = 0; i < 40; i++) {
+      const cur = await page.evaluate(
+        () => document.querySelector('app-search .km-stage-name')?.textContent.trim() ?? '',
+      )
+      if (cur === name) {
+        await page.evaluate(() => {
+          const items = [...document.querySelectorAll('app-search .km-stage-item')]
+          items.sort((a, b) => (Number(b.style.zIndex) || 0) - (Number(a.style.zIndex) || 0))
+          items[0]?.click()
+        })
+        await wait(1000)
+        return true
+      }
+      const dir = all.indexOf(name) > all.indexOf(cur) ? 1 : -1
+      await page.evaluate((d) => {
+        const cx = innerWidth / 2
+        const side = [...document.querySelectorAll('app-search .km-stage-item')]
+          .map((e) => {
+            const r = e.getBoundingClientRect()
+            return { e, x: r.left + r.width / 2 }
+          })
+          .filter((o) => (d > 0 ? o.x > cx + 20 : o.x < cx - 20))
+          .sort((a, b) => Math.abs(a.x - cx) - Math.abs(b.x - cx))
+        side[0]?.e.click()
+      }, dir)
+      await wait(500)
+    }
+    return false
+  }
+  await wait(1000)
+  return how !== 'none'
+}
+
 /** back in the search: from a tile to its start (the search's own back arrow) */
 async function back(page) {
   await page.click('app-search [data-mupi-back]')
@@ -471,9 +547,9 @@ async function back(page) {
 
 /** one of the child's own taken off the start page ("Einträge verwalten" - its tile at the search's start) */
 async function removeOwn(page, name) {
-  await page.click('app-search .srch-own-btn')
-  await wait(700)
-  if (!(await clickText(page, '.srch-own', name)) || (await topTag(page)) !== 'app-search-album')
+  await tapListed(page, 'Manage entries')
+  await wait(400)
+  if (!(await tapListed(page, name)) || (await topTag(page)) !== 'app-search-album')
     throw new Error(`no page for the own entry ${name}`)
   await clickText(page, '.sa-btn', 'Remove')
   await clickText(page, '.sa-btn', 'Yes, remove')
@@ -562,39 +638,42 @@ async function start(page, tag, asked) {
     !(await anywhereVisible(page, 'app-search .simple-keyboard')),
     `${tag}: the search starts without keyboard`,
   )
-  const ways = await names(page, '.srch-ways .srch-way')
+  const ways = await listNames(page)
   rule('R11', ways.join('|') === 'Search Spotify|Podcasts|Radio', `${tag}: the tiles of the start (${ways.join(', ')})`)
-  const row = await page.evaluate(() => {
-    const tops = [...document.querySelectorAll('app-search .srch-ways .srch-way')].map(
-      (e) => e.getBoundingClientRect().top,
-    )
-    return tops.length > 0 && tops.every((t) => Math.abs(t - tops[0]) < 2)
+  // in the start page's album list: its covers round, the names on its bars, its scrollbar
+  const look = await page.evaluate(() => {
+    const list = document.querySelector('app-search mupi-swiper.srch-list')
+    if (!list) return null
+    const round = !!list.querySelector('.img-row ion-card.circle-card, .km-stage-card.km-round, .km-round')
+    const bar = list.querySelector('.title-row ion-card, .km-stage-name')
+    const bg = bar ? getComputedStyle(bar).backgroundColor : ''
+    return { round, bar: !!bg && bg !== 'rgba(0, 0, 0, 0)' && bg !== 'transparent' }
   })
   const o = await overflow(page)
-  rule('R11', row && !o.scrolls, `${tag}: the tiles in one row, nothing scrolls up and down`)
+  rule(
+    'R11',
+    !!look?.round && !o.scrolls,
+    `${tag}: the tiles in the start page's album list - round, its names (on the theme's bars), nothing scrolls up and down (${JSON.stringify(look)})`,
+  )
   rule(
     'R11',
     !asked.some((u) => /\/api\/(search-podcasts|search-radio|wishes\/search)/.test(u)),
     `${tag}: nothing asked before a tile is chosen`,
   )
-  // as the start page's covers: round, the name on the theme's name bar (readable on any picture), read aloud on a tap
-  const look = await page.evaluate(() => {
-    const ic = document.querySelector('app-search .srch-ways .srch-way-ic')
-    const bar = document.querySelector('app-search .srch-ways .srch-way-name')
-    if (!ic || !bar) return null
-    const r = ic.getBoundingClientRect()
-    const bg = getComputedStyle(bar).backgroundColor
-    return {
-      round: getComputedStyle(ic).borderRadius === '50%' && Math.abs(r.width - r.height) < 2,
-      bar: bg !== 'rgba(0, 0, 0, 0)' && bg !== 'transparent',
-    }
-  })
-  rule('R11', !!look?.round && !!look?.bar, `${tag}: the tiles round, their names on a bar (${JSON.stringify(look)})`)
-  await page.click('app-search .srch-ways .srch-way-name')
-  await wait(200)
+  // a tap on a name: read aloud (the box's voice), the search stays at its start
+  const said = () => asked.filter((u) => u.includes('/say/')).length
+  const before = said()
+  await page.evaluate(() =>
+    document
+      .querySelector(
+        'app-search mupi-swiper.srch-list .title-row ion-card, app-search mupi-swiper.srch-list .km-stage-name',
+      )
+      ?.click(),
+  )
+  await wait(400)
   rule(
     'R11',
-    (await visibleCount(page, '.srch-way-name.srch-speaking')) === 1 && (await visibleCount(page, '.srch-mode')) === 0,
+    said() > before && (await visibleCount(page, '.srch-mode')) === 0,
     `${tag}: a tap on a name reads it aloud (the search stays at its start)`,
   )
   await shot(page, `${tag}-0-start`)
@@ -605,6 +684,7 @@ async function start(page, tag, asked) {
     await anywhereVisible(page, 'app-search .simple-keyboard'),
     `${tag}: a tap on the field brings the keyboard`,
   )
+  await shot(page, `${tag}-0a-start-tastatur`)
   await page.click('app-search [data-skbtn="{hide}"]')
   await wait(300)
 }
@@ -612,9 +692,9 @@ async function start(page, tag, asked) {
 /** R7 + R12: the tile "Podcasts" with nothing typed - the tips; a tip fetched, moved and taken out again */
 async function tips(page, tag, asked, dir) {
   const tipAsks = () => asked.filter((u) => u.includes('/api/search-podcasts/tips')).length
-  await page.click('app-search .srch-podcasts-btn')
-  await wait(1200)
-  const shown = await names(page, '.srch-tips .srch-pod')
+  await tapListed(page, 'Podcasts')
+  await wait(400)
+  const shown = await listNames(page)
   rule(
     'R7',
     shown.includes('Frosch Funkhaus') && !shown.includes('Erwachsenenfunk'),
@@ -629,13 +709,13 @@ async function tips(page, tag, asked, dir) {
     `${tag}: the field says where the search looks`,
   )
   await shot(page, `${tag}-0-tipps`)
-  const opened = await clickText(page, '.srch-tips .srch-pod', 'Frosch Funkhaus')
+  const opened = await tapListed(page, 'Frosch Funkhaus')
   if (!opened || (await topTag(page)) !== 'app-search-album') throw new Error('no page for the tip')
   await clickText(page, '.sa-btn', 'To the start page')
   await clickText(page, '.sa-btn', 'Radio')
   await wait(800)
   rule('R7', (await topTag(page)) === 'app-search', `${tag}: a tip put on the start page without approval`)
-  const after = await names(page, '.srch-tips .srch-pod')
+  const after = await listNames(page)
   rule(
     'R7',
     !after.includes('Frosch Funkhaus') && after.includes('Igel Insel'),
@@ -655,38 +735,34 @@ async function tips(page, tag, asked, dir) {
   rule('R11', podAsks() === 0, `${tag}: nothing asked while typing under a tile`)
   await page.click('app-search [data-skbtn="{search}"]')
   await wait(1200)
-  rule(
-    'R7',
-    !(await names(page, '.srch-pod')).includes('Biber Bande'),
-    `${tag}: a podcast the box has is not found again`,
-  )
+  rule('R7', !(await listNames(page)).includes('Biber Bande'), `${tag}: a podcast the box has is not found again`)
   rule(
     'R11',
     podAsks() === 1 &&
-      (await visibleCount(page, '.srch-pod')) > 0 &&
+      (await listNames(page)).length > 0 &&
       !(await anywhereVisible(page, 'app-search .simple-keyboard')),
     `${tag}: "Search" on the keyboard asks, the keyboard goes for the hits`,
   )
   await back(page)
   rule(
     'R11',
-    (await visibleCount(page, '.srch-ways')) === 1 && (await visibleCount(page, '.srch-mode')) === 0,
+    (await listNames(page)).includes('Podcasts') && (await visibleCount(page, '.srch-mode')) === 0,
     `${tag}: back from a tile: the tiles of the start`,
   )
 
   // R12: "Einträge verwalten" - the tip fetched: another tab, then off the start page
-  const ways = await names(page, '.srch-ways .srch-way')
+  const ways = await listNames(page)
   rule(
     'R12',
     ways[0] === 'Manage entries',
     `${tag}: "Manage entries" once the child fetched something (${ways.join(', ')})`,
   )
-  await page.click('app-search .srch-own-btn')
-  await wait(700)
-  const own = await names(page, '.srch-own')
+  await tapListed(page, 'Manage entries')
+  await wait(400)
+  const own = await listNames(page)
   rule('R12', own.includes('Frosch Funkhaus'), `${tag}: what the child fetched itself (${own.join(', ')})`)
   await shot(page, `${tag}-0c-eigene`)
-  if (!(await clickText(page, '.srch-own', 'Frosch Funkhaus')) || (await topTag(page)) !== 'app-search-album')
+  if (!(await tapListed(page, 'Frosch Funkhaus')) || (await topTag(page)) !== 'app-search-album')
     throw new Error('no page for the own entry')
   const o = await overflow(page)
   const words = await page.evaluate((top) => eval(top)?.innerText ?? '', TOP)
@@ -721,7 +797,7 @@ async function tips(page, tag, asked, dir) {
   await removeOwn(page, 'Frosch Funkhaus')
   rule(
     'R12',
-    !row() && (await visibleCount(page, '.srch-own-btn')) === 0,
+    !row() && !(await listNames(page)).includes('Manage entries'),
     `${tag}: taken off the start page; nothing of its own left, no tile for it`,
   )
 }
@@ -729,15 +805,15 @@ async function tips(page, tag, asked, dir) {
 /** R13: radio for children - the tile "Radio": tips of children's stations, one fetched without approval */
 async function radio(page, tag, asked, dir) {
   const tipAsks = () => asked.filter((u) => u.includes('/api/search-radio/tips')).length
-  await page.click('app-search .srch-radio-btn')
-  await wait(1200)
-  const shown = await names(page, '.srch-tips .srch-radio')
+  await tapListed(page, 'Radio')
+  await wait(400)
+  const shown = await listNames(page)
   rule(
     'R13',
     shown.includes('Kinderwelle') && !shown.includes('Nachrichtenwelle') && tipAsks() === 1,
     `${tag}: children's stations under "Radio", asked once (${shown.join(', ')})`,
   )
-  if (!(await clickText(page, '.srch-tips .srch-radio', 'Kinderwelle')) || (await topTag(page)) !== 'app-search-album')
+  if (!(await tapListed(page, 'Kinderwelle')) || (await topTag(page)) !== 'app-search-album')
     throw new Error('no page for the station')
   const words = await page.evaluate((top) => eval(top)?.innerText ?? '', TOP)
   const o = await overflow(page)
@@ -757,7 +833,7 @@ async function radio(page, tag, asked, dir) {
     'R13',
     (await topTag(page)) === 'app-search' &&
       row()?.kidAdded === true &&
-      !(await names(page, '.srch-tips .srch-radio')).includes('Kinderwelle'),
+      !(await listNames(page)).includes('Kinderwelle'),
     `${tag}: on the start page without approval, not offered again`,
   )
   await back(page)
@@ -944,8 +1020,8 @@ async function wishes(page, tag, dir) {
   await wait(700)
   await page.click('app-search [data-skbtn="{hide}"]')
   await wait(300)
-  await page.click('app-search .srch-ways .srch-wish-btn')
-  await wait(500)
+  await tapListed(page, 'Search Spotify')
+  await wait(400)
   rule(
     'R11',
     await anywhereVisible(page, 'app-search .simple-keyboard'),
@@ -961,8 +1037,8 @@ async function wishes(page, tag, dir) {
   await wait(1200)
   rule(
     'R11',
-    (await visibleCount(page, '.srch-wish')) > 0 && calls().length === want(5),
-    `${tag}: "Search" shows Spotify's hits kept on the display (nothing asked; ${await visibleCount(page, '.srch-wish')} hits, ${calls().length} calls: ${calls().slice(-2).join(' / ')})`,
+    (await listNames(page)).length > 0 && calls().length === want(5),
+    `${tag}: "Search" shows Spotify's hits kept on the display (nothing asked; ${(await listNames(page)).length} hits, ${calls().length} calls)`,
   )
   await back(page)
 }
@@ -1085,11 +1161,11 @@ async function wishesOff(browser, dir) {
   try {
     await page.goto(`http://localhost:${STATIC_PORT}/search`, { waitUntil: 'networkidle2' })
     await wait(2500)
-    const ways = await names(page, '.srch-ways .srch-way')
+    const ways = await listNames(page)
     rule('R9', ways.join('|') === 'Podcasts|Radio', `switch off: the tiles without Spotify (${ways.join(', ')})`)
-    await page.click('app-search .srch-podcasts-btn')
-    await wait(1200)
-    rule('R9', (await visibleCount(page, '.srch-tips .srch-pod')) > 0, 'switch off: the tips as before')
+    await tapListed(page, 'Podcasts')
+    await wait(400)
+    rule('R9', (await listNames(page)).length > 0, 'switch off: the tips as before')
     await back(page)
     await type(page, ['F', 'R', 'I'])
     rule(
@@ -1150,11 +1226,7 @@ async function podcasts(page, tag, asked) {
   await wait(900)
   await page.click('app-search .srch-own-btn')
   await wait(700)
-  rule(
-    'R6',
-    (await names(page, '.srch-own')).includes('Frosch Funkhaus'),
-    `${tag}: among what the child fetched itself`,
-  )
+  rule('R6', (await listNames(page)).includes('Frosch Funkhaus'), `${tag}: among what the child fetched itself`)
   await back(page)
   // (taken out again: the next run starts as this one)
   await removeOwn(page, 'Frosch Funkhaus')
