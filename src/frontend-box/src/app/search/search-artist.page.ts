@@ -1,5 +1,5 @@
 import { NgTemplateOutlet } from '@angular/common'
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core'
+import { ChangeDetectionStrategy, Component, computed, effect, inject, signal, untracked } from '@angular/core'
 import { Router } from '@angular/router'
 import {
   IonButton,
@@ -68,6 +68,9 @@ export class SearchArtistPage extends SwiperIonicEventsHelper {
   private readonly wishAlbums = signal<WishItem[]>([])
   private readonly wishMore = signal(false)
   protected readonly loading = signal(false)
+  private readonly failed = signal(false)
+  // (the page is in: covers that come later - Spotify's answer after the page change - are drawn as well)
+  private readonly entered = signal(false)
 
   protected readonly name = computed(() => this.entry()?.name ?? this.wishArtist()?.name ?? '')
   protected readonly swiperData = computed<SwiperData<ArtistAlbum>[]>(() =>
@@ -90,7 +93,9 @@ export class SearchArtistPage extends SwiperIonicEventsHelper {
     this.wishArtist()
       ? this.loading()
         ? 'searchAlbumsLoading'
-        : 'wishNone'
+        : this.failed()
+          ? 'searchFailed'
+          : 'wishNone'
       : this.entry()?.albums
         ? 'searchAllThere'
         : 'searchAlbumsLoading',
@@ -99,6 +104,12 @@ export class SearchArtistPage extends SwiperIonicEventsHelper {
   constructor() {
     super()
     addIcons({ arrowBackOutline })
+    // The covers' swiper is there only once the albums are: when they came after the page change (the first visit,
+    // Spotify asked), it never heard the page's events and stayed empty - back again (loaded then) it was full.
+    effect(() => {
+      const swiper = this.swiperComponent()
+      if (swiper && this.entered()) untracked(() => swiper.ionViewDidEnter())
+    })
     const state = this.router.currentNavigation()?.extras.state as
       | { entry?: PoolEntry; albums?: PoolAlbum[]; wishArtist?: WishItem }
       | undefined
@@ -126,10 +137,12 @@ export class SearchArtistPage extends SwiperIonicEventsHelper {
 
   // (no covers - all of the artist on the start page already: no swiper to tell)
   override ionViewDidEnter(): void {
+    this.entered.set(true)
     if (this.swiperComponent()) super.ionViewDidEnter()
   }
 
   override ionViewWillLeave(): void {
+    this.entered.set(false)
     if (this.swiperComponent()) super.ionViewWillLeave()
   }
 
@@ -141,9 +154,11 @@ export class SearchArtistPage extends SwiperIonicEventsHelper {
     this.loading.set(false)
     if (typeof r === 'string') {
       this.wishMore.set(false)
+      this.failed.set(r === 'failed')
       if (r === 'blocked') this.spotifyBlock.tell('catalog')
       return
     }
+    this.failed.set(false)
     this.wishAlbums.set(r.items)
     this.wishMore.set(r.more)
   }

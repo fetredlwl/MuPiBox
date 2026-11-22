@@ -256,6 +256,8 @@ async function startBackend(dir) {
       MUPIBOX_PODCAST_FIXTURE: path.join(dir, 'podcasts.json'),
       MUPIBOX_SPOTIFY_FIXTURE: path.join(dir, 'spotify.json'),
       MUPIBOX_SPOTIFY_FIXTURE_LOG: path.join(dir, 'spotify-calls.log'),
+      // (Spotify answers after the page change, as on the box: the artist's covers came then and were not drawn)
+      MUPIBOX_SPOTIFY_FIXTURE_DELAY_MS: '1200',
     },
     stdio: ['ignore', 'pipe', 'pipe'],
   })
@@ -551,7 +553,19 @@ async function wishes(page, tag, dir) {
   // the artist: 10 albums, the next 10 only when swiped to the end
   if (!(await clickText(page, '.srch-wish', 'Wunsch Künstler')) || (await topTag(page)) !== 'app-search-artist')
     throw new Error('no page for the artist')
-  await wait(800)
+  // (the covers drawn at the first visit too - they came after the page change; back again they were there)
+  const shownCovers = () =>
+    page.evaluate(
+      () =>
+        [...document.querySelectorAll('app-search-artist .km-stage-item, app-search-artist swiper-slide')].filter(
+          (el) => {
+            const r = el.getBoundingClientRect()
+            return r.width > 20 && r.height > 20 && r.right > 0 && r.left < innerWidth
+          },
+        ).length,
+    )
+  for (let i = 0; i < 30 && (await shownCovers()) === 0; i++) await wait(200)
+  rule('R8', (await shownCovers()) > 0, `${tag}: the artist's covers are drawn when they come late`)
   rule('R8', calls().length === want(3), `${tag}: the artist's first 10 albums${kept} (${calls().length} calls)`)
   // swiping as a finger does (the coverflow and the km stage alike): to the left until more come or the end is reached
   const swipe = async () => {
@@ -660,15 +674,33 @@ async function appWishes(browser, dir) {
     await wait(2500)
     if (shots) await page.screenshot({ path: path.join(shots, 'app-wuensche.png') })
     const text = await page.evaluate(() => document.body.innerText)
-    const wished = JSON.parse(fs.readFileSync(path.join(dir, 'config', 'wishes.json'), 'utf8')).find((w) => w.status === 'open')
-    rule('R10', !!wished && text.includes(wished.name) && (await page.$('[data-wish-yes]')) !== null, `app: the wish "${wished?.name}" waits on the page "Wünsche"`)
+    const wished = JSON.parse(fs.readFileSync(path.join(dir, 'config', 'wishes.json'), 'utf8')).find(
+      (w) => w.status === 'open',
+    )
+    rule(
+      'R10',
+      !!wished && text.includes(wished.name) && (await page.$('[data-wish-yes]')) !== null,
+      `app: the wish "${wished?.name}" waits on the page "Wünsche"`,
+    )
     await page.click('[data-wish-yes]')
     await wait(2000)
     const rows = JSON.parse(fs.readFileSync(path.join(dir, 'config', 'data.json'), 'utf8'))
-    const row = rows.find((r) => r.id === wished?.spotifyId || r.artistid === wished?.spotifyId || r.showid === wished?.spotifyId)
-    rule('R10', !!row && row.category === wished.category && row.kidAdded === true, `app: approved, on the start page under the child's tab (${row?.category})`)
-    const after = JSON.parse(fs.readFileSync(path.join(dir, 'config', 'wishes.json'), 'utf8')).find((w) => w.id === wished?.id)
-    rule('R10', after?.status === 'approved' && (await page.$(`[data-wish-yes="${wished?.id}"]`)) === null, 'app: the wish is decided, not offered again')
+    const row = rows.find(
+      (r) => r.id === wished?.spotifyId || r.artistid === wished?.spotifyId || r.showid === wished?.spotifyId,
+    )
+    rule(
+      'R10',
+      !!row && row.category === wished.category && row.kidAdded === true,
+      `app: approved, on the start page under the child's tab (${row?.category})`,
+    )
+    const after = JSON.parse(fs.readFileSync(path.join(dir, 'config', 'wishes.json'), 'utf8')).find(
+      (w) => w.id === wished?.id,
+    )
+    rule(
+      'R10',
+      after?.status === 'approved' && (await page.$(`[data-wish-yes="${wished?.id}"]`)) === null,
+      'app: the wish is decided, not offered again',
+    )
   } catch (err) {
     rule('R10', false, `app: the page "Wünsche" could not be checked (${firstLine(err)})`)
   } finally {

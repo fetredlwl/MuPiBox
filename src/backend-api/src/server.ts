@@ -1240,8 +1240,11 @@ registerSearchPodcastsRoutes(app, {
 // MUPIBOX_SPOTIFY_FIXTURE: invented pages for the development server and tools/display-check, each call written to
 // MUPIBOX_SPOTIFY_FIXTURE_LOG (the check counts them)
 const spotifyFixture = !productionServe && process.env.MUPIBOX_SPOTIFY_FIXTURE ? String(process.env.MUPIBOX_SPOTIFY_FIXTURE) : ''
-const fixtureCall = (what: string) => {
+// (answered as late as Spotify does - MUPIBOX_SPOTIFY_FIXTURE_DELAY_MS: covers that come after the page change)
+const fixtureCall = async (what: string) => {
   if (process.env.MUPIBOX_SPOTIFY_FIXTURE_LOG) fs.appendFileSync(String(process.env.MUPIBOX_SPOTIFY_FIXTURE_LOG), `${what}\n`)
+  const delay = Number(process.env.MUPIBOX_SPOTIFY_FIXTURE_DELAY_MS) || 0
+  if (delay > 0) await new Promise((resolve) => setTimeout(resolve, delay))
   return JSON.parse(fs.readFileSync(spotifyFixture, 'utf8'))
 }
 registerWishesRoutes(app, {
@@ -1250,14 +1253,14 @@ registerWishesRoutes(app, {
   pool: searchPool,
   getMupiboxConfig: () => getMupiboxConfigSync() as unknown as Record<string, unknown> | undefined,
   searchPage: async (q, offset) => {
-    if (spotifyFixture) return fixtureCall(`search ${q} ${offset}`).search[String(offset)]
+    if (spotifyFixture) return (await fixtureCall(`search ${q} ${offset}`)).search[String(offset)]
     if (!spotifyApiService) throw Object.assign(new Error('no Spotify'), { status: 503 })
     return spotifyApiService.searchWishPage(q, offset)
   },
   artistPage: async (artistId, offset) => {
     const pick = (images?: { url?: string }[]) => images?.[1]?.url ?? images?.[0]?.url ?? ''
     if (spotifyFixture) {
-      const all = (fixtureCall(`artist ${artistId} ${offset}`).artists[artistId] ?? []) as { id: string; name: string; cover: string }[]
+      const all = ((await fixtureCall(`artist ${artistId} ${offset}`)).artists[artistId] ?? []) as { id: string; name: string; cover: string }[]
       return { items: all.slice(offset, offset + 10), total: all.length }
     }
     if (!spotifyApiService) throw Object.assign(new Error('no Spotify'), { status: 503 })
