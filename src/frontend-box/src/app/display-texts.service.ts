@@ -82,7 +82,7 @@ export const DEFAULT_DISPLAY_TEXTS = {
   // (fork "wishes") Spotify blocks the box and does not play (SpotifyPauseComponent)
   spotifyPausePlayer: 'Spotify is not working right now. You can listen to radio and podcasts.',
   // (fork "wishes") the search on the display (search page): {n} = a name, {c} = a tab
-  searchPlaceholder: 'Type a name',
+  searchPlaceholder: 'What would you like to hear?',
   searchStart: 'Type the first letters.',
   searchLoading: 'Loading the library …',
   searchNothing: 'Nothing found.',

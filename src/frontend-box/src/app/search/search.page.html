@@ -55,7 +55,8 @@
   <!-- Spotify is asked only now (never while typing) -->
   <button class="srch-hit srch-pod-btn srch-way srch-wish-btn" type="button" [disabled]="wishBusy()" (click)="wishTileClicked()">
     <span class="srch-cover srch-pod-ic">
-      <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5" /><path d="M15.5 15.5 21 21" /><path d="M10.5 7.5v6M7.5 10.5h6" /></svg>
+      <!-- (Spotify's sign drawn as the other tiles' icons: a ring, three arcs) -->
+      <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9" /><path d="M7.2 9.6c3.3-1 6.9-.7 9.8.9" /><path d="M7.8 12.7c2.7-.8 5.6-.5 8 .8" /><path d="M8.5 15.6c2-.5 4.2-.3 5.9.6" /></svg>
     </span>
     <span class="srch-name">{{ texts.text(wishBusy() ? 'wishLoading' : 'wishSearchTile') }}</span>
   </button>
