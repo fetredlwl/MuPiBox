@@ -62,6 +62,22 @@ export interface RunSyncResult {
   retryAfterSeconds?: number
 }
 
+// A block's reason gets "(told to the ...)" once: a run during the block added it, a block noted from such a reason
+// carried it on, and each restart of the box added one more ("... (told to the sync) (told to the sync) ...").
+const TOLD_TO = /(?:\s*\(told to the (?:sync|player|display's lists)\))+\s*$/
+
+/** The reason without its "(told to the ...)". */
+export function withoutToldTo(reason: string): string {
+  return reason.replace(TOLD_TO, '')
+}
+
+/** The reason with only the first of its "(told to the ...)" (one kept from before this version had several). */
+export function oneToldTo(reason: string): string {
+  const chain = reason.match(TOLD_TO)?.[0]
+  const first = chain?.match(/\(told to the (?:sync|player|display's lists)\)/)?.[0]
+  return first ? `${withoutToldTo(reason)} ${first}` : reason
+}
+
 /**
  * Run one sync cycle. Idempotent under failure — leaves the state file
  * with the latest run outcome, never partially applies a diff.
@@ -112,8 +128,9 @@ export async function runSync(trigger: SyncTrigger, deps: RunSyncDeps, opts: { a
     if (state === 'RATE_LIMITED' && wait > 0) {
       const until = new Date(endedAt.getTime() + wait * 1000)
       rateLimitedUntil = until.toISOString()
-      // (the display's lists wait for it too)
-      noteSpotifyBlock(until.getTime(), 'sync', extras.reason ?? '429')
+      // (the display's lists wait for it too - a block known at the start is noted already: noted again, its reason came
+      // back with "(told to the sync)" added, and after every restart of the box once more)
+      if (!stillBlocked) noteSpotifyBlock(until.getTime(), 'sync', extras.reason ?? '429')
       extras = { ...extras, nextScheduled: extras.nextScheduled ?? rateLimitedUntil }
       if (!stillBlocked)
         console.warn(
@@ -169,8 +186,8 @@ export async function runSync(trigger: SyncTrigger, deps: RunSyncDeps, opts: { a
   if (stillBlocked) {
     return finalise('RATE_LIMITED', undefined, {
       reason:
-        (previousState.last_sync_status === 'RATE_LIMITED' ? previousState.last_sync_reason : null) ??
-        (sharedBlock ? `${sharedBlock.reason} (told to the ${sharedBlock.source === 'sync' ? 'sync' : "display's lists"})` : null) ??
+        (previousState.last_sync_status === 'RATE_LIMITED' && previousState.last_sync_reason ? oneToldTo(previousState.last_sync_reason) : null) ??
+        (sharedBlock ? `${withoutToldTo(sharedBlock.reason)} (told to the ${sharedBlock.source === 'sync' || sharedBlock.source === 'player' ? sharedBlock.source : "display's lists"})` : null) ??
         'Spotify blocks the requests',
       retryAfterSeconds: Math.ceil((blockedUntil - Date.now()) / 1000),
     })

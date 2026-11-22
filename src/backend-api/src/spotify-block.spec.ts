@@ -83,7 +83,11 @@ describe('spotify-block: a quota block of the catalog, switch on', () => {
   it('the sync noting the same block again (its reason carries the quota) changes nothing', () => {
     const until = hours(11)
     block.noteSpotifyBlock(until, 'display', '429 (Spotify: wait 41855 s, QUOTA_EXCEEDED)')
-    block.noteSpotifyBlock(until, 'sync', '/x not asked: Spotify blocks for 41855 s more (429 (Spotify: wait 41855 s, QUOTA_EXCEEDED))')
+    block.noteSpotifyBlock(
+      until,
+      'sync',
+      '/x not asked: Spotify blocks for 41855 s more (429 (Spotify: wait 41855 s, QUOTA_EXCEEDED))',
+    )
     assert.equal(block.playerUntilOf(block.spotifyBlock()), 0)
   })
 })
@@ -131,7 +135,31 @@ describe('spotify_sync.split_quota_block in the settings', () => {
     const { loadSpotifySyncConfig } = await import('./spotify-sync/config-loader')
     type Cfg = Parameters<typeof loadSpotifySyncConfig>[0]
     assert.equal(loadSpotifySyncConfig({} as Cfg).split_quota_block, false)
-    assert.equal(loadSpotifySyncConfig({ spotify_sync: { split_quota_block: 'yes' } } as unknown as Cfg).split_quota_block, false)
-    assert.equal(loadSpotifySyncConfig({ spotify_sync: { split_quota_block: true } } as unknown as Cfg).split_quota_block, true)
+    assert.equal(
+      loadSpotifySyncConfig({ spotify_sync: { split_quota_block: 'yes' } } as unknown as Cfg).split_quota_block,
+      false,
+    )
+    assert.equal(
+      loadSpotifySyncConfig({ spotify_sync: { split_quota_block: true } } as unknown as Cfg).split_quota_block,
+      true,
+    )
+  })
+})
+
+describe('the reason of a block the sync ran into', () => {
+  it('keeps one "(told to the ...)"', async () => {
+    const { oneToldTo, withoutToldTo } = await import('./spotify-sync/state-machine')
+    const seen =
+      "429 (Spotify: wait 41855 s) (told to the display's lists) (told to the sync) (told to the sync) (told to the sync)"
+    assert.equal(oneToldTo(seen), "429 (Spotify: wait 41855 s) (told to the display's lists)")
+    assert.equal(withoutToldTo(seen), '429 (Spotify: wait 41855 s)')
+    assert.equal(
+      oneToldTo('429 from /me/playlists (Spotify: wait 60 s)'),
+      '429 from /me/playlists (Spotify: wait 60 s)',
+    )
+    assert.equal(
+      oneToldTo('429 (Spotify: wait 5 s, QUOTA_EXCEEDED) (told to the sync)'),
+      '429 (Spotify: wait 5 s, QUOTA_EXCEEDED) (told to the sync)',
+    )
   })
 })
