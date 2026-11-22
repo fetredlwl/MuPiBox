@@ -5974,6 +5974,8 @@ async function loadSyncConfig() {
   state.values.set('syncInt', Math.max(5, Math.min(60, Math.round((c.polling_interval_seconds ?? 900) / 60 / 5) * 5)))
   // (fork "wishes": seconds between the Spotify requests of the background work)
   state.values.set('bgSec', Math.max(5, Math.min(120, Math.round((c.background_request_seconds ?? 15) / 5) * 5)))
+  // (fork "wishes": a quota block of the catalog leaves the box playing)
+  state.values.set('quotaSplit', c.split_quota_block === true)
   state.values.set('syncOn', !!c.enabled)
 }
 
@@ -12228,8 +12230,21 @@ const CONTROLLERS = {
         help: 'Wie lange die Box zwischen zwei Anfragen an Spotify wartet, wenn sie im Hintergrund viele Seiten holt – z. B. alle Alben eines Künstlers, der „Nur in der Suche“ freigegeben ist (bei großen Künstlern über 10 Seiten). Zu viele Anfragen auf einmal: Spotify sperrt die Box für Stunden.',
         items: [{ type: 'slider', label: 'Sekunden zwischen Spotify-Anfragen', key: 'bgSec', default: 15, min: 5, max: 120, step: 5, unit: ' s', help: 'Mehr Sekunden: Freigegebene Künstler sind später vollständig in der Suche, die Box ist aber vor Sperren sicherer.' }],
       }
+      // (fork "wishes") a quota block of the catalog only - off: every block stops all of it, as MuPiBox has it
+      const quota = {
+        title: 'Spotify-Sperren',
+        help: 'Spotify zählt die Anfragen der Box in getrennten Kontingenten. Ist das Kontingent für Kataloganfragen (Suche, Künstler, Alben, Playlists, Sync) aufgebraucht, sperrt Spotify die Box oft für viele Stunden – das Abspielen über den Player nimmt Spotify dabei aber weiter an.',
+        items: [
+          {
+            type: 'toggle',
+            label: 'Kontingente trennen',
+            key: 'quotaSplit',
+            help: 'An: Bei einer solchen Sperre spielt die Box weiter ab, was sie schon hat (Abspielen, Pause, Weiter); gesperrt sind nur Suche, Künstlerseiten und Sync. Jede andere Sperre hält wie bisher alles an. Aus: Jede Sperre hält alles an, wie in der MuPiBox vorgesehen. Gilt ab der nächsten Sperre; beim Ausschalten wartet auch das Abspielen sofort.',
+          },
+        ],
+      }
       const at = secs.findIndex((s) => s.items.some((it) => it.key === 'syncInt'))
-      secs.splice(at >= 0 ? at + 1 : secs.length, 0, bg)
+      secs.splice(at >= 0 ? at + 1 : secs.length, 0, bg, quota)
       return secs
     },
     byLabel: {
@@ -12239,7 +12254,7 @@ const CONTROLLERS = {
         if (!prefixOk(prefix)) return
         const r = await api(`${SYNC_API}/config`, {
           method: 'POST',
-          body: { enabled: !!state.values.get('syncOn'), playlist_prefix: prefix, polling_interval_seconds: minutes * 60, background_request_seconds: Number(state.values.get('bgSec')) || 15 },
+          body: { enabled: !!state.values.get('syncOn'), playlist_prefix: prefix, polling_interval_seconds: minutes * 60, background_request_seconds: Number(state.values.get('bgSec')) || 15, split_quota_block: !!state.values.get('quotaSplit') },
         })
         toast(r.ok ? 'Gespeichert' : r.body?.error ?? 'Nicht gespeichert', r.ok ? 'ok' : 'info')
       },

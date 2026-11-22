@@ -14,6 +14,8 @@
 // skipping through the player, with the lists it keeps; the app's searches, artist pages and the Smart-Sync wait. Any
 // other 429 (the 30-second rate limit counts all the app's requests) holds back the player too, as does every 429 the
 // player is answered with (it notes playerUntil itself). A file of an older version has no playerUntil: all of it waits.
+// Only with the switch in the app (Sync-Einstellungen › Spotify-Sperren, spotify_sync.split_quota_block): off, every
+// block holds back all of it as before - for the blocks noted from then on; switched on, from the next block.
 
 import * as fs from 'node:fs'
 import * as path from 'node:path'
@@ -40,6 +42,13 @@ export interface SpotifyBlock {
 /** Spotify's quota of the catalog used up: its 429 names it so (in the reason the box keeps of it). */
 export const QUOTA_EXCEEDED = 'QUOTA_EXCEEDED'
 const isQuota = (text: string) => text.includes(QUOTA_EXCEEDED)
+
+// the switch (server.ts: spotify_sync.split_quota_block) - off until it is told
+let quotaSplit: () => boolean = () => false
+/** Where the switch is read (the box's settings). */
+export function useQuotaSplit(isOn: () => boolean): void {
+  quotaSplit = isOn
+}
 
 /** Until when the player waits too (0: not at all). */
 export function playerUntilOf(block: SpotifyBlock | null): number {
@@ -122,7 +131,13 @@ export function noteSpotifyBlock(until: number, source: string, reason: string):
   load()
   if (!(until > Date.now())) return
   // (a QUOTA_EXCEEDED of the catalog holds back the catalog only - see above)
-  const note: SpotifyBlock = { until, source, reason, since: Date.now(), playerUntil: isQuota(reason) ? 0 : until }
+  let split = false
+  try {
+    split = isQuota(reason) && quotaSplit() === true
+  } catch {
+    // (the settings not readable: as without the switch)
+  }
+  const note: SpotifyBlock = { until, source, reason, since: Date.now(), playerUntil: split ? 0 : until }
   const next = merged(current, note) as SpotifyBlock
   if (current && next.until === current.until && playerUntilOf(next) === playerUntilOf(current)) return
   current = next
@@ -137,6 +152,14 @@ export function spotifyBlock(): SpotifyBlock | null {
     write()
   }
   return current
+}
+
+/** The switch turned off: a block of the catalog only holds back the player too from now on. */
+export function holdPlayerToo(): void {
+  load()
+  if (!current || playerUntilOf(current) >= current.until) return
+  current = { ...current, playerUntil: current.until }
+  write()
 }
 
 const clearedListeners: Array<() => void> = []

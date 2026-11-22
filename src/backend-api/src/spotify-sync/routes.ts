@@ -17,7 +17,7 @@ import { loadSpotifySyncConfig, loadSpotifyTokenStore } from './config-loader'
 import { getValidAccessToken, requiresReAuth, tokenStillValid } from './auth'
 import { fetchArtistAlbums, SpotifyApiException, spotifyGet } from './playlists'
 import { playlistMatchesPrefix } from './categorizer'
-import { playerUntilOf, spotifyBlock } from '../spotify-block'
+import { holdPlayerToo, playerUntilOf, spotifyBlock } from '../spotify-block'
 import { readStateFile } from './state-file'
 import { triggerManualSync } from './scheduler'
 import type { RunSyncDeps } from './state-machine'
@@ -186,6 +186,7 @@ export function createSpotifySyncRouter(deps: RunSyncDeps): Router {
         Math.min(BACKGROUND_REQUEST_SECONDS_MAX, Math.round(body.background_request_seconds)),
       )
     }
+    if (typeof body.split_quota_block === 'boolean') mutations.split_quota_block = body.split_quota_block
     if (Array.isArray(body.playlist_explicit_ids)) {
       mutations.playlist_explicit_ids = body.playlist_explicit_ids.filter((id): id is string => typeof id === 'string')
     }
@@ -204,6 +205,8 @@ export function createSpotifySyncRouter(deps: RunSyncDeps): Router {
       cfg.spotify_sync = existing
     })
     const merged = loadSpotifySyncConfig(deps.getMupiboxConfig())
+    // (switched off during a quota block of the catalog: the player waits for it too from now on)
+    if (mutations.split_quota_block === false) holdPlayerToo()
     res.json({ ok: true, applied: mutations, current: merged })
   })
 

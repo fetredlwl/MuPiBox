@@ -11,15 +11,20 @@ process.env.SPOTIFY_BLOCK_FILE = FILE
 
 type BlockModule = typeof import('./spotify-block')
 let block: BlockModule
+// the switch in the app (spotify_sync.split_quota_block)
+let split = true
 before(async () => {
   block = await import('./spotify-block')
+  block.useQuotaSplit(() => split)
 })
 afterEach(() => {
+  split = true
   block.clearSpotifyBlock('test over')
   fs.rmSync(FILE, { force: true })
 })
 
-const inFile = () => JSON.parse(fs.readFileSync(FILE, 'utf8')) as { until: number; playerUntil?: number; reason: string }
+const inFile = () =>
+  JSON.parse(fs.readFileSync(FILE, 'utf8')) as { until: number; playerUntil?: number; reason: string }
 const hours = (h: number) => Date.now() + h * 3600 * 1000
 // (the file's time moves on: a second write in the same millisecond would look unchanged)
 const writeFile = (content: unknown) => {
@@ -28,7 +33,7 @@ const writeFile = (content: unknown) => {
   fs.utimesSync(FILE, t, t)
 }
 
-describe('spotify-block: a quota block of the catalog', () => {
+describe('spotify-block: a quota block of the catalog, switch on', () => {
   it('holds back the catalog only - the player goes on', () => {
     const until = hours(11)
     block.noteSpotifyBlock(until, 'display', '429 (Spotify: wait 41855 s, QUOTA_EXCEEDED)')
@@ -80,5 +85,53 @@ describe('spotify-block: a quota block of the catalog', () => {
     block.noteSpotifyBlock(until, 'display', '429 (Spotify: wait 41855 s, QUOTA_EXCEEDED)')
     block.noteSpotifyBlock(until, 'sync', '/x not asked: Spotify blocks for 41855 s more (429 (Spotify: wait 41855 s, QUOTA_EXCEEDED))')
     assert.equal(block.playerUntilOf(block.spotifyBlock()), 0)
+  })
+})
+
+describe('spotify-block: switch off (as MuPiBox has it)', () => {
+  it('a quota block holds back the player too', () => {
+    split = false
+    const until = hours(11)
+    block.noteSpotifyBlock(until, 'display', '429 (Spotify: wait 41855 s, QUOTA_EXCEEDED)')
+    assert.equal(block.playerUntilOf(block.spotifyBlock()), until)
+    assert.equal(inFile().playerUntil, until)
+  })
+
+  it('the switch unreadable: as off', () => {
+    block.useQuotaSplit(() => {
+      throw new Error('no settings')
+    })
+    try {
+      const until = hours(11)
+      block.noteSpotifyBlock(until, 'display', '429 (Spotify: wait 41855 s, QUOTA_EXCEEDED)')
+      assert.equal(block.playerUntilOf(block.spotifyBlock()), until)
+    } finally {
+      block.useQuotaSplit(() => split)
+    }
+  })
+
+  it('switched off during a quota block of the catalog: the player waits from then on', () => {
+    const until = hours(11)
+    block.noteSpotifyBlock(until, 'display', '429 (Spotify: wait 41855 s, QUOTA_EXCEEDED)')
+    assert.equal(block.playerUntilOf(block.spotifyBlock()), 0)
+    split = false
+    block.holdPlayerToo()
+    assert.equal(block.playerUntilOf(block.spotifyBlock()), until)
+    assert.equal(inFile().playerUntil, until)
+  })
+
+  it('switched off without a block: nothing written', () => {
+    block.holdPlayerToo()
+    assert.equal(fs.existsSync(FILE), false)
+  })
+})
+
+describe('spotify_sync.split_quota_block in the settings', () => {
+  it('off unless set to true', async () => {
+    const { loadSpotifySyncConfig } = await import('./spotify-sync/config-loader')
+    type Cfg = Parameters<typeof loadSpotifySyncConfig>[0]
+    assert.equal(loadSpotifySyncConfig({} as Cfg).split_quota_block, false)
+    assert.equal(loadSpotifySyncConfig({ spotify_sync: { split_quota_block: 'yes' } } as unknown as Cfg).split_quota_block, false)
+    assert.equal(loadSpotifySyncConfig({ spotify_sync: { split_quota_block: true } } as unknown as Cfg).split_quota_block, true)
   })
 })

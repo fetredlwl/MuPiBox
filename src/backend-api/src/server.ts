@@ -34,6 +34,7 @@ import { fetchFullPlaylistTracks } from './services/spotify-playlist-full'
 import { getValidAccessToken } from './spotify-sync/auth'
 import { SpotifyApiException } from './spotify-sync/playlists'
 import { loadSpotifySyncConfig, loadSpotifyTokenStore } from './spotify-sync/config-loader'
+import { useQuotaSplit } from './spotify-block'
 import { createSpotifySyncRouter } from './spotify-sync/routes'
 import { startScheduler } from './spotify-sync/scheduler'
 import type { RunSyncDeps } from './spotify-sync/state-machine'
@@ -1217,6 +1218,11 @@ const searchPool = registerSearchPoolRoutes(app, {
   session: requireSession,
   csrf: requireCsrf,
 })
+
+// (fork "wishes") whether a quota block of the catalog leaves the box playing: Sync-Einstellungen › Spotify-Sperren
+useQuotaSplit(
+  () => loadSpotifySyncConfig(getMupiboxConfigSync() as unknown as Parameters<typeof loadSpotifySyncConfig>[0]).split_quota_block,
+)
 
 // Whether the box has no internet right now (network.json, written every minute by get_network.sh)
 let offlineCheck = { at: 0, offline: false }
