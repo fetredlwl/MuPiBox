@@ -11,7 +11,7 @@
   } @else {
     <ion-toolbar color="light">
       <ion-buttons slot="start">
-        <ion-button aria-label="Zurück" (click)="goBack()">
+        <ion-button data-mupi-back aria-label="Zurück" (click)="goBack()">
           <ion-icon slot="icon-only" name="arrow-back-outline"></ion-icon>
         </ion-button>
       </ion-buttons>
@@ -21,10 +21,13 @@
   }
 </ion-header>
 
-<!-- the search field: what was typed (a tap brings the keyboard back), ✕ empties it -->
+<!-- the search field: where it searches (a tile chosen), what was typed (a tap brings the keyboard), ✕ empties it -->
 <ng-template #field>
   <div class="srch-field" role="searchbox" [attr.aria-label]="'Suche'" (click)="showKeyboard()">
     <svg class="srch-glass" viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5" /><path d="M15.5 15.5 21 21" /></svg>
+    @if (mode(); as m) {
+      <span class="srch-mode" [attr.data-mode]="m">{{ texts.text(modeLabel[m]) }}</span>
+    }
     @if (query()) {
       <span class="srch-text">{{ query() }}</span>
     } @else {
@@ -39,117 +42,233 @@
   </div>
 </ng-template>
 
-<ion-content class="search-content" [class.srch-kb-open]="keyboardShown()" [class.srch-two]="own().length && tipsShown().length">
-  @if (query().trim().length < 2) {
-    @if (own().length) {
-      <!-- what the child put on the start page itself: a tap marks it, a second tap takes it out -->
-      <p class="srch-label">{{ texts.text('searchOwnLabel') }}</p>
-      <div class="srch-hits">
-        @for (o of own(); track o.ident) {
-          <button class="srch-hit srch-own" type="button" [class.srch-artist]="o.kind === 'artist'" [class.srch-removing]="removing() === o.ident" (click)="removeOwn(o)">
-            <span class="srch-cover"><img [src]="coverUrl(o.cover)" alt="" loading="lazy" /><span class="srch-x" aria-hidden="true">✕</span></span>
-            <span class="srch-name">{{ removing() === o.ident ? texts.text('searchRemoveQ') : o.name }}</span>
-            <span class="srch-sub">{{ catLabel(o.category) }}</span>
-          </button>
-        }
-      </div>
-    }
-    @if (tipsShown().length) {
-      <!-- podcasts for children to start with (the app's suggestions): the child may put them on the start page itself -->
-      <div class="srch-tips">
-        <p class="srch-label">{{ texts.text('searchTipsLabel') }}</p>
+<!-- the tiles: where to search (the start) or what to ask for the typed text (after the hits of the box) -->
+<ng-template #ownTile>
+  <button class="srch-hit srch-pod-btn srch-way srch-own-btn" type="button" (click)="enterMode('own')">
+    <span class="srch-cover srch-pod-ic">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h10M4 12h10M4 18h6" /><path d="M17 14l3 3-3 3M20 17h-6" /></svg>
+    </span>
+    <span class="srch-name">{{ texts.text('searchManageTile') }}</span>
+  </button>
+</ng-template>
+<ng-template #wishTile>
+  <!-- Spotify is asked only now (never while typing) -->
+  <button class="srch-hit srch-pod-btn srch-way srch-wish-btn" type="button" [disabled]="wishBusy()" (click)="wishTileClicked()">
+    <span class="srch-cover srch-pod-ic">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5" /><path d="M15.5 15.5 21 21" /><path d="M10.5 7.5v6M7.5 10.5h6" /></svg>
+    </span>
+    <span class="srch-name">{{ texts.text(wishBusy() ? 'wishLoading' : 'wishSearchTile') }}</span>
+  </button>
+</ng-template>
+<ng-template #podTile>
+  <!-- the directories are asked only now (never while typing) -->
+  <button class="srch-hit srch-pod-btn srch-way srch-podcasts-btn" type="button" [disabled]="podBusy()" (click)="podTileClicked()">
+    <span class="srch-cover srch-pod-ic">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 15v-3a8 8 0 0 1 16 0v3" /><path d="M4 15h3v6H5a1 1 0 0 1-1-1zM20 15h-3v6h2a1 1 0 0 0 1-1z" /></svg>
+    </span>
+    <span class="srch-name">{{ texts.text(podBusy() ? 'searchPodcastsLoading' : 'searchPodcastsButton') }}</span>
+  </button>
+</ng-template>
+<ng-template #radioTile>
+  <!-- the directory is asked only now (never while typing) -->
+  <button class="srch-hit srch-pod-btn srch-way srch-radio-btn" type="button" [disabled]="radioBusy()" (click)="radioTileClicked()">
+    <span class="srch-cover srch-pod-ic">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="9" width="18" height="12" rx="2" /><path d="M7 9 17 4" /><circle cx="15.5" cy="15" r="2.5" /><path d="M6.5 13.5h3M6.5 16.5h3" /></svg>
+    </span>
+    <span class="srch-name">{{ texts.text(radioBusy() ? 'searchPodcastsLoading' : 'searchRadioButton') }}</span>
+  </button>
+</ng-template>
+
+<!-- podcasts and radio stations for children: their page puts them on the start page (no approval needed) -->
+<ng-template #podList let-pods>
+  @for (p of pods; track p.feedUrl) {
+    <button class="srch-hit srch-pod" type="button" (click)="openKidsPodcast(p)">
+      <span class="srch-cover"><img [src]="coverUrl(p.image)" alt="" loading="lazy" /><span class="srch-plus" aria-hidden="true">+</span></span>
+      <span class="srch-name">{{ p.title }}</span>
+      <span class="srch-sub">{{ p.author }}</span>
+    </button>
+  }
+</ng-template>
+<ng-template #radioList let-stations>
+  @for (s of stations; track s.url) {
+    <button class="srch-hit srch-pod srch-radio" type="button" (click)="openKidsRadio(s)">
+      <span class="srch-cover"><img [src]="coverUrl(s.image)" alt="" loading="lazy" /><span class="srch-plus" aria-hidden="true">+</span></span>
+      <span class="srch-name">{{ s.name }}</span>
+    </button>
+  }
+</ng-template>
+<!-- found on Spotify: the child may wish it (the parents decide in the app) -->
+<ng-template #wishList let-ws>
+  @for (w of ws; track w.kind + w.id) {
+    <button class="srch-hit srch-wish" type="button" [class.srch-artist]="w.kind === 'artist'" (click)="openWish(w)">
+      <span class="srch-cover"><img [src]="coverUrl(w.cover)" alt="" loading="lazy" /><span class="srch-star" aria-hidden="true">★</span></span>
+      <span class="srch-name">{{ w.name }}</span>
+      <span class="srch-sub">{{ isWished(w) ? texts.text('wishWished') : w.artist }}</span>
+    </button>
+  }
+  @if (wishMore()) {
+    <!-- the next page when this comes into view -->
+    <span class="srch-end" aria-hidden="true" (mupiNearEnd)="moreWishes()"></span>
+  }
+</ng-template>
+
+<ion-content class="search-content" [class.srch-kb-open]="keyboardShown()">
+  @switch (mode()) {
+    @case ('own') {
+      <!-- "Einträge verwalten": what the child put on the start page itself - its page moves or removes it -->
+      @if (ownShown().length) {
         <div class="srch-hits">
-          @for (p of tipsShown(); track p.feedUrl) {
-            <button class="srch-hit srch-pod srch-tip" type="button" (click)="openKidsPodcast(p)">
-              <span class="srch-cover"><img [src]="coverUrl(p.image)" alt="" loading="lazy" /><span class="srch-plus" aria-hidden="true">+</span></span>
-              <span class="srch-name">{{ p.title }}</span>
+          @for (o of ownShown(); track o.ident) {
+            <button class="srch-hit srch-own" type="button" [class.srch-artist]="o.kind === 'artist'" (click)="openOwn(o)">
+              <span class="srch-cover"><img [src]="coverUrl(o.cover)" alt="" loading="lazy" /></span>
+              <span class="srch-name">{{ o.name }}</span>
+              <span class="srch-sub">{{ catLabel(o.category) }}</span>
             </button>
           }
         </div>
-      </div>
+      } @else {
+        <p class="srch-note">{{ texts.text('searchNothing') }}</p>
+      }
     }
-    @if (!own().length && !tipsShown().length) {
-      <p class="srch-note">{{ texts.text('searchStart') }}</p>
-    }
-  } @else if (loading()) {
-    <p class="srch-note">{{ texts.text('searchLoading') }}</p>
-  } @else if (nothingFound()) {
-    <p class="srch-note">{{ texts.text('searchNothing') }}</p>
-  }
-  @if (query().trim().length >= 2) {
-    <div class="srch-hits">
-      @for (hit of hits(); track hit.key) {
-        <button class="srch-hit" type="button" [class.srch-artist]="hit.round" [class.srch-off]="spotifyBlock.player() && isSpotify(hit)" (click)="hitClicked(hit)">
-          <span class="srch-cover"><img [src]="hit.imgSrc | async" alt="" loading="lazy" />
-            @if (hit.pool) {
-              <!-- from the pool: not on the start page yet -->
-              <span class="srch-plus" aria-hidden="true">+</span>
+    @case ('podcasts') {
+      @if (typed()) {
+        <div class="srch-hits">
+          @if (podShown(); as pods) {
+            <ng-container *ngTemplateOutlet="podList; context: { $implicit: pods }"></ng-container>
+            @if (!pods.length) {
+              <p class="srch-pod-none">{{ texts.text('searchPodcastsNone') }}</p>
             }
-          </span>
-          <span class="srch-name">{{ hit.name }}</span>
-          @if (hit.sub) {
-            <span class="srch-sub">{{ hit.sub }}</span>
+          } @else {
+            <ng-container *ngTemplateOutlet="podTile"></ng-container>
           }
-        </button>
+        </div>
+      } @else if (tipsShown().length) {
+        <!-- podcasts for children to start with (the app's suggestions) -->
+        <p class="srch-label">{{ texts.text('searchTipsLabel') }}</p>
+        <div class="srch-hits srch-tips">
+          <ng-container *ngTemplateOutlet="podList; context: { $implicit: tipsShown() }"></ng-container>
+        </div>
       }
-      @if (podcastsOn()) {
-        @if (podShown(); as pods) {
-          <!-- podcasts for children found for this text: the child may put them on the start page itself -->
-          @for (p of pods; track p.feedUrl) {
-            <button class="srch-hit srch-pod" type="button" (click)="openKidsPodcast(p)">
-              <span class="srch-cover"><img [src]="coverUrl(p.image)" alt="" loading="lazy" /><span class="srch-plus" aria-hidden="true">+</span></span>
-              <span class="srch-name">{{ p.title }}</span>
-              <span class="srch-sub">{{ p.author }}</span>
+    }
+    @case ('radio') {
+      @if (typed()) {
+        <div class="srch-hits">
+          @if (radioShown(); as stations) {
+            <ng-container *ngTemplateOutlet="radioList; context: { $implicit: stations }"></ng-container>
+            @if (!stations.length) {
+              <p class="srch-pod-none">{{ texts.text('searchRadioNone') }}</p>
+            }
+          } @else {
+            <ng-container *ngTemplateOutlet="radioTile"></ng-container>
+          }
+        </div>
+      } @else if (radioTipsShown().length) {
+        <!-- children's stations to start with (the app's "Kinderradio") -->
+        <p class="srch-label">{{ texts.text('searchTipsLabel') }}</p>
+        <div class="srch-hits srch-tips">
+          <ng-container *ngTemplateOutlet="radioList; context: { $implicit: radioTipsShown() }"></ng-container>
+        </div>
+      }
+    }
+    @case ('spotify') {
+      @if (typed()) {
+        <div class="srch-hits">
+          @if (wishShown(); as ws) {
+            <ng-container *ngTemplateOutlet="wishList; context: { $implicit: ws }"></ng-container>
+            @if (!ws.length) {
+              <p class="srch-pod-none">{{ texts.text('wishNone') }}</p>
+            }
+          } @else {
+            <ng-container *ngTemplateOutlet="wishTile"></ng-container>
+          }
+        </div>
+      } @else {
+        <p class="srch-note">{{ texts.text('searchStart') }}</p>
+      }
+    }
+    @default {
+      @if (!typed()) {
+        <!-- the start: where to search - one row to swipe through -->
+        @if (waysShown()) {
+          <div class="srch-hits srch-ways">
+            @if (own().length) {
+              <ng-container *ngTemplateOutlet="ownTile"></ng-container>
+            }
+            @if (wishesOn()) {
+              <ng-container *ngTemplateOutlet="wishTile"></ng-container>
+            }
+            @if (podcastsOn()) {
+              <ng-container *ngTemplateOutlet="podTile"></ng-container>
+            }
+            @if (radioOn()) {
+              <ng-container *ngTemplateOutlet="radioTile"></ng-container>
+            }
+          </div>
+        } @else {
+          <p class="srch-note">{{ texts.text('searchStart') }}</p>
+        }
+      } @else {
+        <!-- the box's library and the pool, then what else may be asked for the typed text -->
+        @if (loading()) {
+          <p class="srch-note">{{ texts.text('searchLoading') }}</p>
+        } @else if (nothingFound()) {
+          <p class="srch-note">{{ texts.text('searchNothing') }}</p>
+        }
+        <div class="srch-hits">
+          @for (hit of hits(); track hit.key) {
+            <button class="srch-hit" type="button" [class.srch-artist]="hit.round" [class.srch-off]="spotifyBlock.player() && isSpotify(hit)" (click)="hitClicked(hit)">
+              <span class="srch-cover"><img [src]="hit.imgSrc | async" alt="" loading="lazy" />
+                @if (hit.pool) {
+                  <!-- from the pool: not on the start page yet -->
+                  <span class="srch-plus" aria-hidden="true">+</span>
+                }
+              </span>
+              <span class="srch-name">{{ hit.name }}</span>
+              @if (hit.sub) {
+                <span class="srch-sub">{{ hit.sub }}</span>
+              }
             </button>
           }
-          @if (!pods.length) {
-            <p class="srch-pod-none">{{ texts.text('searchPodcastsNone') }}</p>
+          @if (podcastsOn()) {
+            @if (podShown(); as pods) {
+              <ng-container *ngTemplateOutlet="podList; context: { $implicit: pods }"></ng-container>
+              @if (!pods.length) {
+                <p class="srch-pod-none">{{ texts.text('searchPodcastsNone') }}</p>
+              }
+            } @else {
+              <ng-container *ngTemplateOutlet="podTile"></ng-container>
+            }
           }
-        } @else {
-          <!-- the directories are asked only now (never while typing) -->
-          <button class="srch-hit srch-pod-btn" type="button" [disabled]="podBusy()" (click)="searchPodcasts()">
-            <span class="srch-cover srch-pod-ic">
-              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 15v-3a8 8 0 0 1 16 0v3" /><path d="M4 15h3v6H5a1 1 0 0 1-1-1zM20 15h-3v6h2a1 1 0 0 0 1-1z" /></svg>
-            </span>
-            <span class="srch-name">{{ texts.text(podBusy() ? 'searchPodcastsLoading' : 'searchPodcastsButton') }}</span>
-          </button>
-        }
+          @if (radioOn()) {
+            @if (radioShown(); as stations) {
+              <ng-container *ngTemplateOutlet="radioList; context: { $implicit: stations }"></ng-container>
+              @if (!stations.length) {
+                <p class="srch-pod-none">{{ texts.text('searchRadioNone') }}</p>
+              }
+            } @else {
+              <ng-container *ngTemplateOutlet="radioTile"></ng-container>
+            }
+          }
+          @if (wishesOn()) {
+            @if (wishShown(); as ws) {
+              <ng-container *ngTemplateOutlet="wishList; context: { $implicit: ws }"></ng-container>
+              @if (!ws.length) {
+                <p class="srch-pod-none">{{ texts.text('wishNone') }}</p>
+              }
+            } @else {
+              <ng-container *ngTemplateOutlet="wishTile"></ng-container>
+            }
+          }
+        </div>
       }
-      @if (wishesOn()) {
-        @if (wishShown(); as ws) {
-          <!-- found on Spotify: the child may wish it (the parents decide in the app) -->
-          @for (w of ws; track w.kind + w.id) {
-            <button class="srch-hit srch-wish" type="button" [class.srch-artist]="w.kind === 'artist'" (click)="openWish(w)">
-              <span class="srch-cover"><img [src]="coverUrl(w.cover)" alt="" loading="lazy" /><span class="srch-star" aria-hidden="true">★</span></span>
-              <span class="srch-name">{{ w.name }}</span>
-              <span class="srch-sub">{{ isWished(w) ? texts.text('wishWished') : w.artist }}</span>
-            </button>
-          }
-          @if (!ws.length) {
-            <p class="srch-pod-none">{{ texts.text('wishNone') }}</p>
-          }
-          @if (wishMore()) {
-            <!-- the next page when this comes into view -->
-            <span class="srch-end" aria-hidden="true" (mupiNearEnd)="moreWishes()"></span>
-          }
-        } @else {
-          <!-- Spotify is asked only now (never while typing) -->
-          <button class="srch-hit srch-pod-btn srch-wish-btn" type="button" [disabled]="wishBusy()" (click)="searchWishes()">
-            <span class="srch-cover srch-pod-ic">
-              <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5" /><path d="M15.5 15.5 21 21" /><path d="M10.5 7.5v6M7.5 10.5h6" /></svg>
-            </span>
-            <span class="srch-name">{{ texts.text(wishBusy() ? 'wishLoading' : 'wishSearchTile') }}</span>
-          </button>
-        }
-      }
-    </div>
+    }
   }
   @if (note()) {
     <div class="srch-toast" role="status">{{ note() }}</div>
   }
 </ion-content>
 
-<!-- the keyboard below the hits; ▼ folds it away (the hits then take the whole page), a tap on the field brings it back -->
+<!-- the keyboard below the hits (shown when the field is tapped); ▼ folds it away, a tap on the field brings it back -->
 <ion-footer class="srch-footer" [class.srch-kb-hidden]="!keyboardShown()">
   <div #keyboard class="simple-keyboard"></div>
 </ion-footer>

@@ -8229,6 +8229,8 @@ async function loadControls() {
   state.values.set('appPool', o.appSearchPool === true)
   // (podcasts for children in the display's search, put on the start page by the child - search-podcasts.ts)
   state.values.set('dispPodcasts', o.displayPodcasts === true)
+  // (radio stations for children in the display's search, put on the start page by the child - search-radio.ts)
+  state.values.set('dispRadio', o.displayRadio === true)
   // (wishes from Spotify in the display's search, approved by the parents - wishes.ts)
   state.values.set('dispWishes', o.displayWishes === true)
   // the search pool and what the child put in from it (shown under "Suche")
@@ -8265,7 +8267,7 @@ function wishesTop() {
   const open = wishesState.open
   const decided = wishesState.decided.slice(0, 20)
   return [
-    `<p class="page-intro">${esc('Was das Kind in der Suche am Display bei Spotify gefunden und sich gewünscht hat. Freigegeben kommt es auf die Startseite – unter den Reiter, den das Kind gewählt hat.')}</p>`,
+    `<p class="page-intro">${esc('Was das Kind in der Suche am Display bei Spotify gefunden und sich gewünscht hat. Freigegeben kommt es auf die Startseite – unter den Reiter, den das Kind gewählt hat. Die Freigabe bleibt: Das Kind kann es selbst entfernen und über die Suche wieder holen, bis du sie widerrufst.')}</p>`,
     ...(wishesState.on ? [] : [`<p class="help">${esc('Wünsche sind ausgeschaltet: Display & Bedienung › Suche › „Wünsche aus Spotify“.')}</p>`]),
     `<section class="card wide"><h2>${esc('Offene Wünsche')}</h2>${
       open.length
@@ -8273,7 +8275,18 @@ function wishesTop() {
         : `<p class="help" style="margin:0">${esc('Keine offenen Wünsche.')}</p>`
     }</section>`,
     ...(decided.length
-      ? [`<section class="card wide"><h2>${esc('Entschieden')}</h2><div class="rows">${decided.map((w) => row(w, `<span class="in-lib">${esc(w.status === 'approved' ? 'Freigegeben' : 'Abgelehnt')}</span>`)).join('')}</div></section>`]
+      ? [
+          `<section class="card wide"><h2>${esc('Entschieden')}</h2><div class="rows">${decided
+            .map((w) =>
+              row(
+                w,
+                w.status === 'approved'
+                  ? `<span class="btns" style="flex-wrap:nowrap;align-items:center"><span class="in-lib">${esc('Freigegeben')}</span><button class="btn" data-wish-revoke="${esc(w.id)}">${esc('Widerrufen')}</button></span>`
+                  : `<span class="in-lib">${esc(w.status === 'revoked' ? 'Zurückgenommen' : 'Abgelehnt')}</span>`,
+              ),
+            )
+            .join('')}</div></section>`,
+        ]
       : []),
   ]
 }
@@ -8297,6 +8310,24 @@ function mountWishes(root, page) {
   }
   for (const b of root.querySelectorAll('[data-wish-yes]')) b.onclick = () => decide(b, true)
   for (const b of root.querySelectorAll('[data-wish-no]')) b.onclick = () => decide(b, false)
+  // an approval taken back: out of the search, off the start page
+  for (const b of root.querySelectorAll('[data-wish-revoke]'))
+    b.onclick = async () => {
+      const w = wishesState.decided.find((x) => x.id === b.dataset.wishRevoke)
+      if (!w) return
+      if (!(await ask('Freigabe widerrufen?', `„${w.name}“ verschwindet aus der Suche am Display und von der Startseite. Das Kind kann es sich danach wieder wünschen.`, 'Widerrufen'))) return
+      b.disabled = true
+      const r = await api(`${API}/wishes/revoke`, { method: 'POST', body: { id: w.id } })
+      if (!r.ok) {
+        b.disabled = false
+        return toast('Das hat nicht geklappt', 'info')
+      }
+      toast(`Zurückgenommen: ${w.name}`)
+      libChanged()
+      lib.items = null
+      await loadWishes()
+      renderPage(page, false)
+    }
 }
 
 // The search pool ("Nur in der Suche") under Bedienung › Suche: what is allowed, with "Entfernen", and what the child
@@ -12598,7 +12629,13 @@ const CONTROLLERS = {
               type: 'toggle',
               key: 'dispPodcasts',
               label: 'Podcasts für Kinder in der Suche',
-              help: 'In der Suche am Display sucht eine Kachel „Podcasts für Kinder“ in Apples Podcast-Verzeichnis (bei Deutsch auch in der ARD Audiothek) – nur Sendungen der Kinder-Kategorien. Das Kind kann sie ohne Freigabe auf die Startseite holen und selbst wieder entfernen. Gesucht wird erst beim Tippen auf die Kachel; der Suchbegriff geht dabei an Apple bzw. die ARD.',
+              help: 'In der Suche am Display sucht eine Kachel „Podcasts“ in Apples Podcast-Verzeichnis (bei Deutsch auch in der ARD Audiothek) – nur Sendungen der Kinder-Kategorien. Das Kind kann sie ohne Freigabe auf die Startseite holen und selbst wieder entfernen. Gesucht wird erst beim Tippen auf die Kachel; der Suchbegriff geht dabei an Apple bzw. die ARD.',
+            },
+            {
+              type: 'toggle',
+              key: 'dispRadio',
+              label: 'Radio für Kinder in der Suche',
+              help: 'In der Suche am Display sucht eine Kachel „Radio“ im Senderverzeichnis radio-browser.info – nur Sender, die dort als Kinderradio markiert sind. Das Kind kann sie ohne Freigabe auf die Startseite holen und selbst wieder entfernen. Gesucht wird erst, wenn das Kind es will; der Suchbegriff geht dabei an radio-browser.info.',
             },
             ...(state.values.get('appPool') ? [{ type: 'html', html: poolListHtml() }] : []),
           ],
@@ -12675,6 +12712,7 @@ const CONTROLLERS = {
       if (key === 'outPick') return saveDisplayOptions({ outputPicker: !!v }, v ? 'Kinder können am Display umschalten' : 'Umschalten nur in der App')
       if (key === 'dispSearch') return saveDisplayOptions({ displaySearch: !!v }, v ? 'Suche auf dem Display an' : 'Suche auf dem Display aus')
       if (key === 'dispWishes') return saveDisplayOptions({ displayWishes: !!v }, v ? 'Wünsche aus Spotify an' : 'Wünsche aus Spotify aus')
+      if (key === 'dispRadio') return saveDisplayOptions({ displayRadio: !!v }, v ? 'Radio für Kinder in der Suche an' : 'Radio für Kinder in der Suche aus')
       if (key === 'dispPodcasts') return saveDisplayOptions({ displayPodcasts: !!v }, v ? 'Podcasts für Kinder in der Suche an' : 'Podcasts für Kinder in der Suche aus')
       if (key === 'appPool') {
         const ok = await saveDisplayOptions({ appSearchPool: !!v }, v ? '„Nur in der Suche“ in der App an' : '„Nur in der Suche“ in der App ausgeblendet')

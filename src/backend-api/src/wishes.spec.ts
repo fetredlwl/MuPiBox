@@ -222,4 +222,101 @@ describe('wishes: the child wishes, the parents decide', () => {
     // (approving asks Spotify nothing)
     assert.equal(calls.length, 1)
   })
+
+  it('an approval is kept: in the pool - taken out by the child, it fetches it back itself; not wished again', async () => {
+    await request(app).get('/api/wishes/search?q=peter').expect(200)
+    await request(app).post('/api/wishes').send({ kind: 'album', id: ALBUM, category: 'music' }).expect(200)
+    const [w] = (await request(app).get('/api/app/wishes').set('x-test-session', 'yes')).body.open
+    await request(app)
+      .post('/api/app/wishes/decide')
+      .set('x-test-session', 'yes')
+      .send({ id: w.id, approve: true })
+      .expect(200)
+    const entry = (await pool.entries()).find((e) => e.kind === 'album' && e.spotifyId === ALBUM)
+    assert.ok(entry, 'approved: in the search pool')
+    // the child takes it off the start page ...
+    await request(app)
+      .post('/api/search-pool/remove-own')
+      .send({ ident: `album:${ALBUM}` })
+      .expect(200)
+    assert.equal(JSON.parse(readFileSync(dataFile, 'utf8')).length, 0)
+    // ... a wish of it is not made (it may fetch it itself) ...
+    const again = await request(app)
+      .post('/api/wishes')
+      .send({ kind: 'album', id: ALBUM, category: 'music' })
+      .expect(200)
+    assert.equal(again.body.result, 'allowed')
+    assert.equal((await request(app).get('/api/app/wishes').set('x-test-session', 'yes')).body.open.length, 0)
+    // ... and it puts it back from the pool, under another tab
+    await request(app)
+      .post('/api/search-pool/add-to-library')
+      .send({ poolId: entry.id, category: 'audiobook' })
+      .expect(200)
+    const rows = JSON.parse(readFileSync(dataFile, 'utf8'))
+    assert.equal(rows.length, 1)
+    assert.equal(rows[0].category, 'audiobook')
+    assert.equal(rows[0].kidAdded, true)
+  })
+
+  it('revoked: out of the pool and off the start page, the child may wish it again', async () => {
+    await request(app).get('/api/wishes/search?q=peter').expect(200)
+    await request(app).post('/api/wishes').send({ kind: 'artist', id: ARTIST, category: 'audiobook' }).expect(200)
+    const [w] = (await request(app).get('/api/app/wishes').set('x-test-session', 'yes')).body.open
+    await request(app)
+      .post('/api/app/wishes/decide')
+      .set('x-test-session', 'yes')
+      .send({ id: w.id, approve: true })
+      .expect(200)
+    const before = (await pool.events()).length
+    await request(app).post('/api/app/wishes/revoke').send({ id: w.id }).expect(401)
+    await request(app).post('/api/app/wishes/revoke').set('x-test-session', 'yes').send({ id: w.id }).expect(200)
+    assert.equal(JSON.parse(readFileSync(dataFile, 'utf8')).length, 0)
+    assert.equal((await pool.entries()).length, 0)
+    // (the parents did it: Home Assistant is not told of a removal)
+    assert.equal((await pool.events()).length, before)
+    const list = await request(app).get('/api/app/wishes').set('x-test-session', 'yes').expect(200)
+    assert.equal(list.body.decided[0].status, 'revoked')
+    await request(app).post('/api/app/wishes/revoke').set('x-test-session', 'yes').send({ id: w.id }).expect(404)
+    const again = await request(app)
+      .post('/api/wishes')
+      .send({ kind: 'artist', id: ARTIST, category: 'audiobook' })
+      .expect(200)
+    assert.equal(again.body.result, 'wished')
+  })
+
+  it('approvals made before the pool kept them: put into it once', async () => {
+    writeFileSync(
+      path.join(dir, 'wishes.json'),
+      JSON.stringify([
+        {
+          id: 'w_old',
+          at: '2026-11-22T09:00:00Z',
+          kind: 'show',
+          spotifyId: SHOW,
+          name: 'Hörspielzeit',
+          artist: 'Sender',
+          cover: '',
+          category: 'audiobook',
+          status: 'approved',
+        },
+      ]),
+    )
+    const wishes = W.registerWishesRoutes(express(), {
+      configDir: dir,
+      cacheDir: path.join(dir, 'cache'),
+      pool,
+      getMupiboxConfig: () => cfg,
+      session: (_req, _res, next) => next(),
+      csrf: (_req, _res, next) => next(),
+    })
+    await wishes.rememberApproved()
+    assert.deepEqual(
+      (await pool.entries()).map((e) => [e.kind, e.spotifyId]),
+      [['show', SHOW]],
+    )
+    // (taken out of the pool in the app afterwards: not put back)
+    await pool.clear()
+    await wishes.rememberApproved()
+    assert.equal((await pool.entries()).length, 0)
+  })
 })

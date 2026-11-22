@@ -47,8 +47,11 @@ export interface Wish {
   cover: string
   /** the tab the child chose */
   category: Category
-  status: 'open' | 'approved' | 'rejected'
+  /** revoked: approved before, the parents took the approval back (out of the pool and off the start page) */
+  status: 'open' | 'approved' | 'rejected' | 'revoked'
   decidedAt?: string
+  /** approved: it is in the search pool too - the child may take it out and put it back itself, as any approval */
+  pooled?: boolean
 }
 
 export interface WishPage {
@@ -231,11 +234,16 @@ export class Wishes {
     await writeJson(this.file, list)
   }
 
-  /** the child wishes something it was shown, for a tab */
-  async wish(kind: WishKind, id: string, category: Category): Promise<'wished' | 'already' | 'there' | 'unknown'> {
+  /** the child wishes something it was shown, for a tab (allowed: approved before - it may fetch it itself) */
+  async wish(
+    kind: WishKind,
+    id: string,
+    category: Category,
+  ): Promise<'wished' | 'already' | 'there' | 'allowed' | 'unknown'> {
     const item = await this.offered(kind, id)
     if (!item) return 'unknown'
     if ((await this.deps.pool.libraryIdents()).has(identOfWish(kind, id))) return 'there'
+    if ((await this.deps.pool.entries()).some((e) => e.kind === kind && e.spotifyId === id)) return 'allowed'
     const result = await this.serial(async () => {
       const list = await this.list()
       if (list.some((w) => w.status === 'open' && w.kind === kind && w.spotifyId === id)) return 'already' as const
@@ -258,7 +266,10 @@ export class Wishes {
     return result
   }
 
-  /** the parents decide: approved, it goes on the start page under the child's tab */
+  /**
+   * The parents decide: approved, it goes on the start page under the child's tab - and into the search pool: the child
+   * may take it out and put it back itself, as anything the parents allowed in the search ("Nur in der Suche").
+   */
   async decide(id: string, approve: boolean): Promise<'approved' | 'rejected' | 'unknown' | 'locked'> {
     const wish = (await this.list()).find((w) => w.id === id && w.status === 'open')
     if (!wish) return 'unknown'
@@ -269,22 +280,75 @@ export class Wishes {
         wish.id,
       )
       if (r === 'locked') return 'locked'
+      await this.toPool(wish)
     }
-    await this.serial(async () => {
+    await this.change(id, {
+      status: approve ? 'approved' : 'rejected',
+      decidedAt: new Date(this.now()).toISOString(),
+      ...(approve ? { pooled: true } : {}),
+    })
+    // (the same thing wished more than once while open: decided with it)
+    for (const twin of (await this.list()).filter(
+      (w) => w.status === 'open' && w.kind === wish.kind && w.spotifyId === wish.spotifyId,
+    ))
+      await this.change(twin.id, {
+        status: approve ? 'approved' : 'rejected',
+        decidedAt: new Date(this.now()).toISOString(),
+      })
+    return approve ? 'approved' : 'rejected'
+  }
+
+  /**
+   * The parents take an approval back ("Freigabe widerrufen"): out of the search pool, and off the start page when the
+   * child has it there (only what it has as its own). The wish stays in the list as revoked.
+   */
+  async revoke(id: string): Promise<'revoked' | 'unknown' | 'locked'> {
+    const wish = (await this.list()).find((w) => w.id === id && w.status === 'approved')
+    if (!wish) return 'unknown'
+    const ident = identOfWish(wish.kind, wish.spotifyId)
+    // (Home Assistant is not told: the parents did it themselves)
+    if ((await this.deps.pool.removeOwn(ident, false)) === 'locked') return 'locked'
+    await this.deps.pool.removeByIdent(ident)
+    // (all approvals of the same thing: revoked together - none of them is in the pool any more)
+    for (const w of (await this.list()).filter(
+      (x) => x.status === 'approved' && x.kind === wish.kind && x.spotifyId === wish.spotifyId,
+    ))
+      await this.change(w.id, { status: 'revoked', decidedAt: new Date(this.now()).toISOString(), pooled: false })
+    return 'revoked'
+  }
+
+  /**
+   * The approvals made before the pool kept them (fork state of 22.11.2026): into the pool once (marked pooled - taken
+   * out of the pool in the app later, they are not put back).
+   */
+  async rememberApproved(): Promise<void> {
+    for (const w of (await this.list()).filter((x) => x.status === 'approved' && !x.pooled)) {
+      await this.toPool(w)
+      await this.change(w.id, { pooled: true })
+    }
+  }
+
+  private async toPool(wish: Wish): Promise<void> {
+    await this.deps.pool.add({
+      kind: wish.kind,
+      spotifyId: wish.spotifyId,
+      name: wish.name,
+      artist: wish.kind === 'artist' ? '' : wish.artist,
+      cover: wish.cover,
+    })
+  }
+
+  private change(id: string, fields: Partial<Wish>): Promise<void> {
+    return this.serial(async () => {
       const list = await this.list()
       const at = list.findIndex((w) => w.id === id)
       if (at < 0) return
-      list[at] = {
-        ...list[at],
-        status: approve ? 'approved' : 'rejected',
-        decidedAt: new Date(this.now()).toISOString(),
-      }
+      list[at] = { ...list[at], ...fields }
       // (the open ones all, of the decided ones the newest)
       const open = list.filter((w) => w.status === 'open')
       const decided = list.filter((w) => w.status !== 'open').slice(-DECIDED_KEPT)
       await this.save([...open, ...decided].sort((a, b) => a.at.localeCompare(b.at)))
     })
-    return approve ? 'approved' : 'rejected'
   }
 }
 
@@ -387,6 +451,26 @@ export function registerWishesRoutes(app: Express, deps: WishesDeps): Wishes {
       fail(res, 500, 'could_not_decide')
     }
   })
+
+  /** POST /api/app/wishes/revoke {id} - an approval taken back: out of the search pool and off the start page */
+  app.post('/api/app/wishes/revoke', deps.session, deps.csrf, async (req, res) => {
+    const id = text(req.body?.id, 40)
+    if (!id) return fail(res, 400, 'invalid_request')
+    try {
+      const result = await wishes.revoke(id)
+      if (result === 'unknown') return fail(res, 404, 'not_approved')
+      if (result === 'locked') return fail(res, 409, 'library_busy')
+      res.json({ ok: true, result })
+    } catch (err) {
+      console.error(`${new Date().toLocaleString()}: [wishes] revoke:`, err)
+      fail(res, 500, 'could_not_revoke')
+    }
+  })
+
+  // (the approvals of before into the pool, once - a moment after the start)
+  setTimeout(() => {
+    wishes.rememberApproved().catch((err) => console.warn(`${new Date().toLocaleString()}: [wishes] remember:`, err))
+  }, 5_000).unref()
 
   return wishes
 }

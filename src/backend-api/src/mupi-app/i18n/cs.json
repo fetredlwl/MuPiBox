@@ -3224,7 +3224,6 @@
  "„Nur in der Suche“ in der App ausgeblendet": "„Jen ve vyhledávání“ v aplikaci skryto",
  "In der Suche am Display. „Aus der Suche nehmen“: das Kind findet es nicht mehr – was es schon auf die Startseite geholt hat, bleibt dort.": "Ve vyhledávání na displeji. „Odebrat z vyhledávání“: dítě to už nenajde – co už dalo na úvodní stránku, tam zůstane.",
  "Podcasts für Kinder in der Suche": "Podcasty pro děti ve vyhledávání",
- "In der Suche am Display sucht eine Kachel „Podcasts für Kinder“ in Apples Podcast-Verzeichnis (bei Deutsch auch in der ARD Audiothek) – nur Sendungen der Kinder-Kategorien. Das Kind kann sie ohne Freigabe auf die Startseite holen und selbst wieder entfernen. Gesucht wird erst beim Tippen auf die Kachel; der Suchbegriff geht dabei an Apple bzw. die ARD.": "Ve vyhledávání na displeji hledá dlaždice „Podcasty pro děti“ v adresáři podcastů Apple (v němčině i v ARD Audiothek) – jen pořady dětských kategorií. Dítě je může bez povolení dát na úvodní stránku a samo je zase odebrat. Hledá se až po klepnutí na dlaždici; hledaný výraz pak jde do Apple nebo ARD.",
  "Podcasts für Kinder in der Suche an": "Podcasty pro děti ve vyhledávání zapnuty",
  "Podcasts für Kinder in der Suche aus": "Podcasty pro děti ve vyhledávání vypnuty",
  "Wünsche": "Přání",
@@ -3232,7 +3231,6 @@
  "Wünsche aus Spotify an": "Přání ze Spotify zapnuta",
  "Wünsche aus Spotify aus": "Přání ze Spotify vypnuta",
  "In der Suche am Display sucht eine Kachel „Bei Spotify suchen“ nach Alben, Künstlern und Podcasts. Das Kind kann sich etwas wünschen und den Reiter wählen; du gibst es in der App frei (Bibliothek › Wünsche), Home Assistant bekommt eine Nachricht mit Link. Spotify wird erst beim Tippen auf die Kachel gefragt, jeweils 10 Treffer, weitere erst beim Weiterblättern; jede Seite merkt sich die Box einen Tag. Aus: keine Spotify-Suche am Display, alles andere bleibt.": "Ve vyhledávání na displeji hledá dlaždice „Hledat na Spotify“ alba, interprety a podcasty. Dítě si může něco přát a vybrat kartu; ty to schválíš v aplikaci (Knihovna › Přání), Home Assistant dostane zprávu s odkazem. Spotify se ptá až po klepnutí na dlaždici, po 10 výsledcích, další až při posouvání; box si každou stránku pamatuje den. Vypnuto: žádné hledání na Spotify na displeji, vše ostatní zůstává.",
- "Was das Kind in der Suche am Display bei Spotify gefunden und sich gewünscht hat. Freigegeben kommt es auf die Startseite – unter den Reiter, den das Kind gewählt hat.": "Co dítě našlo na Spotify ve vyhledávání na displeji a přálo si. Po schválení to přijde na úvodní stránku – pod kartu, kterou dítě vybralo.",
  "Wünsche sind ausgeschaltet: Display & Bedienung › Suche › „Wünsche aus Spotify“.": "Přání jsou vypnuta: Displej a ovládání › Hledání › „Přání ze Spotify“.",
  "Offene Wünsche": "Otevřená přání",
  "Keine offenen Wünsche.": "Žádná otevřená přání.",
@@ -3247,5 +3245,16 @@
  "{} offen": "Otevřeno: {}",
  "Ein Wunsch wartet": "Jedno přání čeká",
  "{} Wünsche warten": "Čeká přání: {}",
- "Antippen, um sie freizugeben oder abzulehnen.": "Klepni pro schválení nebo odmítnutí."
+ "Antippen, um sie freizugeben oder abzulehnen.": "Klepni pro schválení nebo odmítnutí.",
+ "Freigabe widerrufen?": "Odvolat schválení?",
+ "Widerrufen": "Odvolat",
+ "Zurückgenommen": "Odvoláno",
+ "Zurückgenommen: {}": "Odvoláno: {}",
+ "„{}“ verschwindet aus der Suche am Display und von der Startseite. Das Kind kann es sich danach wieder wünschen.": "„{}“ zmizí z vyhledávání na displeji i z úvodní stránky. Dítě si to pak může znovu přát.",
+ "Radio für Kinder in der Suche": "Rádio pro děti ve vyhledávání",
+ "Radio für Kinder in der Suche an": "Rádio pro děti ve vyhledávání zapnuto",
+ "Radio für Kinder in der Suche aus": "Rádio pro děti ve vyhledávání vypnuto",
+ "In der Suche am Display sucht eine Kachel „Radio“ im Senderverzeichnis radio-browser.info – nur Sender, die dort als Kinderradio markiert sind. Das Kind kann sie ohne Freigabe auf die Startseite holen und selbst wieder entfernen. Gesucht wird erst, wenn das Kind es will; der Suchbegriff geht dabei an radio-browser.info.": "Ve vyhledávání na displeji hledá dlaždice „Rádio“ v adresáři stanic radio-browser.info – jen stanice, které jsou tam označené jako rádio pro děti. Dítě je může bez schválení přidat na úvodní stránku a samo je zase odebrat. Hledá se až tehdy, když dítě chce; hledaný výraz jde na radio-browser.info.",
+ "Was das Kind in der Suche am Display bei Spotify gefunden und sich gewünscht hat. Freigegeben kommt es auf die Startseite – unter den Reiter, den das Kind gewählt hat. Die Freigabe bleibt: Das Kind kann es selbst entfernen und über die Suche wieder holen, bis du sie widerrufst.": "Co dítě našlo na Spotify ve vyhledávání na displeji a přálo si. Po schválení to přijde na úvodní stránku – pod kartu, kterou dítě vybralo. Schválení zůstává: dítě to může samo odebrat a znovu si to vzít přes vyhledávání, dokud ho neodvoláš.",
+ "In der Suche am Display sucht eine Kachel „Podcasts“ in Apples Podcast-Verzeichnis (bei Deutsch auch in der ARD Audiothek) – nur Sendungen der Kinder-Kategorien. Das Kind kann sie ohne Freigabe auf die Startseite holen und selbst wieder entfernen. Gesucht wird erst beim Tippen auf die Kachel; der Suchbegriff geht dabei an Apple bzw. die ARD.": "Ve vyhledávání na displeji hledá dlaždice „Podcasty“ v adresáři podcastů Apple (v němčině i v ARD Audiothek) – jen pořady dětských kategorií. Dítě je může bez povolení dát na úvodní stránku a samo je zase odebrat. Hledá se až po klepnutí na dlaždici; hledaný výraz pak jde do Apple nebo ARD."
 }

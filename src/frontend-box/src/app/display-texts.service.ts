@@ -86,7 +86,6 @@ export const DEFAULT_DISPLAY_TEXTS = {
   searchStart: 'Type the first letters.',
   searchLoading: 'Loading the library …',
   searchNothing: 'Nothing found.',
-  searchOwnLabel: 'Fetched by you – tap twice to remove',
   searchRemoveQ: 'Remove?',
   searchArtist: 'Artist',
   searchPodcast: 'Podcast',
@@ -104,7 +103,7 @@ export const DEFAULT_DISPLAY_TEXTS = {
   searchCatMusic: 'Music',
   searchCatRadio: 'Radio',
   // (fork "wishes") podcasts for children in the search (search-podcasts.ts)
-  searchPodcastsButton: 'Podcasts for children',
+  searchPodcastsButton: 'Podcasts',
   searchPodcastsLoading: 'Searching …',
   searchPodcastsNone: 'No podcasts for children found.',
   searchTipsLabel: 'Tips for children',
@@ -119,6 +118,18 @@ export const DEFAULT_DISPLAY_TEXTS = {
   wishAlready: 'You have wished for {n} already.',
   wishThere: '{n} is on the box already.',
   wishPaused: 'Spotify is taking a break – try again later.',
+  wishAllowed: 'You may fetch {n} yourself.',
+  // (fork "wishes") the tiles of the search's start, radio for children, the child's own entries
+  searchManageTile: 'Manage entries',
+  searchMine: 'Mine',
+  searchSpotify: 'Spotify',
+  searchRadioButton: 'Radio',
+  searchRadioNone: 'No radio stations for children found.',
+  searchRadioStation: 'Radio station',
+  searchKey: 'Search',
+  searchMove: 'Somewhere else',
+  searchRemove: 'Remove',
+  searchRemoveYes: 'Yes, remove',
 }
 export type DisplayTextKey = keyof typeof DEFAULT_DISPLAY_TEXTS
 type TextSet = Partial<Record<DisplayTextKey, string>>

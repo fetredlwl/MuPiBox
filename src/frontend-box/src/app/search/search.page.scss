@@ -65,6 +65,18 @@ app-search {
     direction: ltr;
   }
 
+  // (fork "wishes") the tile chosen at the start: where the search looks
+  .srch-mode {
+    flex: 0 0 auto;
+    padding: 4px 12px;
+    border-radius: 16px;
+    background: var(--srch-accent);
+    color: var(--km-ink, #fff);
+    font-size: 18px;
+    font-weight: 700;
+    white-space: nowrap;
+  }
+
   .srch-caret {
     flex: 0 0 3px;
     width: 3px;
@@ -195,8 +207,7 @@ app-search {
   }
 
   // from the pool: a "+" in the corner (not on the start page yet)
-  .srch-plus,
-  .srch-x {
+  .srch-plus {
     position: absolute;
     right: 4px;
     bottom: 4px;
@@ -213,28 +224,9 @@ app-search {
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
   }
 
-  .srch-artist .srch-plus,
-  .srch-artist .srch-x {
+  .srch-artist .srch-plus {
     right: 10px;
     bottom: 10px;
-  }
-
-  // the child's own: a small ✕, red once tapped ("Entfernen?")
-  .srch-x {
-    background: rgba(0, 0, 0, 0.55);
-    color: #fff;
-    font-size: 16px;
-  }
-
-  .srch-removing {
-    .srch-x {
-      background: #e0344e;
-    }
-
-    .srch-cover {
-      outline: 4px solid #e0344e;
-      outline-offset: -4px;
-    }
   }
 
   // (with the label the row is a little smaller: all of it within the 178 px above the keyboard)
@@ -276,39 +268,6 @@ app-search {
     z-index: 20;
   }
 
-  // the child's own and the tips together on the start of the search: both rows smaller, so they fit above the
-  // keyboard (1024 × 600); a smaller display shows the tips with the keyboard folded away
-  .srch-two.srch-kb-open {
-    .srch-label {
-      margin-top: 4px;
-    }
-
-    .srch-hits {
-      padding-top: 4px;
-      padding-bottom: 4px;
-    }
-
-    .srch-hit {
-      flex-basis: 84px;
-      width: 84px;
-    }
-
-    .srch-cover {
-      width: 84px;
-      height: 84px;
-    }
-
-    .srch-name {
-      font-size: 14px;
-    }
-  }
-
-  @media (max-height: 520px) {
-    .srch-two.srch-kb-open .srch-tips {
-      display: none;
-    }
-  }
-
   // podcasts for children: the tile that asks for them (a headphone on the accent colour) and "none found"
   .srch-pod-ic {
     display: grid;
@@ -330,7 +289,7 @@ app-search {
     opacity: 0.6;
   }
 
-  // (its name on two lines: "Podcasts für Kinder" does not fit one)
+  // (its name on two lines: "Einträge verwalten" does not fit one)
   .srch-pod-btn .srch-name {
     white-space: normal;
     line-height: 1.15;
@@ -381,24 +340,44 @@ app-search {
     opacity: 0.45;
   }
 
-  // keyboard folded away: the hits as a grid over the whole page, covers 150
+  // keyboard folded away: still one row to swipe through (nothing scrolls up and down), the covers big; a short row
+  // in the middle (auto margins: a long one still starts at its first cover)
   .search-content:not(.srch-kb-open) {
     .srch-hits {
-      flex-wrap: wrap;
-      justify-content: center;
-      overflow: visible;
-      gap: 18px 16px;
-      padding: 14px;
+      gap: 18px;
+      padding: 24px 18px 14px;
+
+      > :first-child {
+        margin-left: auto;
+      }
+
+      > :last-child {
+        margin-right: auto;
+      }
     }
 
     .srch-hit {
-      flex-basis: 170px;
-      width: 170px;
+      flex-basis: 190px;
+      width: 190px;
     }
 
     .srch-cover {
-      width: 170px;
-      height: 170px;
+      width: 190px;
+      height: 190px;
+    }
+
+    .srch-label + .srch-hits {
+      padding-top: 10px;
+
+      .srch-hit {
+        flex-basis: 190px;
+        width: 190px;
+      }
+
+      .srch-cover {
+        width: 190px;
+        height: 190px;
+      }
     }
 
     .srch-name {
@@ -467,6 +446,13 @@ app-search {
 
     .hg-button-space {
       flex-grow: 6;
+    }
+
+    // ("Suchen": a tile chosen that asks a directory or Spotify)
+    .hg-button-search {
+      flex-grow: 2.4;
+      background: var(--srch-accent);
+      color: var(--km-ink, #fff);
     }
 
     .hg-button-bksp,

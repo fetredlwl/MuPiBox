@@ -3224,7 +3224,6 @@
  "„Nur in der Suche“ in der App ausgeblendet": "«Solo nella ricerca» nascosto nell’app",
  "In der Suche am Display. „Aus der Suche nehmen“: das Kind findet es nicht mehr – was es schon auf die Startseite geholt hat, bleibt dort.": "Nella ricerca sul display. «Togli dalla ricerca»: il bambino non lo trova più – ciò che ha già messo nella pagina iniziale resta lì.",
  "Podcasts für Kinder in der Suche": "Podcast per bambini nella ricerca",
- "In der Suche am Display sucht eine Kachel „Podcasts für Kinder“ in Apples Podcast-Verzeichnis (bei Deutsch auch in der ARD Audiothek) – nur Sendungen der Kinder-Kategorien. Das Kind kann sie ohne Freigabe auf die Startseite holen und selbst wieder entfernen. Gesucht wird erst beim Tippen auf die Kachel; der Suchbegriff geht dabei an Apple bzw. die ARD.": "Nella ricerca sul display una tessera «Podcast per bambini» cerca nell’elenco podcast di Apple (in tedesco anche nell’ARD Audiothek) – solo programmi delle categorie per bambini. Il bambino può metterli nella pagina iniziale senza autorizzazione e toglierli da solo. Si cerca solo toccando la tessera; il termine va allora ad Apple o all’ARD.",
  "Podcasts für Kinder in der Suche an": "Podcast per bambini nella ricerca attivi",
  "Podcasts für Kinder in der Suche aus": "Podcast per bambini nella ricerca disattivati",
  "Wünsche": "Desideri",
@@ -3232,7 +3231,6 @@
  "Wünsche aus Spotify an": "Desideri da Spotify attivi",
  "Wünsche aus Spotify aus": "Desideri da Spotify disattivati",
  "In der Suche am Display sucht eine Kachel „Bei Spotify suchen“ nach Alben, Künstlern und Podcasts. Das Kind kann sich etwas wünschen und den Reiter wählen; du gibst es in der App frei (Bibliothek › Wünsche), Home Assistant bekommt eine Nachricht mit Link. Spotify wird erst beim Tippen auf die Kachel gefragt, jeweils 10 Treffer, weitere erst beim Weiterblättern; jede Seite merkt sich die Box einen Tag. Aus: keine Spotify-Suche am Display, alles andere bleibt.": "Nella ricerca sul display una tessera «Cerca su Spotify» cerca album, artisti e podcast. Il bambino può desiderare qualcosa e scegliere la scheda; tu lo autorizzi nell’app (Libreria › Desideri), Home Assistant riceve un messaggio con un link. Spotify viene interpellato solo toccando la tessera, 10 risultati alla volta, altri solo scorrendo; il box conserva ogni pagina per un giorno. Spento: nessuna ricerca Spotify sul display, il resto rimane.",
- "Was das Kind in der Suche am Display bei Spotify gefunden und sich gewünscht hat. Freigegeben kommt es auf die Startseite – unter den Reiter, den das Kind gewählt hat.": "Ciò che il bambino ha trovato su Spotify nella ricerca sul display e desiderato. Autorizzato, va nella pagina iniziale – sotto la scheda scelta dal bambino.",
  "Wünsche sind ausgeschaltet: Display & Bedienung › Suche › „Wünsche aus Spotify“.": "I desideri sono disattivati: Display e comandi › Ricerca › «Desideri da Spotify».",
  "Offene Wünsche": "Desideri in sospeso",
  "Keine offenen Wünsche.": "Nessun desiderio in sospeso.",
@@ -3247,5 +3245,16 @@
  "{} offen": "{} in sospeso",
  "Ein Wunsch wartet": "Un desiderio in attesa",
  "{} Wünsche warten": "{} desideri in attesa",
- "Antippen, um sie freizugeben oder abzulehnen.": "Tocca per autorizzarli o rifiutarli."
+ "Antippen, um sie freizugeben oder abzulehnen.": "Tocca per autorizzarli o rifiutarli.",
+ "Freigabe widerrufen?": "Revocare l’autorizzazione?",
+ "Widerrufen": "Revoca",
+ "Zurückgenommen": "Revocata",
+ "Zurückgenommen: {}": "Revocata: {}",
+ "„{}“ verschwindet aus der Suche am Display und von der Startseite. Das Kind kann es sich danach wieder wünschen.": "«{}» scompare dalla ricerca sul display e dalla pagina iniziale. Poi il bambino potrà desiderarlo di nuovo.",
+ "Radio für Kinder in der Suche": "Radio per bambini nella ricerca",
+ "Radio für Kinder in der Suche an": "Radio per bambini nella ricerca attiva",
+ "Radio für Kinder in der Suche aus": "Radio per bambini nella ricerca disattivata",
+ "In der Suche am Display sucht eine Kachel „Radio“ im Senderverzeichnis radio-browser.info – nur Sender, die dort als Kinderradio markiert sind. Das Kind kann sie ohne Freigabe auf die Startseite holen und selbst wieder entfernen. Gesucht wird erst, wenn das Kind es will; der Suchbegriff geht dabei an radio-browser.info.": "Nella ricerca sul display una tessera «Radio» cerca nell’elenco di stazioni radio-browser.info – solo stazioni contrassegnate lì come radio per bambini. Il bambino può metterle nella pagina iniziale senza autorizzazione e rimuoverle da solo. Si cerca solo quando il bambino lo vuole; il termine di ricerca va a radio-browser.info.",
+ "Was das Kind in der Suche am Display bei Spotify gefunden und sich gewünscht hat. Freigegeben kommt es auf die Startseite – unter den Reiter, den das Kind gewählt hat. Die Freigabe bleibt: Das Kind kann es selbst entfernen und über die Suche wieder holen, bis du sie widerrufst.": "Ciò che il bambino ha trovato su Spotify nella ricerca sul display e desiderato. Autorizzato, va nella pagina iniziale – sotto la scheda scelta dal bambino. L’autorizzazione resta: il bambino può rimuoverlo da solo e riprenderlo con la ricerca finché non la revochi.",
+ "In der Suche am Display sucht eine Kachel „Podcasts“ in Apples Podcast-Verzeichnis (bei Deutsch auch in der ARD Audiothek) – nur Sendungen der Kinder-Kategorien. Das Kind kann sie ohne Freigabe auf die Startseite holen und selbst wieder entfernen. Gesucht wird erst beim Tippen auf die Kachel; der Suchbegriff geht dabei an Apple bzw. die ARD.": "Nella ricerca sul display una tessera «Podcast» cerca nell’elenco podcast di Apple (in tedesco anche nell’ARD Audiothek) – solo programmi delle categorie per bambini. Il bambino può metterli nella pagina iniziale senza autorizzazione e toglierli da solo. Si cerca solo toccando la tessera; il termine va allora ad Apple o all’ARD."
 }

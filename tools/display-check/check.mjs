@@ -11,14 +11,19 @@
 //   R5  the texts come from the display's translations (English box: no German on the page)
 //   R6  podcasts for children: nothing asked while typing, only the tile asks; children's shows only; on the start
 //       page without approval (no "play" on the way), then among what the child fetched itself
-//   R7  tips for children before anything is typed: asked once, children's shows only, addable without approval; with
-//       the child's own entries both rows fit above the keyboard (1024 × 600)
+//   R7  tips for children (the tile "Podcasts", nothing typed): asked once, children's shows only, addable without
+//       approval
 //   R8  wishes from Spotify: asked only by the tile, 10 a kind; the next page only at the end of the hits; an artist's
 //       albums 10 at a time, the next only when swiped to the end; back and again ask nothing; a wish (no "play", no
 //       "start page") goes to the parents; exactly the expected requests to Spotify
 //   R9  the wishes' switch off: no Spotify search on the display, nothing asked, all else as before
 //   R10 the parents' app, page "Wünsche": the child's wish is there; approved, it is on the start page under the tab
-//       the child chose, as the child's own (the app opened as on the home network: "Anmeldung verlangen" off)
+//       the child chose, as the child's own (the app opened as on the home network: "Anmeldung verlangen" off); the
+//       approval is kept - taken off the start page, the child finds it in the search again - until it is revoked
+//   R11 the search starts with its tiles (no keyboard, nothing asked); the keyboard comes with a tap on the field; a
+//       tile chosen, the search looks only there (no hits of the box), "Suchen" on the keyboard asks; back: the tiles
+//   R12 "Einträge verwalten": what the child fetched itself, on a page of its own - another tab or off the start page
+//   R13 radio for children: tips of children's stations only, asked once; on the start page without approval
 //
 // Usage: node check.mjs <www dir> [--shots <dir>]   (needs Chrome; port 8200 and 4300 free)
 // Exit code 0: all rules kept; 1: a rule broken (listed); 2: could not run.
@@ -118,6 +123,7 @@ function makeConfigDir() {
     ...box.mupibox,
     displaySearch: true,
     displayPodcasts: true,
+    displayRadio: true,
     displayWishes: true,
     hiddenCategories: [],
   }
@@ -165,6 +171,26 @@ function makeConfigDir() {
     kids,
     explicit: false,
   })
+  // (the radio directory's answer for any term and the tips: two children's stations, one for grown-ups -
+  // MUPIBOX_RADIO_FIXTURE)
+  const station = (name, file, kids) => ({
+    name,
+    url: `https://example.invalid/${file}.mp3`,
+    image: '',
+    country: 'DE',
+    codec: 'MP3',
+    bitrate: 128,
+    tags: kids ? ['kinder'] : ['news'],
+    kids,
+  })
+  fs.writeFileSync(
+    path.join(dir, 'radio.json'),
+    JSON.stringify([
+      station('Kinderwelle', 'kinderwelle', true),
+      station('Igelfunk', 'igelfunk', true),
+      station('Nachrichtenwelle', 'nachrichten', false),
+    ]),
+  )
   fs.writeFileSync(
     path.join(dir, 'podcasts.json'),
     JSON.stringify([
@@ -254,6 +280,7 @@ async function startBackend(dir) {
       ...process.env,
       NODE_ENV: 'development',
       MUPIBOX_PODCAST_FIXTURE: path.join(dir, 'podcasts.json'),
+      MUPIBOX_RADIO_FIXTURE: path.join(dir, 'radio.json'),
       MUPIBOX_SPOTIFY_FIXTURE: path.join(dir, 'spotify.json'),
       MUPIBOX_SPOTIFY_FIXTURE_LOG: path.join(dir, 'spotify-calls.log'),
       // (Spotify answers after the page change, as on the box: the artist's covers came then and were not drawn)
@@ -362,6 +389,10 @@ async function clickText(page, selector, text) {
 }
 
 async function type(page, letters) {
+  if (!(await anywhereVisible(page, 'app-search .simple-keyboard'))) {
+    await page.click('app-search .srch-field')
+    await wait(400)
+  }
   for (const k of letters) {
     await page.click(`app-search [data-skbtn="${k}"]`)
     await wait(120)
@@ -389,6 +420,32 @@ async function clickFrontCover(page) {
   return true
 }
 
+/** the names in the search's rows (a selector of its tiles or hits) */
+async function names(page, selector) {
+  return page.evaluate(
+    (sel) => [...document.querySelectorAll(`app-search ${sel} .srch-name`)].map((e) => e.textContent.trim()),
+    selector,
+  )
+}
+
+/** back in the search: from a tile to its start (the search's own back arrow) */
+async function back(page) {
+  await page.click('app-search [data-mupi-back]')
+  await wait(700)
+}
+
+/** one of the child's own taken off the start page ("Einträge verwalten" - its tile at the search's start) */
+async function removeOwn(page, name) {
+  await page.click('app-search .srch-own-btn')
+  await wait(700)
+  if (!(await clickText(page, '.srch-own', name)) || (await topTag(page)) !== 'app-search-album')
+    throw new Error(`no page for the own entry ${name}`)
+  await clickText(page, '.sa-btn', 'Remove')
+  await clickText(page, '.sa-btn', 'Yes, remove')
+  await wait(600)
+  await back(page)
+}
+
 async function shot(page, name) {
   if (shots) await page.screenshot({ path: path.join(shots, `${name}.png`) })
 }
@@ -405,9 +462,19 @@ async function run(browser, dir, size) {
   await page.goto(`http://localhost:${STATIC_PORT}/search`, { waitUntil: 'networkidle2' })
   await wait(2500)
   try {
-    await tips(page, tag, asked, size)
+    await start(page, tag, asked)
+  } catch (err) {
+    rule('R11', false, `${tag}: the start checks stopped (${firstLine(err)})`)
+  }
+  try {
+    await tips(page, tag, asked, dir)
   } catch (err) {
     rule('R7', false, `${tag}: the tips checks stopped (${firstLine(err)})`)
+  }
+  try {
+    await radio(page, tag, asked, dir)
+  } catch (err) {
+    rule('R13', false, `${tag}: the radio checks stopped (${firstLine(err)})`)
   }
   await type(page, ['F', 'R', 'I'])
   const hitsBefore = await visibleCount(page, '.srch-hit')
@@ -453,55 +520,188 @@ async function run(browser, dir, size) {
   await page.close()
 }
 
-async function tips(page, tag, asked, size) {
-  const tipAsks = () => asked.filter((u) => u.includes('/api/search-podcasts/tips')).length
-  const names = () =>
-    page.evaluate(() =>
-      [...document.querySelectorAll('app-search .srch-tip .srch-name')].map((e) => e.textContent.trim()),
+/** R11: the tiles at the start, no keyboard, nothing asked; the keyboard with a tap on the field */
+async function start(page, tag, asked) {
+  rule(
+    'R11',
+    !(await anywhereVisible(page, 'app-search .simple-keyboard')),
+    `${tag}: the search starts without keyboard`,
+  )
+  const ways = await names(page, '.srch-ways .srch-way')
+  rule('R11', ways.join('|') === 'Search Spotify|Podcasts|Radio', `${tag}: the tiles of the start (${ways.join(', ')})`)
+  const row = await page.evaluate(() => {
+    const tops = [...document.querySelectorAll('app-search .srch-ways .srch-way')].map(
+      (e) => e.getBoundingClientRect().top,
     )
-  const shown = await names()
+    return tops.length > 0 && tops.every((t) => Math.abs(t - tops[0]) < 2)
+  })
+  const o = await overflow(page)
+  rule('R11', row && !o.scrolls, `${tag}: the tiles in one row, nothing scrolls up and down`)
+  rule(
+    'R11',
+    !asked.some((u) => /\/api\/(search-podcasts|search-radio|wishes\/search)/.test(u)),
+    `${tag}: nothing asked before a tile is chosen`,
+  )
+  await shot(page, `${tag}-0-start`)
+  await page.click('app-search .srch-field')
+  await wait(400)
+  rule(
+    'R11',
+    await anywhereVisible(page, 'app-search .simple-keyboard'),
+    `${tag}: a tap on the field brings the keyboard`,
+  )
+  await page.click('app-search [data-skbtn="{hide}"]')
+  await wait(300)
+}
+
+/** R7 + R12: the tile "Podcasts" with nothing typed - the tips; a tip fetched, moved and taken out again */
+async function tips(page, tag, asked, dir) {
+  const tipAsks = () => asked.filter((u) => u.includes('/api/search-podcasts/tips')).length
+  await page.click('app-search .srch-podcasts-btn')
+  await wait(1200)
+  const shown = await names(page, '.srch-tips .srch-pod')
   rule(
     'R7',
     shown.includes('Frosch Funkhaus') && !shown.includes('Erwachsenenfunk'),
-    `${tag}: tips for children on the empty search (${shown.join(', ')})`,
+    `${tag}: tips for children under "Podcasts" (${shown.join(', ')})`,
   )
   rule('R7', tipAsks() === 1, `${tag}: the tips asked once`)
+  rule(
+    'R11',
+    (await page.evaluate(() => document.querySelector('app-search .srch-mode')?.textContent?.trim() ?? '')) ===
+      'Podcasts',
+    `${tag}: the field says where the search looks`,
+  )
   await shot(page, `${tag}-0-tipps`)
-  const opened = await clickText(page, '.srch-tip', 'Frosch Funkhaus')
+  const opened = await clickText(page, '.srch-tips .srch-pod', 'Frosch Funkhaus')
   if (!opened || (await topTag(page)) !== 'app-search-album') throw new Error('no page for the tip')
   await clickText(page, '.sa-btn', 'To the start page')
   await clickText(page, '.sa-btn', 'Radio')
   await wait(800)
-  const own = await page.evaluate(() =>
-    [...document.querySelectorAll('app-search .srch-own .srch-name')].map((e) => e.textContent.trim()),
-  )
-  rule(
-    'R7',
-    (await topTag(page)) === 'app-search' && own.includes('Frosch Funkhaus'),
-    `${tag}: a tip put on the start page without approval`,
-  )
-  const after = await names()
+  rule('R7', (await topTag(page)) === 'app-search', `${tag}: a tip put on the start page without approval`)
+  const after = await names(page, '.srch-tips .srch-pod')
   rule(
     'R7',
     !after.includes('Frosch Funkhaus') && after.includes('Igel Insel'),
     `${tag}: a tip on the box is not offered again (${after.join(', ')})`,
   )
-  await shot(page, `${tag}-0b-tipps-und-eigene`)
-  if (size.height >= 600) {
-    // both rows above the keyboard: nothing of them below its top, nothing to scroll
-    const fit = await page.evaluate(() => {
-      const kb = document.querySelector('app-search .simple-keyboard')?.getBoundingClientRect().top ?? innerHeight
-      const rows = [...document.querySelectorAll('app-search .srch-own, app-search .srch-tip')].filter(
-        (e) => e.getBoundingClientRect().width > 0,
-      )
-      return rows.length > 0 && rows.every((e) => e.getBoundingClientRect().bottom <= kb + 1)
-    })
-    rule('R7', fit, `${tag}: the child's own and the tips fit above the keyboard`)
-  }
   rule('R7', tipAsks() === 1, `${tag}: no new tips asked on the way back`)
-  // (taken out again: the next part starts as before)
-  await clickText(page, '.srch-own', 'Frosch Funkhaus')
-  await clickText(page, '.srch-own', 'Remove?')
+  // R11: typed under "Podcasts": only the podcasts' tile, no hits of the box; "Suchen" asks (another text than the
+  // hits' part below asks for: its tile is still to tap there)
+  const podAsks = () => asked.filter((u) => u.includes('/api/search-podcasts?')).length
+  await type(page, ['F', 'R', 'O'])
+  rule(
+    'R11',
+    (await visibleCount(page, '.srch-hit:not(.srch-way)')) === 0 &&
+      (await visibleCount(page, '.srch-podcasts-btn')) === 1,
+    `${tag}: a tile chosen - the search looks only there (no hits of the box)`,
+  )
+  rule('R11', podAsks() === 0, `${tag}: nothing asked while typing under a tile`)
+  await page.click('app-search [data-skbtn="{search}"]')
+  await wait(1200)
+  rule(
+    'R11',
+    podAsks() === 1 &&
+      (await visibleCount(page, '.srch-pod')) > 0 &&
+      !(await anywhereVisible(page, 'app-search .simple-keyboard')),
+    `${tag}: "Search" on the keyboard asks, the keyboard goes for the hits`,
+  )
+  await back(page)
+  rule(
+    'R11',
+    (await visibleCount(page, '.srch-ways')) === 1 && (await visibleCount(page, '.srch-mode')) === 0,
+    `${tag}: back from a tile: the tiles of the start`,
+  )
+
+  // R12: "Einträge verwalten" - the tip fetched: another tab, then off the start page
+  const ways = await names(page, '.srch-ways .srch-way')
+  rule(
+    'R12',
+    ways[0] === 'Manage entries',
+    `${tag}: "Manage entries" once the child fetched something (${ways.join(', ')})`,
+  )
+  await page.click('app-search .srch-own-btn')
+  await wait(700)
+  const own = await names(page, '.srch-own')
+  rule('R12', own.includes('Frosch Funkhaus'), `${tag}: what the child fetched itself (${own.join(', ')})`)
+  await shot(page, `${tag}-0c-eigene`)
+  if (!(await clickText(page, '.srch-own', 'Frosch Funkhaus')) || (await topTag(page)) !== 'app-search-album')
+    throw new Error('no page for the own entry')
+  const o = await overflow(page)
+  const words = await page.evaluate((top) => eval(top)?.innerText ?? '', TOP)
+  rule(
+    'R12',
+    words.includes('Somewhere else') && words.includes('Remove') && !o.scrolls && !o.below,
+    `${tag}: its page - "Somewhere else", "Remove", nothing scrolls`,
+  )
+  rule('R4', (await visibleCount(page, '[data-mupi-back]')) === 1, `${tag}: its page has one way back`)
+  await clickText(page, '.sa-btn', 'Somewhere else')
+  const tabs = await page.evaluate(() =>
+    [...document.querySelectorAll('app-search-album .sa-btn')].map((e) => e.textContent.trim()),
+  )
+  rule(
+    'R12',
+    tabs.includes('Music') && tabs.includes('Audio books') && !tabs.includes('Radio'),
+    `${tag}: the other tabs, not its own (${tabs.join(', ')})`,
+  )
+  await clickText(page, '.sa-btn', 'Music')
+  await wait(800)
+  const row = () =>
+    JSON.parse(fs.readFileSync(path.join(dir, 'config', 'data.json'), 'utf8')).find((r) =>
+      String(r.id ?? '').includes('frosch-funkhaus'),
+    )
+  const note = await page.evaluate(() => document.querySelector('app-search .srch-toast')?.textContent ?? '')
+  rule(
+    'R12',
+    (await topTag(page)) === 'app-search' && row()?.category === 'music' && /Music/.test(note),
+    `${tag}: moved to another tab ("${note.trim()}")`,
+  )
+  await back(page)
+  await removeOwn(page, 'Frosch Funkhaus')
+  rule(
+    'R12',
+    !row() && (await visibleCount(page, '.srch-own-btn')) === 0,
+    `${tag}: taken off the start page; nothing of its own left, no tile for it`,
+  )
+}
+
+/** R13: radio for children - the tile "Radio": tips of children's stations, one fetched without approval */
+async function radio(page, tag, asked, dir) {
+  const tipAsks = () => asked.filter((u) => u.includes('/api/search-radio/tips')).length
+  await page.click('app-search .srch-radio-btn')
+  await wait(1200)
+  const shown = await names(page, '.srch-tips .srch-radio')
+  rule(
+    'R13',
+    shown.includes('Kinderwelle') && !shown.includes('Nachrichtenwelle') && tipAsks() === 1,
+    `${tag}: children's stations under "Radio", asked once (${shown.join(', ')})`,
+  )
+  if (!(await clickText(page, '.srch-tips .srch-radio', 'Kinderwelle')) || (await topTag(page)) !== 'app-search-album')
+    throw new Error('no page for the station')
+  const words = await page.evaluate((top) => eval(top)?.innerText ?? '', TOP)
+  const o = await overflow(page)
+  rule(
+    'R13',
+    words.includes('To the start page') && !words.includes('Play') && !o.scrolls && !o.below,
+    `${tag}: a station goes on the start page (its page fits the screen)`,
+  )
+  await clickText(page, '.sa-btn', 'To the start page')
+  await clickText(page, '.sa-btn', 'Radio')
+  await wait(800)
+  const row = () =>
+    JSON.parse(fs.readFileSync(path.join(dir, 'config', 'data.json'), 'utf8')).find(
+      (r) => r.type === 'radio' && String(r.id).includes('kinderwelle'),
+    )
+  rule(
+    'R13',
+    (await topTag(page)) === 'app-search' &&
+      row()?.kidAdded === true &&
+      !(await names(page, '.srch-tips .srch-radio')).includes('Kinderwelle'),
+    `${tag}: on the start page without approval, not offered again`,
+  )
+  await back(page)
+  await removeOwn(page, 'Kinderwelle')
+  rule('R13', !row(), `${tag}: the child takes it off again`)
 }
 
 /** the calls to (invented) Spotify so far */
@@ -663,6 +863,32 @@ async function wishes(page, tag, dir) {
     calls().length === want(5),
     `${tag}: Spotify asked ${calls().length} times in all${first ? ' (2 search pages, 3 album pages)' : kept}`,
   )
+  // R11: the tile "Search Spotify" at the start - the keyboard at once, only Spotify's hits, the pages kept
+  await page.click('app-search .srch-clear')
+  await wait(700)
+  await page.click('app-search [data-skbtn="{hide}"]')
+  await wait(300)
+  await page.click('app-search .srch-ways .srch-wish-btn')
+  await wait(500)
+  rule(
+    'R11',
+    await anywhereVisible(page, 'app-search .simple-keyboard'),
+    `${tag}: "Search Spotify" - the keyboard at once`,
+  )
+  await type(page, ['F', 'R', 'I'])
+  rule(
+    'R11',
+    (await visibleCount(page, '.srch-hit:not(.srch-way):not(.srch-wish)')) === 0 && calls().length === want(5),
+    `${tag}: under "Spotify" no hits of the box, nothing asked while typing (its hits for the text kept: shown at once)`,
+  )
+  await page.click('app-search [data-skbtn="{search}"]')
+  await wait(1200)
+  rule(
+    'R11',
+    (await visibleCount(page, '.srch-wish')) > 0 && calls().length === want(5),
+    `${tag}: "Search" shows Spotify's hits kept on the display (nothing asked; ${await visibleCount(page, '.srch-wish')} hits, ${calls().length} calls: ${calls().slice(-2).join(' / ')})`,
+  )
+  await back(page)
 }
 
 /** R10: the parents' app, page "Wünsche" - the wish of the run before, approved */
@@ -701,6 +927,39 @@ async function appWishes(browser, dir) {
       after?.status === 'approved' && (await page.$(`[data-wish-yes="${wished?.id}"]`)) === null,
       'app: the wish is decided, not offered again',
     )
+    const inPool = () =>
+      JSON.parse(fs.readFileSync(path.join(dir, 'config', 'search-pool.json'), 'utf8')).some(
+        (e) => e.spotifyId === wished?.spotifyId,
+      )
+    rule('R10', inPool(), 'app: the approval is kept in the search')
+    // the child takes it off the start page and finds it in the search again (to fetch itself, no wish)
+    const box = await browser.newPage()
+    await box.setViewport({ width: 1024, height: 600, deviceScaleFactor: 1 })
+    try {
+      await box.goto(`http://localhost:${STATIC_PORT}/search`, { waitUntil: 'networkidle2' })
+      await wait(2500)
+      await removeOwn(box, wished.name)
+      await type(box, ['W', 'U', 'N', 'S', 'C', 'H'])
+      const again = await box.evaluate(
+        (n) =>
+          [...document.querySelectorAll('app-search .srch-hit')].some(
+            (h) => h.querySelector('.srch-name')?.textContent?.trim() === n && h.querySelector('.srch-plus'),
+          ),
+        wished.name,
+      )
+      rule('R10', again, `display: taken off, "${wished.name}" is in the search to fetch again`)
+    } finally {
+      await box.close()
+    }
+    // revoked in the app: out of the search, off the start page
+    await page.click(`[data-wish-revoke="${wished?.id}"]`)
+    await wait(600)
+    await page.click('[data-ok]')
+    await wait(2000)
+    const revoked = JSON.parse(fs.readFileSync(path.join(dir, 'config', 'wishes.json'), 'utf8')).find(
+      (w) => w.id === wished?.id,
+    )
+    rule('R10', revoked?.status === 'revoked' && !inPool(), 'app: revoked - out of the search, marked as revoked')
   } catch (err) {
     rule('R10', false, `app: the page "Wünsche" could not be checked (${firstLine(err)})`)
   } finally {
@@ -722,7 +981,12 @@ async function wishesOff(browser, dir) {
   try {
     await page.goto(`http://localhost:${STATIC_PORT}/search`, { waitUntil: 'networkidle2' })
     await wait(2500)
-    rule('R9', (await visibleCount(page, '.srch-tip')) > 0, 'switch off: the tips as before')
+    const ways = await names(page, '.srch-ways .srch-way')
+    rule('R9', ways.join('|') === 'Podcasts|Radio', `switch off: the tiles without Spotify (${ways.join(', ')})`)
+    await page.click('app-search .srch-podcasts-btn')
+    await wait(1200)
+    rule('R9', (await visibleCount(page, '.srch-tips .srch-pod')) > 0, 'switch off: the tips as before')
+    await back(page)
     await type(page, ['F', 'R', 'I'])
     rule(
       'R9',
@@ -731,7 +995,7 @@ async function wishesOff(browser, dir) {
     )
     rule(
       'R9',
-      (await visibleCount(page, '.srch-pod-btn:not(.srch-wish-btn)')) === 1,
+      (await visibleCount(page, '.srch-podcasts-btn')) === 1,
       'switch off: the podcasts for children as before',
     )
     const opened = await clickText(page, '.srch-hit', 'Fritzi Funkel')
@@ -748,22 +1012,16 @@ async function wishesOff(browser, dir) {
 
 async function podcasts(page, tag, asked) {
   const podAsks = () => asked.filter((u) => u.includes('/api/search-podcasts?')).length
-  rule('R6', podAsks() === 0, `${tag}: no podcast search while typing`)
-  rule(
-    'R6',
-    (await visibleCount(page, '.srch-pod-btn:not(.srch-wish-btn)')) === 1,
-    `${tag}: the tile "podcasts for children" is there`,
-  )
-  await page.click('app-search .srch-pod-btn:not(.srch-wish-btn)')
+  rule('R6', podAsks() === 1, `${tag}: no podcast search while typing (only the one under the tile "Podcasts")`)
+  rule('R6', (await visibleCount(page, '.srch-podcasts-btn')) === 1, `${tag}: the tile "Podcasts" after the hits`)
+  await page.click('app-search .srch-podcasts-btn')
   await wait(1200)
-  rule('R6', podAsks() === 1, `${tag}: the tile asks once`)
-  const names = await page.evaluate(() =>
-    [...document.querySelectorAll('app-search .srch-pod .srch-name')].map((e) => e.textContent.trim()),
-  )
+  rule('R6', podAsks() === 2, `${tag}: the tile asks once`)
+  const shows = await names(page, '.srch-pod')
   rule(
     'R6',
-    names.includes('Frosch Funkhaus') && !names.includes('Erwachsenenfunk'),
-    `${tag}: children's shows only (${names.join(', ')})`,
+    shows.includes('Frosch Funkhaus') && !shows.includes('Erwachsenenfunk'),
+    `${tag}: children's shows only (${shows.join(', ')})`,
   )
   const opened = await clickText(page, '.srch-pod', 'Frosch Funkhaus')
   if (!opened || (await topTag(page)) !== 'app-search-album') throw new Error('no page for the podcast')
@@ -786,13 +1044,16 @@ async function podcasts(page, tag, asked) {
   )
   await page.click('app-search .srch-clear')
   await wait(900)
-  const own = await page.evaluate(() =>
-    [...document.querySelectorAll('app-search .srch-own .srch-name')].map((e) => e.textContent.trim()),
+  await page.click('app-search .srch-own-btn')
+  await wait(700)
+  rule(
+    'R6',
+    (await names(page, '.srch-own')).includes('Frosch Funkhaus'),
+    `${tag}: among what the child fetched itself`,
   )
-  rule('R6', own.includes('Frosch Funkhaus'), `${tag}: among what the child fetched itself`)
+  await back(page)
   // (taken out again: the next run starts as this one)
-  await clickText(page, '.srch-own', 'Frosch Funkhaus')
-  await clickText(page, '.srch-own', 'Remove?')
+  await removeOwn(page, 'Frosch Funkhaus')
 }
 
 async function navigation(page, tag, hitsBefore, asked) {

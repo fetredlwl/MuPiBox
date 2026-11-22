@@ -31,7 +31,25 @@
           <small>{{ sub() }}</small>
         }
       </div>
-      @if (choosing()) {
+      @if (own()) {
+        <!-- one of the child's own: another tab, or off the start page (asked once more) -->
+        @if (choosing()) {
+          <p class="sa-q">{{ texts.text('searchWhere') }}</p>
+          @for (c of elsewhere(); track c) {
+            <button class="sa-btn" type="button" [disabled]="busy()" (click)="addTo(c)">
+              <ion-icon [name]="categoryLabel[c].icon"></ion-icon>{{ flow.catLabel(c) }}
+            </button>
+          }
+        } @else if (removing()) {
+          <p class="sa-q">{{ texts.text('searchRemoveQ') }}</p>
+          <button class="sa-btn sa-main sa-remove-yes" type="button" [disabled]="busy()" (click)="removeOwn()"><span class="sa-ic">✕</span>{{ texts.text('searchRemoveYes') }}</button>
+        } @else {
+          @if (elsewhere().length) {
+            <button class="sa-btn sa-main sa-move" type="button" (click)="moveOwn()"><ion-icon name="swap-horizontal-outline"></ion-icon>{{ texts.text('searchMove') }}</button>
+          }
+          <button class="sa-btn sa-remove" type="button" (click)="removeOwn()"><span class="sa-ic">✕</span>{{ texts.text('searchRemove') }}</button>
+        }
+      } @else if (choosing()) {
         <p class="sa-q">{{ texts.text('searchWhere') }}</p>
         @for (c of flow.categories(); track c) {
           <button class="sa-btn" type="button" [disabled]="busy()" (click)="addTo(c)">

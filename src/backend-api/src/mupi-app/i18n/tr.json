@@ -3224,7 +3224,6 @@
  "„Nur in der Suche“ in der App ausgeblendet": "Uygulamada „Yalnızca aramada“ gizlendi",
  "In der Suche am Display. „Aus der Suche nehmen“: das Kind findet es nicht mehr – was es schon auf die Startseite geholt hat, bleibt dort.": "Ekrandaki aramada. „Aramadan çıkar“: çocuk artık bulamaz – başlangıç sayfasına zaten eklediği orada kalır.",
  "Podcasts für Kinder in der Suche": "Aramada çocuklar için podcast’ler",
- "In der Suche am Display sucht eine Kachel „Podcasts für Kinder“ in Apples Podcast-Verzeichnis (bei Deutsch auch in der ARD Audiothek) – nur Sendungen der Kinder-Kategorien. Das Kind kann sie ohne Freigabe auf die Startseite holen und selbst wieder entfernen. Gesucht wird erst beim Tippen auf die Kachel; der Suchbegriff geht dabei an Apple bzw. die ARD.": "Ekrandaki aramada „Çocuklar için podcast’ler“ kutucuğu Apple’ın podcast dizininde (Almancada ARD Audiothek’te de) arar – yalnızca çocuk kategorilerindeki yayınlar. Çocuk bunları onay olmadan başlangıç sayfasına ekleyebilir ve kendisi kaldırabilir. Arama yalnızca kutucuğa dokunulunca yapılır; arama terimi o zaman Apple’a veya ARD’ye gider.",
  "Podcasts für Kinder in der Suche an": "Aramada çocuk podcast’leri açık",
  "Podcasts für Kinder in der Suche aus": "Aramada çocuk podcast’leri kapalı",
  "Wünsche": "Dilekler",
@@ -3232,7 +3231,6 @@
  "Wünsche aus Spotify an": "Spotify’dan dilekler açık",
  "Wünsche aus Spotify aus": "Spotify’dan dilekler kapalı",
  "In der Suche am Display sucht eine Kachel „Bei Spotify suchen“ nach Alben, Künstlern und Podcasts. Das Kind kann sich etwas wünschen und den Reiter wählen; du gibst es in der App frei (Bibliothek › Wünsche), Home Assistant bekommt eine Nachricht mit Link. Spotify wird erst beim Tippen auf die Kachel gefragt, jeweils 10 Treffer, weitere erst beim Weiterblättern; jede Seite merkt sich die Box einen Tag. Aus: keine Spotify-Suche am Display, alles andere bleibt.": "Ekrandaki aramada „Spotify’da ara“ kutucuğu albüm, sanatçı ve podcast arar. Çocuk bir şey dileyip sekmeyi seçebilir; sen uygulamada onaylarsın (Kütüphane › Dilekler), Home Assistant bağlantılı bir mesaj alır. Spotify’a yalnızca kutucuğa dokunulunca sorulur, her seferinde 10 sonuç, fazlası yalnızca kaydırınca; kutu her sayfayı bir gün saklar. Kapalı: ekranda Spotify araması yok, gerisi aynı kalır.",
- "Was das Kind in der Suche am Display bei Spotify gefunden und sich gewünscht hat. Freigegeben kommt es auf die Startseite – unter den Reiter, den das Kind gewählt hat.": "Çocuğun ekrandaki aramada Spotify’da bulup dilediği şeyler. Onaylanınca başlangıç sayfasına gider – çocuğun seçtiği sekmeye.",
  "Wünsche sind ausgeschaltet: Display & Bedienung › Suche › „Wünsche aus Spotify“.": "Dilekler kapalı: Ekran & Kullanım › Ara › „Spotify’dan dilekler“.",
  "Offene Wünsche": "Bekleyen dilekler",
  "Keine offenen Wünsche.": "Bekleyen dilek yok.",
@@ -3247,5 +3245,16 @@
  "{} offen": "{} bekliyor",
  "Ein Wunsch wartet": "Bir dilek bekliyor",
  "{} Wünsche warten": "{} dilek bekliyor",
- "Antippen, um sie freizugeben oder abzulehnen.": "Onaylamak veya reddetmek için dokun."
+ "Antippen, um sie freizugeben oder abzulehnen.": "Onaylamak veya reddetmek için dokun.",
+ "Freigabe widerrufen?": "Onay geri alınsın mı?",
+ "Widerrufen": "Geri al",
+ "Zurückgenommen": "Geri alındı",
+ "Zurückgenommen: {}": "Geri alındı: {}",
+ "„{}“ verschwindet aus der Suche am Display und von der Startseite. Das Kind kann es sich danach wieder wünschen.": "„{}“ ekrandaki aramadan ve başlangıç sayfasından kaybolur. Çocuk daha sonra onu yeniden dileyebilir.",
+ "Radio für Kinder in der Suche": "Aramada çocuk radyosu",
+ "Radio für Kinder in der Suche an": "Aramada çocuk radyosu açık",
+ "Radio für Kinder in der Suche aus": "Aramada çocuk radyosu kapalı",
+ "In der Suche am Display sucht eine Kachel „Radio“ im Senderverzeichnis radio-browser.info – nur Sender, die dort als Kinderradio markiert sind. Das Kind kann sie ohne Freigabe auf die Startseite holen und selbst wieder entfernen. Gesucht wird erst, wenn das Kind es will; der Suchbegriff geht dabei an radio-browser.info.": "Ekrandaki aramada „Radyo“ kutucuğu radio-browser.info istasyon dizininde arar – yalnızca orada çocuk radyosu olarak işaretlenmiş istasyonlar. Çocuk bunları onaysız başlangıç sayfasına ekleyebilir ve kendisi kaldırabilir. Arama yalnızca çocuk istediğinde yapılır; arama terimi radio-browser.info’ya gider.",
+ "Was das Kind in der Suche am Display bei Spotify gefunden und sich gewünscht hat. Freigegeben kommt es auf die Startseite – unter den Reiter, den das Kind gewählt hat. Die Freigabe bleibt: Das Kind kann es selbst entfernen und über die Suche wieder holen, bis du sie widerrufst.": "Çocuğun ekrandaki aramada Spotify’da bulup dilediği şeyler. Onaylanınca başlangıç sayfasına gider – çocuğun seçtiği sekmeye. Onay kalır: çocuk onu kendisi kaldırabilir ve sen onayı geri alana kadar arama ile yeniden alabilir.",
+ "In der Suche am Display sucht eine Kachel „Podcasts“ in Apples Podcast-Verzeichnis (bei Deutsch auch in der ARD Audiothek) – nur Sendungen der Kinder-Kategorien. Das Kind kann sie ohne Freigabe auf die Startseite holen und selbst wieder entfernen. Gesucht wird erst beim Tippen auf die Kachel; der Suchbegriff geht dabei an Apple bzw. die ARD.": "Ekrandaki aramada „Podcast’ler“ kutucuğu Apple’ın podcast dizininde (Almancada ARD Audiothek’te de) arar – yalnızca çocuk kategorilerindeki yayınlar. Çocuk bunları onay olmadan başlangıç sayfasına ekleyebilir ve kendisi kaldırabilir. Arama yalnızca kutucuğa dokunulunca yapılır; arama terimi o zaman Apple’a veya ARD’ye gider."
 }

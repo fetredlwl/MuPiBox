@@ -3224,7 +3224,6 @@
  "„Nur in der Suche“ in der App ausgeblendet": "“Search only” hidden in the app",
  "In der Suche am Display. „Aus der Suche nehmen“: das Kind findet es nicht mehr – was es schon auf die Startseite geholt hat, bleibt dort.": "In the search on the display. “Remove from search”: the child no longer finds it – what it already put on the start page stays there.",
  "Podcasts für Kinder in der Suche": "Podcasts for children in the search",
- "In der Suche am Display sucht eine Kachel „Podcasts für Kinder“ in Apples Podcast-Verzeichnis (bei Deutsch auch in der ARD Audiothek) – nur Sendungen der Kinder-Kategorien. Das Kind kann sie ohne Freigabe auf die Startseite holen und selbst wieder entfernen. Gesucht wird erst beim Tippen auf die Kachel; der Suchbegriff geht dabei an Apple bzw. die ARD.": "In the search on the display a tile “Podcasts for children” searches Apple’s podcast directory (for German also the ARD Audiothek) – only shows of the children’s categories. The child can put them on the start page without approval and remove them again itself. The search runs only when the tile is tapped; the search term then goes to Apple or the ARD.",
  "Podcasts für Kinder in der Suche an": "Podcasts for children in the search on",
  "Podcasts für Kinder in der Suche aus": "Podcasts for children in the search off",
  "Wünsche": "Wishes",
@@ -3232,7 +3231,6 @@
  "Wünsche aus Spotify an": "Wishes from Spotify on",
  "Wünsche aus Spotify aus": "Wishes from Spotify off",
  "In der Suche am Display sucht eine Kachel „Bei Spotify suchen“ nach Alben, Künstlern und Podcasts. Das Kind kann sich etwas wünschen und den Reiter wählen; du gibst es in der App frei (Bibliothek › Wünsche), Home Assistant bekommt eine Nachricht mit Link. Spotify wird erst beim Tippen auf die Kachel gefragt, jeweils 10 Treffer, weitere erst beim Weiterblättern; jede Seite merkt sich die Box einen Tag. Aus: keine Spotify-Suche am Display, alles andere bleibt.": "In the search on the display a tile “Search Spotify” looks for albums, artists and podcasts. The child can wish for something and choose the tab; you approve it in the app (Library › Wishes), Home Assistant gets a message with a link. Spotify is asked only when the tile is tapped, 10 hits at a time, more only when scrolling on; the box keeps every page for a day. Off: no Spotify search on the display, everything else stays.",
- "Was das Kind in der Suche am Display bei Spotify gefunden und sich gewünscht hat. Freigegeben kommt es auf die Startseite – unter den Reiter, den das Kind gewählt hat.": "What the child found on Spotify in the search on the display and wished for. Approved, it goes on the start page – under the tab the child chose.",
  "Wünsche sind ausgeschaltet: Display & Bedienung › Suche › „Wünsche aus Spotify“.": "Wishes are switched off: Display & controls › Search › “Wishes from Spotify”.",
  "Offene Wünsche": "Open wishes",
  "Keine offenen Wünsche.": "No open wishes.",
@@ -3247,5 +3245,16 @@
  "{} offen": "{} open",
  "Ein Wunsch wartet": "One wish is waiting",
  "{} Wünsche warten": "{} wishes are waiting",
- "Antippen, um sie freizugeben oder abzulehnen.": "Tap to approve or refuse them."
+ "Antippen, um sie freizugeben oder abzulehnen.": "Tap to approve or refuse them.",
+ "Freigabe widerrufen?": "Revoke approval?",
+ "Widerrufen": "Revoke",
+ "Zurückgenommen": "Revoked",
+ "Zurückgenommen: {}": "Revoked: {}",
+ "„{}“ verschwindet aus der Suche am Display und von der Startseite. Das Kind kann es sich danach wieder wünschen.": "“{}” disappears from the search on the display and from the start page. The child can wish for it again afterwards.",
+ "Radio für Kinder in der Suche": "Radio for children in the search",
+ "Radio für Kinder in der Suche an": "Radio for children in the search on",
+ "Radio für Kinder in der Suche aus": "Radio for children in the search off",
+ "In der Suche am Display sucht eine Kachel „Radio“ im Senderverzeichnis radio-browser.info – nur Sender, die dort als Kinderradio markiert sind. Das Kind kann sie ohne Freigabe auf die Startseite holen und selbst wieder entfernen. Gesucht wird erst, wenn das Kind es will; der Suchbegriff geht dabei an radio-browser.info.": "In the search on the display a tile “Radio” searches the station directory radio-browser.info – only stations marked there as children’s radio. The child can put them on the start page without approval and remove them again itself. It only searches when the child wants to; the search term goes to radio-browser.info.",
+ "Was das Kind in der Suche am Display bei Spotify gefunden und sich gewünscht hat. Freigegeben kommt es auf die Startseite – unter den Reiter, den das Kind gewählt hat. Die Freigabe bleibt: Das Kind kann es selbst entfernen und über die Suche wieder holen, bis du sie widerrufst.": "What the child found on Spotify in the search on the display and wished for. Approved, it goes on the start page – under the tab the child chose. Approval stays: the child can remove it itself and fetch it again through the search until you revoke it.",
+ "In der Suche am Display sucht eine Kachel „Podcasts“ in Apples Podcast-Verzeichnis (bei Deutsch auch in der ARD Audiothek) – nur Sendungen der Kinder-Kategorien. Das Kind kann sie ohne Freigabe auf die Startseite holen und selbst wieder entfernen. Gesucht wird erst beim Tippen auf die Kachel; der Suchbegriff geht dabei an Apple bzw. die ARD.": "In the search on the display a tile “Podcasts” searches Apple’s podcast directory (for German also the ARD Audiothek) – only shows of the children’s categories. The child can put them on the start page without approval and remove them again itself. The search runs only when the tile is tapped; the search term then goes to Apple or the ARD."
 }

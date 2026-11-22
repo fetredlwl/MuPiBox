@@ -107,6 +107,8 @@ export function registerDisplayRoutes(router: Router, deps: DisplayDeps): void {
       appSearchPool: mb.appSearchPool === true,
       // (podcasts for children in the display's search, put on the start page by the child - search-podcasts.ts)
       displayPodcasts: mb.displayPodcasts === true,
+      // (radio stations for children in the display's search, put on the start page by the child - search-radio.ts)
+      displayRadio: mb.displayRadio === true,
       // (wishes from Spotify in the display's search, approved by the parents - wishes.ts)
       displayWishes: mb.displayWishes === true,
       resume: num(mb.resume, 1, 99) ?? 9,
@@ -141,7 +143,7 @@ export function registerDisplayRoutes(router: Router, deps: DisplayDeps): void {
     const mb: Record<string, unknown> = {}
     const chromium: Record<string, unknown> = {}
     const bad = (what: string) => res.status(400).json({ error: `invalid ${what}` })
-    for (const key of ['coverflowShowNames', 'hideScrollbar', 'episodeResume', 'newEpisodes', 'episodeProgress', 'outputPicker', 'displaySearch', 'appSearchPool', 'displayPodcasts', 'displayWishes']) {
+    for (const key of ['coverflowShowNames', 'hideScrollbar', 'episodeResume', 'newEpisodes', 'episodeProgress', 'outputPicker', 'displaySearch', 'appSearchPool', 'displayPodcasts', 'displayRadio', 'displayWishes']) {
       if (body[key] === undefined) continue
       if (typeof body[key] !== 'boolean') return bad(key)
       mb[key] = body[key]

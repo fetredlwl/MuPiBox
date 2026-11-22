@@ -3224,7 +3224,6 @@
  "„Nur in der Suche“ in der App ausgeblendet": "„Tylko w wyszukiwaniu” ukryte w aplikacji",
  "In der Suche am Display. „Aus der Suche nehmen“: das Kind findet es nicht mehr – was es schon auf die Startseite geholt hat, bleibt dort.": "W wyszukiwaniu na wyświetlaczu. „Usuń z wyszukiwania”: dziecko już tego nie znajdzie – to, co już dodało na stronę startową, tam zostaje.",
  "Podcasts für Kinder in der Suche": "Podcasty dla dzieci w wyszukiwaniu",
- "In der Suche am Display sucht eine Kachel „Podcasts für Kinder“ in Apples Podcast-Verzeichnis (bei Deutsch auch in der ARD Audiothek) – nur Sendungen der Kinder-Kategorien. Das Kind kann sie ohne Freigabe auf die Startseite holen und selbst wieder entfernen. Gesucht wird erst beim Tippen auf die Kachel; der Suchbegriff geht dabei an Apple bzw. die ARD.": "W wyszukiwaniu na wyświetlaczu kafelek „Podcasty dla dzieci” przeszukuje katalog podcastów Apple (po niemiecku także ARD Audiothek) – tylko audycje z kategorii dziecięcych. Dziecko może dodać je na stronę startową bez zgody i samo je usunąć. Wyszukiwanie następuje dopiero po stuknięciu kafelka; wpisane hasło trafia wtedy do Apple lub ARD.",
  "Podcasts für Kinder in der Suche an": "Podcasty dla dzieci w wyszukiwaniu włączone",
  "Podcasts für Kinder in der Suche aus": "Podcasty dla dzieci w wyszukiwaniu wyłączone",
  "Wünsche": "Prośby",
@@ -3232,7 +3231,6 @@
  "Wünsche aus Spotify an": "Prośby ze Spotify włączone",
  "Wünsche aus Spotify aus": "Prośby ze Spotify wyłączone",
  "In der Suche am Display sucht eine Kachel „Bei Spotify suchen“ nach Alben, Künstlern und Podcasts. Das Kind kann sich etwas wünschen und den Reiter wählen; du gibst es in der App frei (Bibliothek › Wünsche), Home Assistant bekommt eine Nachricht mit Link. Spotify wird erst beim Tippen auf die Kachel gefragt, jeweils 10 Treffer, weitere erst beim Weiterblättern; jede Seite merkt sich die Box einen Tag. Aus: keine Spotify-Suche am Display, alles andere bleibt.": "W wyszukiwaniu na wyświetlaczu kafelek „Szukaj na Spotify” szuka albumów, artystów i podcastów. Dziecko może o coś poprosić i wybrać zakładkę; ty zatwierdzasz to w aplikacji (Biblioteka › Prośby), Home Assistant dostaje wiadomość z linkiem. Spotify jest pytane dopiero po stuknięciu kafelka, po 10 wyników, kolejne dopiero przy przewijaniu; box pamięta każdą stronę przez dzień. Wył.: brak wyszukiwania Spotify na wyświetlaczu, reszta zostaje.",
- "Was das Kind in der Suche am Display bei Spotify gefunden und sich gewünscht hat. Freigegeben kommt es auf die Startseite – unter den Reiter, den das Kind gewählt hat.": "To, co dziecko znalazło na Spotify w wyszukiwaniu na wyświetlaczu i o co poprosiło. Po zatwierdzeniu trafia na stronę startową – pod zakładkę wybraną przez dziecko.",
  "Wünsche sind ausgeschaltet: Display & Bedienung › Suche › „Wünsche aus Spotify“.": "Prośby są wyłączone: Wyświetlacz i obsługa › Wyszukiwanie › „Prośby ze Spotify”.",
  "Offene Wünsche": "Otwarte prośby",
  "Keine offenen Wünsche.": "Brak otwartych próśb.",
@@ -3247,5 +3245,16 @@
  "{} offen": "Otwarte: {}",
  "Ein Wunsch wartet": "Jedna prośba czeka",
  "{} Wünsche warten": "Prośby czekają: {}",
- "Antippen, um sie freizugeben oder abzulehnen.": "Stuknij, by je zatwierdzić lub odrzucić."
+ "Antippen, um sie freizugeben oder abzulehnen.": "Stuknij, by je zatwierdzić lub odrzucić.",
+ "Freigabe widerrufen?": "Cofnąć zatwierdzenie?",
+ "Widerrufen": "Cofnij",
+ "Zurückgenommen": "Cofnięto",
+ "Zurückgenommen: {}": "Cofnięto: {}",
+ "„{}“ verschwindet aus der Suche am Display und von der Startseite. Das Kind kann es sich danach wieder wünschen.": "„{}” zniknie z wyszukiwania na wyświetlaczu i ze strony startowej. Dziecko może potem znów o to poprosić.",
+ "Radio für Kinder in der Suche": "Radio dla dzieci w wyszukiwaniu",
+ "Radio für Kinder in der Suche an": "Radio dla dzieci w wyszukiwaniu włączone",
+ "Radio für Kinder in der Suche aus": "Radio dla dzieci w wyszukiwaniu wyłączone",
+ "In der Suche am Display sucht eine Kachel „Radio“ im Senderverzeichnis radio-browser.info – nur Sender, die dort als Kinderradio markiert sind. Das Kind kann sie ohne Freigabe auf die Startseite holen und selbst wieder entfernen. Gesucht wird erst, wenn das Kind es will; der Suchbegriff geht dabei an radio-browser.info.": "W wyszukiwaniu na wyświetlaczu kafelek „Radio” przeszukuje katalog stacji radio-browser.info – tylko stacje oznaczone tam jako radio dla dzieci. Dziecko może dodać je na stronę startową bez zatwierdzenia i samo je usunąć. Wyszukiwanie odbywa się dopiero, gdy dziecko chce; wyszukiwane hasło trafia do radio-browser.info.",
+ "Was das Kind in der Suche am Display bei Spotify gefunden und sich gewünscht hat. Freigegeben kommt es auf die Startseite – unter den Reiter, den das Kind gewählt hat. Die Freigabe bleibt: Das Kind kann es selbst entfernen und über die Suche wieder holen, bis du sie widerrufst.": "To, co dziecko znalazło na Spotify w wyszukiwaniu na wyświetlaczu i o co poprosiło. Po zatwierdzeniu trafia na stronę startową – pod zakładkę wybraną przez dziecko. Zatwierdzenie zostaje: dziecko może samo to usunąć i znów pobrać przez wyszukiwanie, dopóki go nie cofniesz.",
+ "In der Suche am Display sucht eine Kachel „Podcasts“ in Apples Podcast-Verzeichnis (bei Deutsch auch in der ARD Audiothek) – nur Sendungen der Kinder-Kategorien. Das Kind kann sie ohne Freigabe auf die Startseite holen und selbst wieder entfernen. Gesucht wird erst beim Tippen auf die Kachel; der Suchbegriff geht dabei an Apple bzw. die ARD.": "W wyszukiwaniu na wyświetlaczu kafelek „Podcasty” przeszukuje katalog podcastów Apple (po niemiecku także ARD Audiothek) – tylko audycje z kategorii dziecięcych. Dziecko może dodać je na stronę startową bez zgody i samo je usunąć. Wyszukiwanie następuje dopiero po stuknięciu kafelka; wpisane hasło trafia wtedy do Apple lub ARD."
 }

@@ -34,7 +34,7 @@ import { environment } from 'src/environments/environment'
 import type { Artist } from '../artist'
 import { ArtworkService } from '../artwork.service'
 import { CoverFlipService } from '../cover-flip.service'
-import { DisplayTextsService } from '../display-texts.service'
+import { type DisplayTextKey, DisplayTextsService } from '../display-texts.service'
 import { KmStatusGroupComponent } from '../km-header/km-status-group.component'
 import type { CategoryType, Media } from '../media'
 import { isStandaloneMedia, MediaService } from '../media.service'
@@ -47,7 +47,10 @@ import { NearEndDirective } from './near-end.directive'
 import {
   CATEGORY_LABEL,
   type KidsPodcast,
+  type KidsStation,
   kidsPodcastEntry,
+  kidsRadioEntry,
+  type OwnEntry,
   type PoolAlbum,
   type PoolEntry,
   SearchFlowService,
@@ -57,14 +60,17 @@ import {
 // The search pool ("Nur in der Suche", backend search-pool.ts): allowed by the parents, not on the start page
 // (podcast: an RSS feed, feedUrl instead of spotifyId - put on the start page only: its episodes come with it) - its
 // types, playing and putting on the start page: SearchFlowService (shared with the artist and album page)
-// what the child put on the start page from the pool (it may take these out again)
-interface OwnEntry {
-  ident: string
-  kind: string
-  name: string
-  artist: string
-  cover: string
-  category: string
+
+// (fork "wishes") Where the search looks - the tiles of its start: the child's own entries ("Einträge verwalten"),
+// Spotify (wishes), podcasts and radio for children. Typed without a tile: the box's library and the pool, the tiles
+// after the hits (each asks for the typed text when tapped).
+type SearchMode = 'own' | 'spotify' | 'podcasts' | 'radio'
+// (the word in the search field: where it looks)
+const MODE_LABEL: Record<SearchMode, DisplayTextKey> = {
+  own: 'searchMine',
+  spotify: 'searchSpotify',
+  podcasts: 'searchPodcastsButton',
+  radio: 'searchRadioButton',
 }
 
 /** a podcast's feed as the backend compares it (search-pool.ts feedKey): without http(s):// */
@@ -155,7 +161,13 @@ export class SearchPage implements AfterViewInit, OnDestroy {
   private keyboard?: Keyboard
 
   protected readonly query = signal('')
-  protected readonly keyboardShown = signal(true)
+  /** typed enough to search (2 letters) */
+  protected readonly typed = computed(() => normalizeForSearch(this.query()).trim().length >= 2)
+  // (the keyboard comes when the field is tapped - the page starts with the tiles)
+  protected readonly keyboardShown = signal(false)
+  /** the tile chosen at the start: the search looks only there (none: the box's library and the pool) */
+  protected readonly mode = signal<SearchMode | null>(null)
+  protected readonly modeLabel = MODE_LABEL
   protected readonly loading = signal(true)
   // the tabs shown on the start page (the ones a pool hit can go to)
   protected readonly categories = signal<CategoryType[]>([])
@@ -163,8 +175,12 @@ export class SearchPage implements AfterViewInit, OnDestroy {
   private readonly media = signal<{ category: CategoryType; media: Media }[]>([])
   private readonly pool = signal<PoolEntry[]>([])
   protected readonly own = signal<OwnEntry[]>([])
-  // the child's own entry tapped once: a second tap takes it out (a tap by mistake does nothing)
-  protected readonly removing = signal<string | null>(null)
+  /** "Einträge verwalten": the child's own, those fitting the typed text */
+  protected readonly ownShown = computed(() => {
+    const q = this.query().trim()
+    if (!this.typed()) return this.own()
+    return this.own().filter((o) => searchRank(o.name, q) !== null || (!!o.artist && searchRank(o.artist, q) !== null))
+  })
   protected readonly note = signal('')
   private noteTimer = 0
   // (the pool asked again while the page is open: allowed in the app meanwhile, it shows without leaving the search)
@@ -269,11 +285,11 @@ export class SearchPage implements AfterViewInit, OnDestroy {
   private readonly podFor = signal('')
   private readonly podHits = signal<KidsPodcast[]>([])
   protected readonly podBusy = signal(false)
-  // the tips before anything is typed ("Tipps für Kinder", the app's suggestions - asked once per visit of the search,
-  // the backend asks Apple / the ARD every 6 hours at the soonest)
-  private readonly tips = signal<KidsPodcast[]>([])
+  // the tips before anything is typed ("Tipps für Kinder", the app's suggestions - asked when the tile "Podcasts" is
+  // first chosen in a visit of the search, the backend asks Apple / the ARD every 6 hours at the soonest)
+  private readonly tips = signal<KidsPodcast[] | null>(null)
   protected readonly tipsShown = computed(() =>
-    this.podcastsOn() ? this.tips().filter((p) => !this.onBox().has(feedKey(p.feedUrl))) : [],
+    this.podcastsOn() ? (this.tips() ?? []).filter((p) => !this.onBox().has(feedKey(p.feedUrl))) : [],
   )
   /** the podcasts on the box already (their feeds): not offered again - the library's and the child's own */
   private readonly onBox = computed(() => {
@@ -282,11 +298,40 @@ export class SearchPage implements AfterViewInit, OnDestroy {
     for (const o of this.own()) if (o.ident.startsWith('podcast:')) feeds.add(o.ident.slice('podcast:'.length))
     return feeds
   })
+  /** the radio stations on the box already (their streams): not offered again */
+  private readonly radioOnBox = computed(() => {
+    const streams = new Set<string>()
+    for (const { media } of this.media()) if (media.type === 'radio' && media.id) streams.add(feedKey(media.id))
+    for (const o of this.own()) if (o.ident.startsWith('radio:')) streams.add(o.ident.slice('radio:'.length))
+    return streams
+  })
   /** the podcasts found for the text as it is now (another text: the tile again) */
   protected readonly podShown = computed(() =>
     this.podFor() && this.podFor() === normalizeForSearch(this.query()).trim()
       ? this.podHits().filter((p) => !this.onBox().has(feedKey(p.feedUrl)))
       : null,
+  )
+
+  // ---------- radio for children (radio-browser.info, search-radio.ts) ----------
+  // switched on in the app (Bedienung › Suche); asked only when the child asks, for the text typed then; the tips (the
+  // app's "Kinderradio") when the tile "Radio" is first chosen in a visit
+  protected readonly radioOn = signal(false)
+  private readonly radioFor = signal('')
+  private readonly radioHits = signal<KidsStation[]>([])
+  protected readonly radioBusy = signal(false)
+  private readonly radioTips = signal<KidsStation[] | null>(null)
+  protected readonly radioTipsShown = computed(() =>
+    (this.radioTips() ?? []).filter((s) => !this.radioOnBox().has(feedKey(s.url))),
+  )
+  protected readonly radioShown = computed(() =>
+    this.radioFor() && this.radioFor() === normalizeForSearch(this.query()).trim()
+      ? this.radioHits().filter((s) => !this.radioOnBox().has(feedKey(s.url)))
+      : null,
+  )
+
+  /** the tiles of the start: at least one to show */
+  protected readonly waysShown = computed(
+    () => this.own().length > 0 || this.wishesOn() || this.podcastsOn() || this.radioOn(),
   )
 
   // ---------- wishes from Spotify (backend wishes.ts; switched on in the app, Bedienung › Suche) ----------
@@ -322,7 +367,7 @@ export class SearchPage implements AfterViewInit, OnDestroy {
         const hidden = config?.mupibox?.hiddenCategories ?? []
         this.categories.set(SEARCHED.filter((c) => !hidden.includes(c)))
         this.podcastsOn.set((config?.mupibox as { displayPodcasts?: boolean } | undefined)?.displayPodcasts === true)
-        if (this.podcastsOn()) this.loadTips()
+        this.radioOn.set((config?.mupibox as { displayRadio?: boolean } | undefined)?.displayRadio === true)
         this.wishesOn.set((config?.mupibox as { displayWishes?: boolean } | undefined)?.displayWishes === true)
         if (this.wishesOn()) this.flow.loadWished()
         this.flow.categories.set(this.categories())
@@ -390,7 +435,11 @@ export class SearchPage implements AfterViewInit, OnDestroy {
         catchError(() => of({ entries: [] })),
         takeUntilDestroyed(this.destroyRef),
       )
-      .subscribe((r) => this.pool.set(r?.entries ?? []))
+      .subscribe((r) => {
+        this.pool.set(r?.entries ?? [])
+        // (the artist and album pages fetch what is allowed instead of wishing it)
+        this.flow.pool.set(this.pool())
+      })
     this.http
       .get<{ entries: OwnEntry[] }>(`${this.api}/search-pool/own`)
       .pipe(
@@ -413,6 +462,14 @@ export class SearchPage implements AfterViewInit, OnDestroy {
           '{hide} {space} {clear}',
         ],
         digits: ['1 2 3 4 5 6 7 8 9 0', "- . , ! ? ' & ( ) :", '{abc} {bksp}', '{hide} {space} {clear}'],
+        // (a tile chosen that asks a directory or Spotify: "Suchen" asks for the typed text)
+        go: [
+          'Q W E R T Z U I O P Ü',
+          'A S D F G H J K L Ö Ä',
+          '{123} Y X C V B N M ß {bksp}',
+          '{hide} {space} {clear} {search}',
+        ],
+        goDigits: ['1 2 3 4 5 6 7 8 9 0', "- . , ! ? ' & ( ) :", '{abc} {bksp}', '{hide} {space} {clear} {search}'],
       },
       layoutName: 'default',
       display: {
@@ -422,6 +479,7 @@ export class SearchPage implements AfterViewInit, OnDestroy {
         '{abc}': 'ABC',
         '{hide}': '▼',
         '{clear}': '✕',
+        '{search}': this.texts.text('searchKey'),
       },
       theme: 'hg-theme-default mupi-search-keys',
       onChange: (input: string) => this.query.set(input),
@@ -436,15 +494,63 @@ export class SearchPage implements AfterViewInit, OnDestroy {
   }
 
   private keyPressed(button: string): void {
-    if (button === '{123}') this.keyboard?.setOptions({ layoutName: 'digits' })
-    else if (button === '{abc}') this.keyboard?.setOptions({ layoutName: 'default' })
+    if (button === '{123}') this.setLayout(true)
+    else if (button === '{abc}') this.setLayout(false)
     else if (button === '{hide}') this.keyboardShown.set(false)
     else if (button === '{clear}') this.clear()
+    else if (button === '{search}') this.searchHere()
+  }
+
+  /** the keyboard's keys: with "Suchen" where a directory or Spotify is asked */
+  private setLayout(digits: boolean): void {
+    const go = this.mode() === 'spotify' || this.mode() === 'podcasts' || this.mode() === 'radio'
+    this.keyboard?.setOptions({
+      layoutName: go ? (digits ? 'goDigits' : 'go') : digits ? 'digits' : 'default',
+      display: { ...(this.keyboard?.options.display ?? {}), '{search}': this.texts.text('searchKey') },
+    })
+  }
+
+  /** "Suchen" on the keyboard: the chosen tile asked for the typed text, the keyboard folded away for the hits */
+  private searchHere(): void {
+    if (!this.typed()) return
+    const m = this.mode()
+    if (m === 'spotify') void this.searchWishes()
+    else if (m === 'podcasts') void this.searchPodcasts()
+    else if (m === 'radio') void this.searchRadio()
+    else return
+    this.keyboardShown.set(false)
   }
 
   /** a tap on the field: the keyboard comes back */
   protected showKeyboard(): void {
     this.keyboardShown.set(true)
+  }
+
+  /** a tile of the start: the search looks only there (Spotify: the keyboard at once - nothing to show before) */
+  protected enterMode(m: SearchMode): void {
+    this.mode.set(m)
+    this.keyboard?.clearInput()
+    this.query.set('')
+    this.setLayout(false)
+    this.keyboardShown.set(m === 'spotify')
+    if (m === 'podcasts' && this.tips() === null) this.loadTips()
+    if (m === 'radio' && this.radioTips() === null) this.loadRadioTips()
+  }
+
+  /** the tile "Bei Spotify suchen": with a text typed it asks for it, else the search looks on Spotify */
+  protected wishTileClicked(): void {
+    if (this.typed()) void this.searchWishes()
+    else this.enterMode('spotify')
+  }
+
+  protected podTileClicked(): void {
+    if (this.typed()) void this.searchPodcasts()
+    else this.enterMode('podcasts')
+  }
+
+  protected radioTileClicked(): void {
+    if (this.typed()) void this.searchRadio()
+    else this.enterMode('radio')
   }
 
   protected clear(): void {
@@ -453,7 +559,16 @@ export class SearchPage implements AfterViewInit, OnDestroy {
     this.keyboardShown.set(true)
   }
 
+  /** back: from a tile to the start of the search, from there to the start page */
   protected goBack(): void {
+    if (this.mode()) {
+      this.mode.set(null)
+      this.keyboard?.clearInput()
+      this.query.set('')
+      this.setLayout(false)
+      this.keyboardShown.set(false)
+      return
+    }
     this.navController.navigateRoot('/home', { animationDirection: 'back' })
   }
 
@@ -485,6 +600,7 @@ export class SearchPage implements AfterViewInit, OnDestroy {
   }
 
   private loadTips(): void {
+    this.tips.set([])
     this.http
       .get<{ shows: KidsPodcast[] }>(`${this.api}/search-podcasts/tips`)
       .pipe(
@@ -492,6 +608,47 @@ export class SearchPage implements AfterViewInit, OnDestroy {
         takeUntilDestroyed(this.destroyRef),
       )
       .subscribe((r) => this.tips.set(r?.shows ?? []))
+  }
+
+  private loadRadioTips(): void {
+    this.radioTips.set([])
+    this.http
+      .get<{ stations: KidsStation[] }>(`${this.api}/search-radio/tips`)
+      .pipe(
+        catchError(() => of({ stations: [] })),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe((r) => this.radioTips.set(r?.stations ?? []))
+  }
+
+  /** "Radio": the directory asked for the typed text (the backend keeps each text a day) */
+  protected async searchRadio(): Promise<void> {
+    const q = normalizeForSearch(this.query()).trim()
+    if (q.length < 2 || this.radioBusy()) return
+    this.radioBusy.set(true)
+    try {
+      const r = await firstValueFrom(
+        this.http.get<{ stations: KidsStation[] }>(`${this.api}/search-radio`, { params: { q } }),
+      )
+      this.radioHits.set(r?.stations ?? [])
+      this.radioFor.set(q)
+    } catch {
+      this.showNote(this.texts.text('searchFailed'))
+    } finally {
+      this.radioBusy.set(false)
+    }
+  }
+
+  /** a radio station for children: its page, "Auf die Startseite" (no approval needed) */
+  protected openKidsRadio(s: KidsStation): void {
+    this.flow.openedOwnPage()
+    void this.navController.navigateForward(['/search-album'], { state: { entry: kidsRadioEntry(s) } })
+  }
+
+  /** one of the child's own: its page - another tab, or off the start page */
+  protected openOwn(o: OwnEntry): void {
+    this.flow.openedOwnPage()
+    void this.navController.navigateForward(['/search-album'], { state: { own: o } })
   }
 
   /** "Podcasts für Kinder": the directories asked for the typed text (the backend keeps each text a day) */
@@ -555,6 +712,13 @@ export class SearchPage implements AfterViewInit, OnDestroy {
 
   /** a hit of Spotify: an artist its albums, an album / a show its page with "Wünschen" */
   protected openWish(w: WishItem): void {
+    // (allowed already - an approved wish: the pool's page, the child fetches it itself)
+    const allowed = this.flow.poolFor(w)
+    if (allowed) {
+      if (allowed.entry.kind === 'artist' && !allowed.album) this.openPoolArtist(allowed.entry)
+      else this.openPoolItem(allowed.entry, allowed.album)
+      return
+    }
     this.flow.openedOwnPage()
     if (w.kind === 'artist') void this.navController.navigateForward(['/search-artist'], { state: { wishArtist: w } })
     else void this.navController.navigateForward(['/search-album'], { state: { wish: w } })
@@ -580,24 +744,6 @@ export class SearchPage implements AfterViewInit, OnDestroy {
   private openPoolItem(entry: PoolEntry, album?: PoolAlbum): void {
     this.flow.openedOwnPage()
     void this.navController.navigateForward(['/search-album'], { state: { entry, album } })
-  }
-
-  // ---------- the child's own entries ----------
-
-  protected async removeOwn(o: OwnEntry): Promise<void> {
-    if (this.removing() !== o.ident) {
-      this.removing.set(o.ident)
-      return
-    }
-    this.removing.set(null)
-    try {
-      await firstValueFrom(this.http.post(`${this.api}/search-pool/remove-own`, { ident: o.ident }))
-      this.own.update((list) => list.filter((x) => x.ident !== o.ident))
-      this.showNote(this.texts.text('searchGone', { n: o.name }))
-      window.setTimeout(() => this.loadLibrary(), 1500)
-    } catch {
-      this.showNote(this.texts.text('searchFailed'))
-    }
   }
 
   private showNote(text: string): void {

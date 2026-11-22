@@ -11,7 +11,8 @@ import { SpotifyBlockService } from '../spotify-block.service'
 // (fork "wishes") What the search, its artist page and its album page share: the pool's kinds, playing something of
 // the pool, putting it on the start page, and the note the search shows when it is back on top.
 
-export type PoolKind = 'artist' | 'album' | 'playlist' | 'show' | 'podcast'
+// (radio: a station for children of the search's radio, search-radio.ts - its stream in feedUrl; never in the pool)
+export type PoolKind = 'artist' | 'album' | 'playlist' | 'show' | 'podcast' | 'radio'
 
 export interface PoolAlbum {
   id: string
@@ -54,6 +55,37 @@ export const kidsPodcastEntry = (p: KidsPodcast): PoolEntry => ({
   cover: p.image,
 })
 
+/** a radio station for children (search-radio.ts): put on the start page by the child, no approval */
+export interface KidsStation {
+  url: string
+  name: string
+  image: string
+  country: string
+}
+
+/** (the id a kids radio station has as an entry of the search's pages - it is no entry of the pool) */
+export const KIDS_RADIO = 'kids-radio'
+
+export const kidsRadioEntry = (s: KidsStation): PoolEntry => ({
+  id: KIDS_RADIO,
+  kind: 'radio',
+  spotifyId: '',
+  feedUrl: s.url,
+  name: s.name,
+  artist: '',
+  cover: s.image,
+})
+
+/** what the child put on the start page itself (backend search-pool.ts own): "Einträge verwalten" */
+export interface OwnEntry {
+  ident: string
+  kind: string
+  name: string
+  artist: string
+  cover: string
+  category: string
+}
+
 /** (fork "wishes") something on Spotify the child may wish (backend wishes.ts) */
 export type WishKind = 'album' | 'artist' | 'show'
 export interface WishItem {
@@ -88,6 +120,8 @@ export class SearchFlowService {
 
   /** the tabs a pool hit can go to (those shown on the start page; set by the search) */
   readonly categories = signal<CategoryType[]>([])
+  /** the search pool (set by the search): something found on Spotify that is allowed is fetched, not wished */
+  readonly pool = signal<PoolEntry[]>([])
   /** the open wishes ("kind:id"): marked "gewünscht", not wished again */
   readonly wished = signal<Set<string>>(new Set())
   // the pages loaded on this display (a search by its text, an artist by its id) - kept until the display reloads
@@ -114,6 +148,22 @@ export class SearchFlowService {
       next: (r) => this.wished.set(new Set((r?.wishes ?? []).map((w) => `${w.kind}:${w.id}`))),
       error: () => {},
     })
+  }
+
+  /**
+   * Something found on Spotify that the parents allowed already (in the pool - an approved wish too): its page of the
+   * pool, where the child fetches it itself. An album of an allowed artist too.
+   */
+  poolFor(w: WishItem): { entry: PoolEntry; album?: PoolAlbum } | undefined {
+    const pool = this.pool()
+    const entry = pool.find((e) => e.kind === w.kind && e.spotifyId === w.id)
+    if (entry) return { entry }
+    if (w.kind !== 'album') return undefined
+    for (const e of pool) {
+      const album = e.kind === 'artist' ? e.albums?.find((a) => a.id === w.id) : undefined
+      if (album) return { entry: e, album }
+    }
+    return undefined
   }
 
   /** the pages of a search loaded so far, without asking (undefined: none yet) */
@@ -176,7 +226,7 @@ export class SearchFlowService {
   async wish(item: WishItem, category: CategoryType): Promise<void> {
     try {
       const r = await firstValueFrom(
-        this.http.post<{ ok: boolean; result: 'wished' | 'already' | 'there' }>(`${this.api}/wishes`, {
+        this.http.post<{ ok: boolean; result: 'wished' | 'already' | 'there' | 'allowed' }>(`${this.api}/wishes`, {
           kind: item.kind,
           id: item.id,
           category,
@@ -185,10 +235,12 @@ export class SearchFlowService {
       this.note =
         r?.result === 'there'
           ? this.texts.text('wishThere', { n: item.name })
-          : r?.result === 'already'
-            ? this.texts.text('wishAlready', { n: item.name })
-            : this.texts.text('wishSent', { n: item.name })
-      this.wished.update((s) => new Set([...s, `${item.kind}:${item.id}`]))
+          : r?.result === 'allowed'
+            ? this.texts.text('wishAllowed', { n: item.name })
+            : r?.result === 'already'
+              ? this.texts.text('wishAlready', { n: item.name })
+              : this.texts.text('wishSent', { n: item.name })
+      if (r?.result !== 'allowed') this.wished.update((s) => new Set([...s, `${item.kind}:${item.id}`]))
     } catch {
       this.note = this.texts.text('searchFailed')
     }
@@ -245,23 +297,54 @@ export class SearchFlowService {
   async addTo(entry: PoolEntry, category: CategoryType, album?: PoolAlbum): Promise<void> {
     const name = album?.name ?? entry.name
     try {
-      // (a podcast for children found by the search: its own way in, only shows the search handed out)
+      // (a podcast or a radio station for children found by the search: its own way in, only what it handed out)
       const r = await firstValueFrom(
         entry.id === KIDS_PODCAST
           ? this.http.post<{ ok: boolean; result: 'added' | 'already' }>(`${this.api}/search-podcasts/add`, {
               feedUrl: entry.feedUrl,
               category,
             })
-          : this.http.post<{ ok: boolean; result: 'added' | 'already' }>(`${this.api}/search-pool/add-to-library`, {
-              poolId: entry.id,
-              albumId: album?.id,
-              category,
-            }),
+          : entry.id === KIDS_RADIO
+            ? this.http.post<{ ok: boolean; result: 'added' | 'already' }>(`${this.api}/search-radio/add`, {
+                url: entry.feedUrl,
+                category,
+              })
+            : this.http.post<{ ok: boolean; result: 'added' | 'already' }>(`${this.api}/search-pool/add-to-library`, {
+                poolId: entry.id,
+                albumId: album?.id,
+                category,
+              }),
       )
       this.note =
         r?.result === 'already'
           ? this.texts.text('searchAlready', { n: name })
           : this.texts.text('searchAdded', { n: name, c: this.catLabel(category) })
+      this.changed = true
+    } catch {
+      this.note = this.texts.text('searchFailed')
+    }
+    void this.navController.navigateBack(['/search'])
+  }
+
+  // ---------- "Einträge verwalten": what the child put on the start page itself ----------
+
+  /** under another tab, then back to the search, which tells it */
+  async moveOwn(own: OwnEntry, category: CategoryType): Promise<void> {
+    try {
+      await firstValueFrom(this.http.post(`${this.api}/search-pool/move-own`, { ident: own.ident, category }))
+      this.note = this.texts.text('searchAdded', { n: own.name, c: this.catLabel(category) })
+      this.changed = true
+    } catch {
+      this.note = this.texts.text('searchFailed')
+    }
+    void this.navController.navigateBack(['/search'])
+  }
+
+  /** off the start page, then back to the search, which tells it */
+  async removeOwn(own: OwnEntry): Promise<void> {
+    try {
+      await firstValueFrom(this.http.post(`${this.api}/search-pool/remove-own`, { ident: own.ident }))
+      this.note = this.texts.text('searchGone', { n: own.name })
       this.changed = true
     } catch {
       this.note = this.texts.text('searchFailed')

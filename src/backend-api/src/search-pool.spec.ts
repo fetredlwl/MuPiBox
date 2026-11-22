@@ -90,7 +90,8 @@ describe('libraryRow / identOf', () => {
       `playlist:${PLAYLIST}`,
     )
     assert.equal(identOf(libraryRow({ kind: 'show', spotifyId: PLAYLIST, ...base }, 'other', 'p')), `show:${PLAYLIST}`)
-    assert.equal(identOf({ type: 'radio', id: 'x' }), null)
+    // (fork "wishes": a radio station of the child's, from the search's radio for children)
+    assert.equal(identOf({ type: 'radio', id: 'https://x.invalid/s' }), 'radio:x.invalid/s')
   })
 })
 
@@ -99,7 +100,8 @@ describe('the pool', () => {
     const a = await pool.add({ kind: 'artist', spotifyId: ARTIST, name: 'Lena', artist: '', cover: '' })
     const again = await pool.add({ kind: 'artist', spotifyId: ARTIST, name: 'Lena', artist: '', cover: '' })
     assert.equal(a.id, again.id)
-    await settle()
+    // (fetched in the background: a moment, longer on a busy machine)
+    for (let i = 0; i < 40 && !(await pool.entries())[0]?.albums; i++) await settle()
     const [entry] = await pool.entries()
     assert.equal(entry.albums?.length, 2)
     assert.equal(entry.albums?.[0].cover, 'https://i.scdn.co/image/mid')

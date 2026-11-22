@@ -3224,7 +3224,6 @@
  "„Nur in der Suche“ in der App ausgeblendet": "«Лише в пошуку» приховано в застосунку",
  "In der Suche am Display. „Aus der Suche nehmen“: das Kind findet es nicht mehr – was es schon auf die Startseite geholt hat, bleibt dort.": "У пошуку на дисплеї. «Прибрати з пошуку»: дитина більше не знайде – те, що вже додано на стартову сторінку, там і залишиться.",
  "Podcasts für Kinder in der Suche": "Подкасти для дітей у пошуку",
- "In der Suche am Display sucht eine Kachel „Podcasts für Kinder“ in Apples Podcast-Verzeichnis (bei Deutsch auch in der ARD Audiothek) – nur Sendungen der Kinder-Kategorien. Das Kind kann sie ohne Freigabe auf die Startseite holen und selbst wieder entfernen. Gesucht wird erst beim Tippen auf die Kachel; der Suchbegriff geht dabei an Apple bzw. die ARD.": "У пошуку на дисплеї плитка «Подкасти для дітей» шукає в каталозі подкастів Apple (німецькою також в ARD Audiothek) – лише передачі дитячих категорій. Дитина може додати їх на стартову сторінку без дозволу й сама прибрати. Пошук іде лише після торкання плитки; пошуковий запит тоді надходить до Apple або ARD.",
  "Podcasts für Kinder in der Suche an": "Подкасти для дітей у пошуку увімкнено",
  "Podcasts für Kinder in der Suche aus": "Подкасти для дітей у пошуку вимкнено",
  "Wünsche": "Бажання",
@@ -3232,7 +3231,6 @@
  "Wünsche aus Spotify an": "Бажання зі Spotify увімкнено",
  "Wünsche aus Spotify aus": "Бажання зі Spotify вимкнено",
  "In der Suche am Display sucht eine Kachel „Bei Spotify suchen“ nach Alben, Künstlern und Podcasts. Das Kind kann sich etwas wünschen und den Reiter wählen; du gibst es in der App frei (Bibliothek › Wünsche), Home Assistant bekommt eine Nachricht mit Link. Spotify wird erst beim Tippen auf die Kachel gefragt, jeweils 10 Treffer, weitere erst beim Weiterblättern; jede Seite merkt sich die Box einen Tag. Aus: keine Spotify-Suche am Display, alles andere bleibt.": "У пошуку на дисплеї плитка «Шукати в Spotify» шукає альбоми, виконавців і подкасти. Дитина може щось побажати й вибрати вкладку; ти схвалюєш це в застосунку (Бібліотека › Бажання), Home Assistant отримує повідомлення з посиланням. Spotify запитують лише після торкання плитки, по 10 результатів, наступні — лише при гортанні; бокс пам’ятає кожну сторінку добу. Вимк.: немає пошуку Spotify на дисплеї, решта лишається.",
- "Was das Kind in der Suche am Display bei Spotify gefunden und sich gewünscht hat. Freigegeben kommt es auf die Startseite – unter den Reiter, den das Kind gewählt hat.": "Те, що дитина знайшла в Spotify пошуком на дисплеї й побажала. Після схвалення воно з’явиться на стартовій сторінці – у вибраній дитиною вкладці.",
  "Wünsche sind ausgeschaltet: Display & Bedienung › Suche › „Wünsche aus Spotify“.": "Бажання вимкнено: Дисплей і керування › Пошук › «Бажання зі Spotify».",
  "Offene Wünsche": "Відкриті бажання",
  "Keine offenen Wünsche.": "Немає відкритих бажань.",
@@ -3247,5 +3245,16 @@
  "{} offen": "Відкрито: {}",
  "Ein Wunsch wartet": "Одне бажання чекає",
  "{} Wünsche warten": "Бажань чекає: {}",
- "Antippen, um sie freizugeben oder abzulehnen.": "Торкнись, щоб схвалити або відхилити."
+ "Antippen, um sie freizugeben oder abzulehnen.": "Торкнись, щоб схвалити або відхилити.",
+ "Freigabe widerrufen?": "Відкликати схвалення?",
+ "Widerrufen": "Відкликати",
+ "Zurückgenommen": "Відкликано",
+ "Zurückgenommen: {}": "Відкликано: {}",
+ "„{}“ verschwindet aus der Suche am Display und von der Startseite. Das Kind kann es sich danach wieder wünschen.": "«{}» зникне з пошуку на дисплеї та зі стартової сторінки. Потім дитина зможе знову це побажати.",
+ "Radio für Kinder in der Suche": "Дитяче радіо в пошуку",
+ "Radio für Kinder in der Suche an": "Дитяче радіо в пошуку увімкнено",
+ "Radio für Kinder in der Suche aus": "Дитяче радіо в пошуку вимкнено",
+ "In der Suche am Display sucht eine Kachel „Radio“ im Senderverzeichnis radio-browser.info – nur Sender, die dort als Kinderradio markiert sind. Das Kind kann sie ohne Freigabe auf die Startseite holen und selbst wieder entfernen. Gesucht wird erst, wenn das Kind es will; der Suchbegriff geht dabei an radio-browser.info.": "У пошуку на дисплеї плитка «Радіо» шукає в каталозі станцій radio-browser.info – лише станції, позначені там як дитяче радіо. Дитина може додати їх на стартову сторінку без схвалення й сама прибрати. Пошук виконується лише тоді, коли дитина хоче; пошуковий запит надходить до radio-browser.info.",
+ "Was das Kind in der Suche am Display bei Spotify gefunden und sich gewünscht hat. Freigegeben kommt es auf die Startseite – unter den Reiter, den das Kind gewählt hat. Die Freigabe bleibt: Das Kind kann es selbst entfernen und über die Suche wieder holen, bis du sie widerrufst.": "Те, що дитина знайшла в Spotify пошуком на дисплеї й побажала. Після схвалення воно з’явиться на стартовій сторінці – у вибраній дитиною вкладці. Схвалення лишається: дитина може сама це прибрати й знову взяти через пошук, доки ти його не відкличеш.",
+ "In der Suche am Display sucht eine Kachel „Podcasts“ in Apples Podcast-Verzeichnis (bei Deutsch auch in der ARD Audiothek) – nur Sendungen der Kinder-Kategorien. Das Kind kann sie ohne Freigabe auf die Startseite holen und selbst wieder entfernen. Gesucht wird erst beim Tippen auf die Kachel; der Suchbegriff geht dabei an Apple bzw. die ARD.": "У пошуку на дисплеї плитка «Подкасти» шукає в каталозі подкастів Apple (німецькою також в ARD Audiothek) – лише передачі дитячих категорій. Дитина може додати їх на стартову сторінку без дозволу й сама прибрати. Пошук іде лише після торкання плитки; пошуковий запит тоді надходить до Apple або ARD."
 }

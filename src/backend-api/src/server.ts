@@ -56,6 +56,7 @@ import { readEmbeddedPicture } from './embedded-cover'
 import { acquireLock, releaseLock, staleReason } from './file-lock'
 import { registerSearchPodcastsRoutes } from './search-podcasts'
 import { registerSearchPoolRoutes } from './search-pool'
+import { registerSearchRadioRoutes } from './search-radio'
 import { keptWishAlbums, registerWishesRoutes } from './wishes'
 import { type AlbumFillDeps, fillSpotifyAlbums, isBareAlbum, startSpotifyAlbumFill } from './spotify-album-fill'
 import { coverHidden } from './hidden-covers'
@@ -1232,6 +1233,19 @@ registerSearchPodcastsRoutes(app, {
     ? {
         search: async () => JSON.parse(fs.readFileSync(String(process.env.MUPIBOX_PODCAST_FIXTURE), 'utf8')),
         tips: async () => JSON.parse(fs.readFileSync(String(process.env.MUPIBOX_PODCAST_FIXTURE), 'utf8')),
+      }
+    : {}),
+})
+
+// (fork "wishes") radio for children in the display's search (radio-browser.info, children's stations only);
+// MUPIBOX_RADIO_FIXTURE: invented stations for the development server and tools/display-check
+registerSearchRadioRoutes(app, {
+  getMupiboxConfig: () => getMupiboxConfigSync() as unknown as MupiboxConfig | undefined,
+  pool: searchPool,
+  ...(!productionServe && process.env.MUPIBOX_RADIO_FIXTURE
+    ? {
+        search: async () => JSON.parse(fs.readFileSync(String(process.env.MUPIBOX_RADIO_FIXTURE), 'utf8')),
+        tips: async () => JSON.parse(fs.readFileSync(String(process.env.MUPIBOX_RADIO_FIXTURE), 'utf8')),
       }
     : {}),
 })

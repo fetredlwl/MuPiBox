@@ -3224,7 +3224,6 @@
  "„Nur in der Suche“ in der App ausgeblendet": "«Bare i søket» skjult i appen",
  "In der Suche am Display. „Aus der Suche nehmen“: das Kind findet es nicht mehr – was es schon auf die Startseite geholt hat, bleibt dort.": "I søket på displayet. «Fjern fra søket»: barnet finner det ikke lenger – det som allerede ligger på startsiden, blir der.",
  "Podcasts für Kinder in der Suche": "Podkaster for barn i søket",
- "In der Suche am Display sucht eine Kachel „Podcasts für Kinder“ in Apples Podcast-Verzeichnis (bei Deutsch auch in der ARD Audiothek) – nur Sendungen der Kinder-Kategorien. Das Kind kann sie ohne Freigabe auf die Startseite holen und selbst wieder entfernen. Gesucht wird erst beim Tippen auf die Kachel; der Suchbegriff geht dabei an Apple bzw. die ARD.": "I søket på displayet søker en flis «Podkaster for barn» i Apples podkastkatalog (på tysk også i ARD Audiothek) – bare programmer i barnekategoriene. Barnet kan legge dem på startsiden uten godkjenning og selv fjerne dem igjen. Det søkes først når flisen trykkes; søkeordet går da til Apple eller ARD.",
  "Podcasts für Kinder in der Suche an": "Podkaster for barn i søket på",
  "Podcasts für Kinder in der Suche aus": "Podkaster for barn i søket av",
  "Wünsche": "Ønsker",
@@ -3232,7 +3231,6 @@
  "Wünsche aus Spotify an": "Ønsker fra Spotify på",
  "Wünsche aus Spotify aus": "Ønsker fra Spotify av",
  "In der Suche am Display sucht eine Kachel „Bei Spotify suchen“ nach Alben, Künstlern und Podcasts. Das Kind kann sich etwas wünschen und den Reiter wählen; du gibst es in der App frei (Bibliothek › Wünsche), Home Assistant bekommt eine Nachricht mit Link. Spotify wird erst beim Tippen auf die Kachel gefragt, jeweils 10 Treffer, weitere erst beim Weiterblättern; jede Seite merkt sich die Box einen Tag. Aus: keine Spotify-Suche am Display, alles andere bleibt.": "I søket på displayet søker en flis «Søk på Spotify» etter album, artister og podkaster. Barnet kan ønske seg noe og velge fane; du godkjenner det i appen (Bibliotek › Ønsker), Home Assistant får en melding med lenke. Spotify spørres først når flisen trykkes, 10 treff om gangen, flere først når man blar videre; boksen husker hver side en dag. Av: ingen Spotify-søk på displayet, resten blir.",
- "Was das Kind in der Suche am Display bei Spotify gefunden und sich gewünscht hat. Freigegeben kommt es auf die Startseite – unter den Reiter, den das Kind gewählt hat.": "Det barnet fant på Spotify i søket på displayet og ønsket seg. Godkjent havner det på startsiden – under fanen barnet valgte.",
  "Wünsche sind ausgeschaltet: Display & Bedienung › Suche › „Wünsche aus Spotify“.": "Ønsker er slått av: Display og betjening › Søk › «Ønsker fra Spotify».",
  "Offene Wünsche": "Åpne ønsker",
  "Keine offenen Wünsche.": "Ingen åpne ønsker.",
@@ -3247,5 +3245,16 @@
  "{} offen": "{} åpne",
  "Ein Wunsch wartet": "Et ønske venter",
  "{} Wünsche warten": "{} ønsker venter",
- "Antippen, um sie freizugeben oder abzulehnen.": "Trykk for å godkjenne eller avvise dem."
+ "Antippen, um sie freizugeben oder abzulehnen.": "Trykk for å godkjenne eller avvise dem.",
+ "Freigabe widerrufen?": "Trekke tilbake godkjenningen?",
+ "Widerrufen": "Trekk tilbake",
+ "Zurückgenommen": "Trukket tilbake",
+ "Zurückgenommen: {}": "Trukket tilbake: {}",
+ "„{}“ verschwindet aus der Suche am Display und von der Startseite. Das Kind kann es sich danach wieder wünschen.": "«{}» forsvinner fra søket på displayet og fra startsiden. Barnet kan ønske seg det igjen etterpå.",
+ "Radio für Kinder in der Suche": "Barneradio i søket",
+ "Radio für Kinder in der Suche an": "Barneradio i søket på",
+ "Radio für Kinder in der Suche aus": "Barneradio i søket av",
+ "In der Suche am Display sucht eine Kachel „Radio“ im Senderverzeichnis radio-browser.info – nur Sender, die dort als Kinderradio markiert sind. Das Kind kann sie ohne Freigabe auf die Startseite holen und selbst wieder entfernen. Gesucht wird erst, wenn das Kind es will; der Suchbegriff geht dabei an radio-browser.info.": "I søket på displayet søker en flis «Radio» i stasjonskatalogen radio-browser.info – bare stasjoner som er merket som barneradio der. Barnet kan legge dem på startsiden uten godkjenning og fjerne dem selv. Det søkes først når barnet vil; søkeordet går til radio-browser.info.",
+ "Was das Kind in der Suche am Display bei Spotify gefunden und sich gewünscht hat. Freigegeben kommt es auf die Startseite – unter den Reiter, den das Kind gewählt hat. Die Freigabe bleibt: Das Kind kann es selbst entfernen und über die Suche wieder holen, bis du sie widerrufst.": "Det barnet fant på Spotify i søket på displayet og ønsket seg. Godkjent havner det på startsiden – under fanen barnet valgte. Godkjenningen blir stående: barnet kan fjerne det selv og hente det igjen via søket til du trekker den tilbake.",
+ "In der Suche am Display sucht eine Kachel „Podcasts“ in Apples Podcast-Verzeichnis (bei Deutsch auch in der ARD Audiothek) – nur Sendungen der Kinder-Kategorien. Das Kind kann sie ohne Freigabe auf die Startseite holen und selbst wieder entfernen. Gesucht wird erst beim Tippen auf die Kachel; der Suchbegriff geht dabei an Apple bzw. die ARD.": "I søket på displayet søker en flis «Podkaster» i Apples podkastkatalog (på tysk også i ARD Audiothek) – bare programmer i barnekategoriene. Barnet kan legge dem på startsiden uten godkjenning og selv fjerne dem igjen. Det søkes først når flisen trykkes; søkeordet går da til Apple eller ARD."
 }

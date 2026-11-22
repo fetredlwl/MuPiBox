@@ -3224,7 +3224,6 @@
  "„Nur in der Suche“ in der App ausgeblendet": "”Vain haussa” piilotettu sovelluksessa",
  "In der Suche am Display. „Aus der Suche nehmen“: das Kind findet es nicht mehr – was es schon auf die Startseite geholt hat, bleibt dort.": "Näytön haussa. ”Poista hausta”: lapsi ei enää löydä sitä – mitä se on jo siirtänyt aloitussivulle, jää sinne.",
  "Podcasts für Kinder in der Suche": "Lasten podcastit haussa",
- "In der Suche am Display sucht eine Kachel „Podcasts für Kinder“ in Apples Podcast-Verzeichnis (bei Deutsch auch in der ARD Audiothek) – nur Sendungen der Kinder-Kategorien. Das Kind kann sie ohne Freigabe auf die Startseite holen und selbst wieder entfernen. Gesucht wird erst beim Tippen auf die Kachel; der Suchbegriff geht dabei an Apple bzw. die ARD.": "Näytön haussa ruutu ”Lasten podcastit” hakee Applen podcast-hakemistosta (saksaksi myös ARD Audiothekista) – vain lastenluokkien ohjelmia. Lapsi voi lisätä ne aloitussivulle ilman hyväksyntää ja poistaa ne itse. Haku tehdään vasta ruutua napautettaessa; hakusana menee silloin Applelle tai ARD:lle.",
  "Podcasts für Kinder in der Suche an": "Lasten podcastit haussa päällä",
  "Podcasts für Kinder in der Suche aus": "Lasten podcastit haussa pois",
  "Wünsche": "Toiveet",
@@ -3232,7 +3231,6 @@
  "Wünsche aus Spotify an": "Toiveet Spotifysta päällä",
  "Wünsche aus Spotify aus": "Toiveet Spotifysta pois",
  "In der Suche am Display sucht eine Kachel „Bei Spotify suchen“ nach Alben, Künstlern und Podcasts. Das Kind kann sich etwas wünschen und den Reiter wählen; du gibst es in der App frei (Bibliothek › Wünsche), Home Assistant bekommt eine Nachricht mit Link. Spotify wird erst beim Tippen auf die Kachel gefragt, jeweils 10 Treffer, weitere erst beim Weiterblättern; jede Seite merkt sich die Box einen Tag. Aus: keine Spotify-Suche am Display, alles andere bleibt.": "Näytön haussa ruutu ”Hae Spotifysta” hakee albumeja, artisteja ja podcasteja. Lapsi voi toivoa jotain ja valita välilehden; sinä hyväksyt sen sovelluksessa (Kirjasto › Toiveet), Home Assistant saa viestin linkin kanssa. Spotifylta kysytään vasta ruutua napautettaessa, 10 osumaa kerrallaan, lisää vasta selattaessa; laite muistaa jokaisen sivun päivän. Pois: ei Spotify-hakua näytöllä, kaikki muu pysyy.",
- "Was das Kind in der Suche am Display bei Spotify gefunden und sich gewünscht hat. Freigegeben kommt es auf die Startseite – unter den Reiter, den das Kind gewählt hat.": "Mitä lapsi löysi Spotifysta näytön haulla ja toivoi. Hyväksyttynä se siirtyy aloitussivulle – lapsen valitsemalle välilehdelle.",
  "Wünsche sind ausgeschaltet: Display & Bedienung › Suche › „Wünsche aus Spotify“.": "Toiveet ovat pois päältä: Näyttö ja käyttö › Haku › ”Toiveet Spotifysta”.",
  "Offene Wünsche": "Avoimet toiveet",
  "Keine offenen Wünsche.": "Ei avoimia toiveita.",
@@ -3247,5 +3245,16 @@
  "{} offen": "{} avoinna",
  "Ein Wunsch wartet": "Yksi toive odottaa",
  "{} Wünsche warten": "{} toivetta odottaa",
- "Antippen, um sie freizugeben oder abzulehnen.": "Napauta hyväksyäksesi tai hylätäksesi ne."
+ "Antippen, um sie freizugeben oder abzulehnen.": "Napauta hyväksyäksesi tai hylätäksesi ne.",
+ "Freigabe widerrufen?": "Peru hyväksyntä?",
+ "Widerrufen": "Peru",
+ "Zurückgenommen": "Peruttu",
+ "Zurückgenommen: {}": "Peruttu: {}",
+ "„{}“ verschwindet aus der Suche am Display und von der Startseite. Das Kind kann es sich danach wieder wünschen.": "”{}” katoaa näytön hausta ja aloitussivulta. Lapsi voi sen jälkeen toivoa sitä uudelleen.",
+ "Radio für Kinder in der Suche": "Lastenradio haussa",
+ "Radio für Kinder in der Suche an": "Lastenradio haussa päällä",
+ "Radio für Kinder in der Suche aus": "Lastenradio haussa pois",
+ "In der Suche am Display sucht eine Kachel „Radio“ im Senderverzeichnis radio-browser.info – nur Sender, die dort als Kinderradio markiert sind. Das Kind kann sie ohne Freigabe auf die Startseite holen und selbst wieder entfernen. Gesucht wird erst, wenn das Kind es will; der Suchbegriff geht dabei an radio-browser.info.": "Näytön haussa ruutu ”Radio” hakee asemahakemistosta radio-browser.info – vain asemia, jotka on merkitty siellä lastenradioksi. Lapsi voi lisätä ne aloitussivulle ilman hyväksyntää ja poistaa ne itse. Haku tehdään vasta, kun lapsi haluaa; hakusana lähetetään radio-browser.infoon.",
+ "Was das Kind in der Suche am Display bei Spotify gefunden und sich gewünscht hat. Freigegeben kommt es auf die Startseite – unter den Reiter, den das Kind gewählt hat. Die Freigabe bleibt: Das Kind kann es selbst entfernen und über die Suche wieder holen, bis du sie widerrufst.": "Mitä lapsi löysi Spotifysta näytön haulla ja toivoi. Hyväksyttynä se siirtyy aloitussivulle – lapsen valitsemalle välilehdelle. Hyväksyntä pysyy: lapsi voi poistaa sen itse ja hakea sen uudelleen haulla, kunnes perut hyväksynnän.",
+ "In der Suche am Display sucht eine Kachel „Podcasts“ in Apples Podcast-Verzeichnis (bei Deutsch auch in der ARD Audiothek) – nur Sendungen der Kinder-Kategorien. Das Kind kann sie ohne Freigabe auf die Startseite holen und selbst wieder entfernen. Gesucht wird erst beim Tippen auf die Kachel; der Suchbegriff geht dabei an Apple bzw. die ARD.": "Näytön haussa ruutu ”Podcastit” hakee Applen podcast-hakemistosta (saksaksi myös ARD Audiothekista) – vain lastenluokkien ohjelmia. Lapsi voi lisätä ne aloitussivulle ilman hyväksyntää ja poistaa ne itse. Haku tehdään vasta ruutua napautettaessa; hakusana menee silloin Applelle tai ARD:lle."
 }

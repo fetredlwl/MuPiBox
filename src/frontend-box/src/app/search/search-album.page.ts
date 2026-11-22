@@ -11,7 +11,7 @@ import {
   NavController,
 } from '@ionic/angular/standalone'
 import { addIcons } from 'ionicons'
-import { arrowBackOutline, bookOutline, musicalNotesOutline, radioOutline } from 'ionicons/icons'
+import { arrowBackOutline, bookOutline, musicalNotesOutline, radioOutline, swapHorizontalOutline } from 'ionicons/icons'
 import { DisplayTextsService } from '../display-texts.service'
 import { KmStatusGroupComponent } from '../km-header/km-status-group.component'
 import type { CategoryType } from '../media'
@@ -19,7 +19,14 @@ import { SpotifyBlockService } from '../spotify-block.service'
 import { StatusComponent } from '../status/status.component'
 import { KmThemeService } from '../theme/km-theme.service'
 import { localizeCoverUrl } from '../utils'
-import { CATEGORY_LABEL, type PoolAlbum, type PoolEntry, SearchFlowService, type WishItem } from './search-flow.service'
+import {
+  CATEGORY_LABEL,
+  type OwnEntry,
+  type PoolAlbum,
+  type PoolEntry,
+  SearchFlowService,
+  type WishItem,
+} from './search-flow.service'
 
 // (fork "wishes") One thing of the search pool - an album (of a pool artist), a playlist, a podcast, or a whole artist
 // ("Alles holen"): its cover big on the left, on the right "Abspielen" and "Auf die Startseite" - which asks for the
@@ -27,6 +34,8 @@ import { CATEGORY_LABEL, type PoolAlbum, type PoolEntry, SearchFlowService, type
 // by side). One way back: the arrow top left (from the tabs to the buttons, else to the page before).
 // Wish mode (something found on Spotify, backend wishes.ts): "Wünschen" instead - the tab, and the parents decide; not
 // played before that. Already wished: "Gewünscht", nothing to tap.
+// Own mode ("Einträge verwalten"): something the child put on the start page itself - "Woanders hin" (another tab) or
+// "Entfernen" (asked once more in the same place).
 @Component({
   selector: 'app-search-album',
   templateUrl: 'search-album.page.html',
@@ -60,6 +69,12 @@ export class SearchAlbumPage {
     const w = this.wish()
     return !!w && this.flow.wished().has(`${w.kind}:${w.id}`)
   })
+  /** one of the child's own on the start page (instead of an entry of the pool) */
+  protected readonly own = signal<OwnEntry | null>(null)
+  /** "Entfernen" tapped: asked once more */
+  protected readonly removing = signal(false)
+  /** the tabs an own entry may go to: the shown ones but its own */
+  protected readonly elsewhere = computed(() => this.flow.categories().filter((c) => c !== this.own()?.category))
   protected readonly album = signal<PoolAlbum | undefined>(undefined)
   /** the whole artist ("Alles holen") */
   protected readonly whole = signal(false)
@@ -67,8 +82,13 @@ export class SearchAlbumPage {
   protected readonly choosing = signal(false)
   protected readonly busy = signal(false)
 
-  protected readonly title = computed(() => this.wish()?.name ?? this.album()?.name ?? this.entry()?.name ?? '')
+  protected readonly title = computed(
+    () => this.own()?.name ?? this.wish()?.name ?? this.album()?.name ?? this.entry()?.name ?? '',
+  )
   protected readonly sub = computed(() => {
+    const o = this.own()
+    // (where it is now)
+    if (o) return this.flow.catLabel(o.category)
     const w = this.wish()
     if (w) return w.kind === 'artist' ? this.texts.text('searchArtist') : w.artist
     const e = this.entry()
@@ -76,13 +96,19 @@ export class SearchAlbumPage {
     if (this.album()) return e.name
     if (e.kind === 'artist') return this.texts.text('searchArtist')
     if (e.kind === 'podcast') return this.texts.text('searchPodcast')
+    if (e.kind === 'radio') return this.texts.text('searchRadioStation')
     return e.artist
   })
   protected readonly cover = computed(() =>
-    localizeCoverUrl(this.wish()?.cover || this.album()?.cover || this.entry()?.cover || undefined),
+    localizeCoverUrl(
+      this.own()?.cover || this.wish()?.cover || this.album()?.cover || this.entry()?.cover || undefined,
+    ),
   )
   protected readonly round = computed(
-    () => this.wish()?.kind === 'artist' || (!this.album() && this.entry()?.kind === 'artist'),
+    () =>
+      this.own()?.kind === 'artist' ||
+      this.wish()?.kind === 'artist' ||
+      (!this.album() && this.entry()?.kind === 'artist'),
   )
   protected readonly playable = computed(() => {
     if (this.wish()) return false
@@ -91,11 +117,12 @@ export class SearchAlbumPage {
   })
 
   constructor() {
-    addIcons({ arrowBackOutline, bookOutline, musicalNotesOutline, radioOutline })
+    addIcons({ arrowBackOutline, bookOutline, musicalNotesOutline, radioOutline, swapHorizontalOutline })
     const state = this.router.currentNavigation()?.extras.state as
-      | { entry?: PoolEntry; album?: PoolAlbum; whole?: boolean; wish?: WishItem }
+      | { entry?: PoolEntry; album?: PoolAlbum; whole?: boolean; wish?: WishItem; own?: OwnEntry }
       | undefined
     this.entry.set(state?.entry ?? null)
+    this.own.set(state?.own ?? null)
     this.wish.set(state?.wish ?? null)
     this.album.set(state?.album)
     this.whole.set(state?.whole === true)
@@ -103,12 +130,13 @@ export class SearchAlbumPage {
 
   ionViewWillEnter(): void {
     // (opened afresh without the search behind it - a reload of the display: nothing to show)
-    if (!this.entry() && !this.wish()) void this.navController.navigateRoot(['/search'])
+    if (!this.entry() && !this.wish() && !this.own()) void this.navController.navigateRoot(['/search'])
   }
 
   protected goBack(): void {
-    if (this.choosing()) {
+    if (this.choosing() || this.removing()) {
       this.choosing.set(false)
+      this.removing.set(false)
       return
     }
     void this.navController.pop()
@@ -131,6 +159,12 @@ export class SearchAlbumPage {
 
   protected async addTo(category: CategoryType): Promise<void> {
     if (this.busy()) return
+    const o = this.own()
+    if (o) {
+      this.busy.set(true)
+      await this.flow.moveOwn(o, category)
+      return
+    }
     const w = this.wish()
     if (w) {
       this.busy.set(true)
@@ -141,5 +175,27 @@ export class SearchAlbumPage {
     if (!e) return
     this.busy.set(true)
     await this.flow.addTo(e, category, this.whole() ? undefined : this.album())
+  }
+
+  /** "Woanders hin": the other tabs (with one other only, straight there) */
+  protected moveOwn(): void {
+    const cats = this.elsewhere()
+    if (cats.length === 1) {
+      void this.addTo(cats[0])
+      return
+    }
+    this.choosing.set(true)
+  }
+
+  /** "Entfernen": asked once more; "Ja, entfernen": off the start page */
+  protected async removeOwn(): Promise<void> {
+    const o = this.own()
+    if (!o || this.busy()) return
+    if (!this.removing()) {
+      this.removing.set(true)
+      return
+    }
+    this.busy.set(true)
+    await this.flow.removeOwn(o)
   }
 }

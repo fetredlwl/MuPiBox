@@ -18,6 +18,8 @@ import { spotifyBlock } from './spotify-block'
 // (podcast: an RSS feed - feedUrl instead of spotifyId; show: a Spotify podcast)
 export type PoolKind = 'artist' | 'album' | 'playlist' | 'show' | 'podcast'
 export const POOL_KINDS: PoolKind[] = ['artist', 'album', 'playlist', 'show', 'podcast']
+/** (fork "wishes") what the child may have on the start page: the pool's kinds and a radio station for children */
+export type LibraryKind = PoolKind | 'radio'
 export const LIBRARY_CATEGORIES = ['audiobook', 'music', 'other'] as const
 type LibraryCategory = (typeof LIBRARY_CATEGORIES)[number]
 
@@ -48,7 +50,7 @@ export interface PoolEvent {
   at: string
   /** (fork "wishes": 'wish' - the child wished it from Spotify, the parents decide in the app, see wishes.ts) */
   what: 'added' | 'removed' | 'wish'
-  kind: PoolKind
+  kind: LibraryKind
   name: string
   artist: string
   category: LibraryCategory
@@ -130,6 +132,7 @@ async function writeJson(file: string, data: unknown): Promise<void> {
 /** a library row of the child's from the pool: which Spotify thing it is ("album:<id>", "artist:<id>", …) */
 export function identOf(row: Record<string, unknown>): string | null {
   if (row.type === 'rss' && typeof row.id === 'string' && row.id) return `podcast:${feedKey(row.id)}`
+  if (row.type === 'radio' && typeof row.id === 'string' && row.id) return `radio:${feedKey(row.id)}`
   if (row.type !== 'spotify') return null
   if (typeof row.playlistid === 'string' && row.playlistid) return `playlist:${row.playlistid}`
   if (typeof row.showid === 'string' && row.showid) return `show:${row.showid}`
@@ -140,7 +143,7 @@ export function identOf(row: Record<string, unknown>): string | null {
 
 /** the library row for an album, a whole artist, a playlist or a podcast, put in by the child */
 export function libraryRow(
-  what: { kind: PoolKind; spotifyId: string; feedUrl?: string; name: string; artist: string; cover: string },
+  what: { kind: LibraryKind; spotifyId: string; feedUrl?: string; name: string; artist: string; cover: string },
   category: LibraryCategory,
   poolId: string,
   now = new Date(),
@@ -150,6 +153,9 @@ export function libraryRow(
     case 'podcast':
       // (as the app's podcast search adds one: the feed, named by its title)
       return { ...base, type: 'rss', id: what.feedUrl, artist: what.name }
+    case 'radio':
+      // (as the app's radio search adds one: the stream, named by the station)
+      return { ...base, type: 'radio', id: what.feedUrl, artist: what.name, title: what.name, cover: what.cover }
     case 'album':
       // (name and cover with it: the display shows it at once, without asking Spotify - see storedSpotifyAlbum)
       return { ...base, id: what.spotifyId, title: what.name, artist: what.artist || what.name, cover: what.cover }
@@ -217,7 +223,7 @@ export class SearchPool {
         ...input,
         addedAt: new Date().toISOString(),
       }
-      await this.writePool( [...list, added])
+      await this.writePool([...list, added])
       return { entry: added, isNew: true }
     })
     // (only for a new one: allowed twice in a row, Spotify was asked twice)
@@ -239,7 +245,7 @@ export class SearchPool {
       const list = await this.entries()
       const rest = list.filter((e) => e.id !== id)
       if (rest.length === list.length) return false
-      await this.writePool( rest)
+      await this.writePool(rest)
       return true
     })
   }
@@ -291,7 +297,7 @@ export class SearchPool {
       const at = list.findIndex((e) => e.id === id)
       if (at < 0) return
       list[at] = { ...list[at], albums, albumsAt: new Date().toISOString() }
-      await this.writePool( list)
+      await this.writePool(list)
     })
   }
 
@@ -388,13 +394,46 @@ export class SearchPool {
     return this.putInLibrary(what, category, wishId, false)
   }
 
+  /**
+   * (fork "wishes") A radio station for children the display's search found (search-radio.ts: radio-browser.info, the
+   * children's stations only) - put on the start page by the child without the parents' approval, as one of its own.
+   */
+  async addKidsRadio(
+    station: { url: string; name: string; cover: string },
+    category: LibraryCategory,
+  ): Promise<'added' | 'already' | 'locked'> {
+    return this.putInLibrary(
+      {
+        kind: 'radio',
+        spotifyId: '',
+        feedUrl: station.url,
+        name: station.name,
+        artist: station.name,
+        cover: station.cover,
+      },
+      category,
+      'kids-radio',
+    )
+  }
+
+  /** (fork "wishes") an approved wish's entry of the pool, by what it is ("artist:<id>" …) - its approval revoked */
+  async removeByIdent(ident: string): Promise<boolean> {
+    return this.serial(async () => {
+      const list = await this.entries()
+      const rest = list.filter((e) => poolIdent(e) !== ident)
+      if (rest.length === list.length) return false
+      await this.writePool(rest)
+      return true
+    })
+  }
+
   /** an event for Home Assistant (/search_events) - the child's wish (wishes.ts) */
   announce(event: Omit<PoolEvent, 'id' | 'at'>): Promise<void> {
     return this.note(event)
   }
 
   private async putInLibrary(
-    what: { kind: PoolKind; spotifyId: string; feedUrl?: string; name: string; artist: string; cover: string },
+    what: { kind: LibraryKind; spotifyId: string; feedUrl?: string; name: string; artist: string; cover: string },
     category: LibraryCategory,
     poolId: string,
     told = true,
@@ -423,8 +462,25 @@ export class SearchPool {
     return result
   }
 
-  /** the child takes out what it put in itself (only rows marked kidAdded) */
-  async removeOwn(ident: string): Promise<'removed' | 'unknown' | 'locked'> {
+  /**
+   * (fork "wishes") The child puts what it put in itself under another tab ("Einträge verwalten" in the display's
+   * search) - only rows marked kidAdded.
+   */
+  async moveOwn(ident: string, category: LibraryCategory): Promise<'moved' | 'same' | 'unknown' | 'locked'> {
+    return withLock(this.deps.dataLock, 'search pool move', async () => {
+      const data = await this.readLibrary()
+      if (!data) throw new Error('library unreadable')
+      const row = data.find((r) => r?.kidAdded === true && identOf(r) === ident)
+      if (!row) return 'unknown' as const
+      if (row.category === category) return 'same' as const
+      row.category = category
+      await this.deps.writeLibrary(data)
+      return 'moved' as const
+    })
+  }
+
+  /** the child takes out what it put in itself (only rows marked kidAdded); told: Home Assistant hears of it */
+  async removeOwn(ident: string, told = true): Promise<'removed' | 'unknown' | 'locked'> {
     let removed: Record<string, unknown> | undefined
     const result = await withLock(this.deps.dataLock, 'search pool remove', async () => {
       const data = await this.readLibrary()
@@ -439,7 +495,7 @@ export class SearchPool {
       await this.deps.writeLibrary(data)
       return 'removed' as const
     })
-    if (result === 'removed' && removed) {
+    if (result === 'removed' && removed && told) {
       const kind = (ident.split(':')[0] as PoolEvent['kind']) ?? 'album'
       const name =
         text(kind === 'album' || kind === 'playlist' ? removed.title : removed.artist) || text(removed.artist)
@@ -470,6 +526,10 @@ export class SearchPool {
   }
 }
 
+/** what the child put in, as the routes take it: "album:<id>" …, "podcast:<feed>", "radio:<stream>" */
+export const isOwnIdent = (ident: string): boolean =>
+  /^(album|artist|playlist|show):[A-Za-z0-9]{22}$/.test(ident) || /^(podcast|radio):\S{4,500}$/.test(ident)
+
 const isCategory = (v: unknown): v is LibraryCategory => (LIBRARY_CATEGORIES as readonly string[]).includes(String(v))
 
 export function registerSearchPoolRoutes(app: Express, deps: SearchPoolDeps): SearchPool {
@@ -487,7 +547,11 @@ export function registerSearchPoolRoutes(app: Express, deps: SearchPoolDeps): Se
 
   // the pool artists' albums older than a day: checked every 6 hours (first 10 minutes after the start), in the
   // background one after the other - not when the display looks at the pool
-  const refresh = () => void pool.entries().then((list) => pool.refreshStale(list), () => undefined)
+  const refresh = () =>
+    void pool.entries().then(
+      (list) => pool.refreshStale(list),
+      () => undefined,
+    )
   setTimeout(refresh, 10 * 60_000).unref()
   setInterval(refresh, 6 * 3600_000).unref()
 
@@ -517,8 +581,7 @@ export function registerSearchPoolRoutes(app: Express, deps: SearchPoolDeps): Se
   /** POST /api/search-pool/remove-own {ident} - only rows the child put in itself; only the box itself */
   app.post('/api/search-pool/remove-own', localOnly, async (req, res) => {
     const ident = text(req.body?.ident, 600)
-    if (!/^(album|artist|playlist|show):[A-Za-z0-9]{22}$/.test(ident) && !/^podcast:\S{4,500}$/.test(ident))
-      return fail(res, 400, 'invalid request')
+    if (!isOwnIdent(ident)) return fail(res, 400, 'invalid request')
     try {
       const result = await pool.removeOwn(ident)
       if (result === 'unknown') return fail(res, 404, 'not one of the child')
@@ -527,6 +590,24 @@ export function registerSearchPoolRoutes(app: Express, deps: SearchPoolDeps): Se
     } catch (err) {
       console.error(`${new Date().toLocaleString()}: [search-pool] remove failed:`, err)
       fail(res, 500, 'could not remove')
+    }
+  })
+
+  /**
+   * (fork "wishes") POST /api/search-pool/move-own {ident, category} - the child puts one of its own under another tab;
+   * only the box itself
+   */
+  app.post('/api/search-pool/move-own', localOnly, async (req, res) => {
+    const ident = text(req.body?.ident, 600)
+    if (!isOwnIdent(ident) || !isCategory(req.body?.category)) return fail(res, 400, 'invalid request')
+    try {
+      const result = await pool.moveOwn(ident, req.body.category)
+      if (result === 'unknown') return fail(res, 404, 'not one of the child')
+      if (result === 'locked') return fail(res, 409, 'library busy')
+      res.json({ ok: true, result })
+    } catch (err) {
+      console.error(`${new Date().toLocaleString()}: [search-pool] move failed:`, err)
+      fail(res, 500, 'could not move')
     }
   })
 
@@ -581,8 +662,7 @@ export function registerSearchPoolRoutes(app: Express, deps: SearchPoolDeps): Se
   /** POST /api/app/search-pool/remove-own {ident} - the parents take off the start page what the child put there */
   app.post('/api/app/search-pool/remove-own', deps.session, deps.csrf, async (req, res) => {
     const ident = text(req.body?.ident, 600)
-    if (!/^(album|artist|playlist|show):[A-Za-z0-9]{22}$/.test(ident) && !/^podcast:\S{4,500}$/.test(ident))
-      return fail(res, 400, 'invalid request')
+    if (!isOwnIdent(ident)) return fail(res, 400, 'invalid request')
     try {
       const result = await pool.removeOwn(ident)
       if (result === 'unknown') return fail(res, 404, 'not one of the child')
