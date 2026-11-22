@@ -119,6 +119,7 @@ export const DEFAULT_DISPLAY_TEXTS = {
   wishThere: '{n} is on the box already.',
   wishPaused: 'Spotify is taking a break – try again later.',
   wishAllowed: 'You may fetch {n} yourself.',
+  wishOnBox: 'Already on the box',
   // (fork "wishes") the tiles of the search's start, radio for children, the child's own entries
   searchManageTile: 'Manage entries',
   searchMine: 'Mine',

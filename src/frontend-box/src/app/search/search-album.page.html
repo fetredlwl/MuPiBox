@@ -63,7 +63,10 @@
         }
         @if (wish()) {
           <!-- (wished: the parents decide in the app; nothing played before) -->
-          @if (wished()) {
+          @if (wish()?.there) {
+            <!-- (on the box already: nothing to wish or fetch) -->
+            <button class="sa-btn sa-wished sa-onbox" type="button" disabled><span class="sa-ic">✓</span>{{ texts.text('wishOnBox') }}</button>
+          } @else if (wished()) {
             <button class="sa-btn sa-wished" type="button" disabled><span class="sa-ic">★</span>{{ texts.text('wishWished') }}</button>
           } @else {
             <button class="sa-btn sa-main sa-wish" type="button" (click)="toStart()"><span class="sa-ic">★</span>{{ texts.text('wishButton') }}</button>

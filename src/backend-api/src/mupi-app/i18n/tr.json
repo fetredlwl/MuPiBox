@@ -3219,7 +3219,6 @@
  "Suche auf dem Display an": "Ekranda arama açık",
  "Suche auf dem Display aus": "Ekranda arama kapalı",
  "„Nur in der Suche“ in der App": "Uygulamada „Yalnızca aramada“",
- "Zeigt in der App die Knöpfe „Nur in der Suche“ und den Vorrat unten. Aus: alles davon ausgeblendet, der Vorrat bleibt erhalten – die Suche am Display findet ihn weiter, solange sie an ist.": "Uygulamada „Yalnızca aramada“ düğmelerini ve aşağıdaki havuzu gösterir. Kapalı: hepsi gizlenir, havuz korunur – ekrandaki arama açık olduğu sürece onu bulmaya devam eder.",
  "„Nur in der Suche“ in der App an": "Uygulamada „Yalnızca aramada“ açık",
  "„Nur in der Suche“ in der App ausgeblendet": "Uygulamada „Yalnızca aramada“ gizlendi",
  "In der Suche am Display. „Aus der Suche nehmen“: das Kind findet es nicht mehr – was es schon auf die Startseite geholt hat, bleibt dort.": "Ekrandaki aramada. „Aramadan çıkar“: çocuk artık bulamaz – başlangıç sayfasına zaten eklediği orada kalır.",
@@ -3256,5 +3255,18 @@
  "Radio für Kinder in der Suche aus": "Aramada çocuk radyosu kapalı",
  "In der Suche am Display sucht eine Kachel „Radio“ im Senderverzeichnis radio-browser.info – nur Sender, die dort als Kinderradio markiert sind. Das Kind kann sie ohne Freigabe auf die Startseite holen und selbst wieder entfernen. Gesucht wird erst, wenn das Kind es will; der Suchbegriff geht dabei an radio-browser.info.": "Ekrandaki aramada „Radyo“ kutucuğu radio-browser.info istasyon dizininde arar – yalnızca orada çocuk radyosu olarak işaretlenmiş istasyonlar. Çocuk bunları onaysız başlangıç sayfasına ekleyebilir ve kendisi kaldırabilir. Arama yalnızca çocuk istediğinde yapılır; arama terimi radio-browser.info’ya gider.",
  "Was das Kind in der Suche am Display bei Spotify gefunden und sich gewünscht hat. Freigegeben kommt es auf die Startseite – unter den Reiter, den das Kind gewählt hat. Die Freigabe bleibt: Das Kind kann es selbst entfernen und über die Suche wieder holen, bis du sie widerrufst.": "Çocuğun ekrandaki aramada Spotify’da bulup dilediği şeyler. Onaylanınca başlangıç sayfasına gider – çocuğun seçtiği sekmeye. Onay kalır: çocuk onu kendisi kaldırabilir ve sen onayı geri alana kadar arama ile yeniden alabilir.",
- "In der Suche am Display sucht eine Kachel „Podcasts“ in Apples Podcast-Verzeichnis (bei Deutsch auch in der ARD Audiothek) – nur Sendungen der Kinder-Kategorien. Das Kind kann sie ohne Freigabe auf die Startseite holen und selbst wieder entfernen. Gesucht wird erst beim Tippen auf die Kachel; der Suchbegriff geht dabei an Apple bzw. die ARD.": "Ekrandaki aramada „Podcast’ler“ kutucuğu Apple’ın podcast dizininde (Almancada ARD Audiothek’te de) arar – yalnızca çocuk kategorilerindeki yayınlar. Çocuk bunları onay olmadan başlangıç sayfasına ekleyebilir ve kendisi kaldırabilir. Arama yalnızca kutucuğa dokunulunca yapılır; arama terimi o zaman Apple’a veya ARD’ye gider."
+ "In der Suche am Display sucht eine Kachel „Podcasts“ in Apples Podcast-Verzeichnis (bei Deutsch auch in der ARD Audiothek) – nur Sendungen der Kinder-Kategorien. Das Kind kann sie ohne Freigabe auf die Startseite holen und selbst wieder entfernen. Gesucht wird erst beim Tippen auf die Kachel; der Suchbegriff geht dabei an Apple bzw. die ARD.": "Ekrandaki aramada „Podcast’ler“ kutucuğu Apple’ın podcast dizininde (Almancada ARD Audiothek’te de) arar – yalnızca çocuk kategorilerindeki yayınlar. Çocuk bunları onay olmadan başlangıç sayfasına ekleyebilir ve kendisi kaldırabilir. Arama yalnızca kutucuğa dokunulunca yapılır; arama terimi o zaman Apple’a veya ARD’ye gider.",
+ "Für die Suche freigegeben": "Arama için izin verilenler",
+ "{} freigegeben · {} vom Kind geholt": "{} izinli · {} çocuk tarafından alındı",
+ "Was das Kind in der Suche am Display finden und selbst auf die Startseite holen darf, und was es schon geholt hat.": "Çocuğun ekrandaki aramada bulup kendisi başlangıç sayfasına ekleyebileceği şeyler ve şimdiye kadar aldıkları.",
+ "Nichts davon steht auf der Startseite.": "Bunların hiçbiri başlangıç sayfasında değil.",
+ "Freigegebene Wünsche kommen auch hierher.": "Onaylanan dilekler de buraya gelir.",
+ "Was freigegeben ist und was das Kind geholt hat: Bibliothek › Für die Suche freigegeben.": "İzin verilenler ve çocuğun aldıkları: Kütüphane › Arama için izin verilenler.",
+ "Zeigt in der App beim Hinzufügen die Knöpfe „Nur in der Suche“. Aus: ausgeblendet, der Vorrat bleibt erhalten – die Suche am Display findet ihn weiter, solange sie an ist.": "Uygulamada eklerken „Yalnızca aramada“ düğmelerini gösterir. Kapalı: gizli, stok kalır – ekrandaki arama açık olduğu sürece onu bulur.",
+ "Aus der Liste entfernen": "Listeden kaldır",
+ "Aus der Liste entfernen ändert nichts an einer Freigabe – sie steht weiter unter Bibliothek › Für die Suche freigegeben.": "Listeden kaldırmak bir onayı değiştirmez – Kütüphane › Arama için izin verilenler altında kalır.",
+ "Liste leeren": "Listeyi temizle",
+ "Liste leeren?": "Liste temizlensin mi?",
+ "Liste geleert": "Liste temizlendi",
+ "Die entschiedenen Wünsche verschwinden aus der Liste. Offene Wünsche und Freigaben bleiben.": "Karar verilen dilekler listeden kaybolur. Bekleyen dilekler ve onaylar kalır."
 }

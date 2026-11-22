@@ -3219,7 +3219,6 @@
  "Suche auf dem Display an": "Zoeken op het display aan",
  "Suche auf dem Display aus": "Zoeken op het display uit",
  "„Nur in der Suche“ in der App": "„Alleen in het zoeken” in de app",
- "Zeigt in der App die Knöpfe „Nur in der Suche“ und den Vorrat unten. Aus: alles davon ausgeblendet, der Vorrat bleibt erhalten – die Suche am Display findet ihn weiter, solange sie an ist.": "Toont in de app de knoppen „Alleen in het zoeken” en de voorraad hieronder. Uit: alles verborgen, de voorraad blijft bewaard – het zoeken op het display vindt hem nog zolang het aan staat.",
  "„Nur in der Suche“ in der App an": "„Alleen in het zoeken” in de app aan",
  "„Nur in der Suche“ in der App ausgeblendet": "„Alleen in het zoeken” verborgen in de app",
  "In der Suche am Display. „Aus der Suche nehmen“: das Kind findet es nicht mehr – was es schon auf die Startseite geholt hat, bleibt dort.": "In het zoeken op het display. „Uit het zoeken halen”: het kind vindt het niet meer – wat het al op de startpagina heeft gezet, blijft daar.",
@@ -3256,5 +3255,18 @@
  "Radio für Kinder in der Suche aus": "Radio voor kinderen in het zoeken uit",
  "In der Suche am Display sucht eine Kachel „Radio“ im Senderverzeichnis radio-browser.info – nur Sender, die dort als Kinderradio markiert sind. Das Kind kann sie ohne Freigabe auf die Startseite holen und selbst wieder entfernen. Gesucht wird erst, wenn das Kind es will; der Suchbegriff geht dabei an radio-browser.info.": "In het zoeken op het display zoekt een tegel „Radio” in de zendergids radio-browser.info – alleen zenders die daar als kinderradio gemarkeerd zijn. Het kind kan ze zonder vrijgave op de startpagina zetten en zelf weer verwijderen. Er wordt pas gezocht als het kind dat wil; de zoekterm gaat naar radio-browser.info.",
  "Was das Kind in der Suche am Display bei Spotify gefunden und sich gewünscht hat. Freigegeben kommt es auf die Startseite – unter den Reiter, den das Kind gewählt hat. Die Freigabe bleibt: Das Kind kann es selbst entfernen und über die Suche wieder holen, bis du sie widerrufst.": "Wat het kind in het zoeken op het display op Spotify vond en wenste. Vrijgegeven komt het op de startpagina – onder het tabblad dat het kind koos. De vrijgave blijft: het kind kan het zelf verwijderen en via het zoeken terughalen, tot jij de vrijgave intrekt.",
- "In der Suche am Display sucht eine Kachel „Podcasts“ in Apples Podcast-Verzeichnis (bei Deutsch auch in der ARD Audiothek) – nur Sendungen der Kinder-Kategorien. Das Kind kann sie ohne Freigabe auf die Startseite holen und selbst wieder entfernen. Gesucht wird erst beim Tippen auf die Kachel; der Suchbegriff geht dabei an Apple bzw. die ARD.": "In het zoeken op het display zoekt een tegel „Podcasts” in Apples podcastgids (bij Duits ook in de ARD Audiothek) – alleen programma’s uit de kindercategorieën. Het kind kan ze zonder toestemming op de startpagina zetten en zelf weer verwijderen. Er wordt pas gezocht als op de tegel wordt getikt; de zoekterm gaat dan naar Apple of de ARD."
+ "In der Suche am Display sucht eine Kachel „Podcasts“ in Apples Podcast-Verzeichnis (bei Deutsch auch in der ARD Audiothek) – nur Sendungen der Kinder-Kategorien. Das Kind kann sie ohne Freigabe auf die Startseite holen und selbst wieder entfernen. Gesucht wird erst beim Tippen auf die Kachel; der Suchbegriff geht dabei an Apple bzw. die ARD.": "In het zoeken op het display zoekt een tegel „Podcasts” in Apples podcastgids (bij Duits ook in de ARD Audiothek) – alleen programma’s uit de kindercategorieën. Het kind kan ze zonder toestemming op de startpagina zetten en zelf weer verwijderen. Er wordt pas gezocht als op de tegel wordt getikt; de zoekterm gaat dan naar Apple of de ARD.",
+ "Für die Suche freigegeben": "Vrijgegeven voor het zoeken",
+ "{} freigegeben · {} vom Kind geholt": "{} vrijgegeven · {} door het kind gepakt",
+ "Was das Kind in der Suche am Display finden und selbst auf die Startseite holen darf, und was es schon geholt hat.": "Wat het kind in het zoeken op het display mag vinden en zelf op de startpagina mag zetten, en wat het al gepakt heeft.",
+ "Nichts davon steht auf der Startseite.": "Niets hiervan staat op de startpagina.",
+ "Freigegebene Wünsche kommen auch hierher.": "Vrijgegeven wensen komen ook hier.",
+ "Was freigegeben ist und was das Kind geholt hat: Bibliothek › Für die Suche freigegeben.": "Wat vrijgegeven is en wat het kind gepakt heeft: Bibliotheek › Vrijgegeven voor het zoeken.",
+ "Zeigt in der App beim Hinzufügen die Knöpfe „Nur in der Suche“. Aus: ausgeblendet, der Vorrat bleibt erhalten – die Suche am Display findet ihn weiter, solange sie an ist.": "Toont in de app bij het toevoegen de knoppen „Alleen in het zoeken”. Uit: verborgen, de voorraad blijft – het zoeken op het display vindt hem zolang het aan staat.",
+ "Aus der Liste entfernen": "Uit de lijst verwijderen",
+ "Aus der Liste entfernen ändert nichts an einer Freigabe – sie steht weiter unter Bibliothek › Für die Suche freigegeben.": "Uit de lijst verwijderen verandert niets aan een vrijgave – die blijft onder Bibliotheek › Vrijgegeven voor het zoeken.",
+ "Liste leeren": "Lijst leegmaken",
+ "Liste leeren?": "Lijst leegmaken?",
+ "Liste geleert": "Lijst leeggemaakt",
+ "Die entschiedenen Wünsche verschwinden aus der Liste. Offene Wünsche und Freigaben bleiben.": "De besliste wensen verdwijnen uit de lijst. Openstaande wensen en vrijgaven blijven."
 }

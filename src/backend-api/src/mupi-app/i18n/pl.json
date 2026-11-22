@@ -3219,7 +3219,6 @@
  "Suche auf dem Display an": "Wyszukiwanie na wyświetlaczu włączone",
  "Suche auf dem Display aus": "Wyszukiwanie na wyświetlaczu wyłączone",
  "„Nur in der Suche“ in der App": "„Tylko w wyszukiwaniu” w aplikacji",
- "Zeigt in der App die Knöpfe „Nur in der Suche“ und den Vorrat unten. Aus: alles davon ausgeblendet, der Vorrat bleibt erhalten – die Suche am Display findet ihn weiter, solange sie an ist.": "Pokazuje w aplikacji przyciski „Tylko w wyszukiwaniu” i zasób poniżej. Wył.: wszystko ukryte, zasób zostaje – wyszukiwanie na wyświetlaczu nadal go znajduje, dopóki jest włączone.",
  "„Nur in der Suche“ in der App an": "„Tylko w wyszukiwaniu” w aplikacji włączone",
  "„Nur in der Suche“ in der App ausgeblendet": "„Tylko w wyszukiwaniu” ukryte w aplikacji",
  "In der Suche am Display. „Aus der Suche nehmen“: das Kind findet es nicht mehr – was es schon auf die Startseite geholt hat, bleibt dort.": "W wyszukiwaniu na wyświetlaczu. „Usuń z wyszukiwania”: dziecko już tego nie znajdzie – to, co już dodało na stronę startową, tam zostaje.",
@@ -3256,5 +3255,18 @@
  "Radio für Kinder in der Suche aus": "Radio dla dzieci w wyszukiwaniu wyłączone",
  "In der Suche am Display sucht eine Kachel „Radio“ im Senderverzeichnis radio-browser.info – nur Sender, die dort als Kinderradio markiert sind. Das Kind kann sie ohne Freigabe auf die Startseite holen und selbst wieder entfernen. Gesucht wird erst, wenn das Kind es will; der Suchbegriff geht dabei an radio-browser.info.": "W wyszukiwaniu na wyświetlaczu kafelek „Radio” przeszukuje katalog stacji radio-browser.info – tylko stacje oznaczone tam jako radio dla dzieci. Dziecko może dodać je na stronę startową bez zatwierdzenia i samo je usunąć. Wyszukiwanie odbywa się dopiero, gdy dziecko chce; wyszukiwane hasło trafia do radio-browser.info.",
  "Was das Kind in der Suche am Display bei Spotify gefunden und sich gewünscht hat. Freigegeben kommt es auf die Startseite – unter den Reiter, den das Kind gewählt hat. Die Freigabe bleibt: Das Kind kann es selbst entfernen und über die Suche wieder holen, bis du sie widerrufst.": "To, co dziecko znalazło na Spotify w wyszukiwaniu na wyświetlaczu i o co poprosiło. Po zatwierdzeniu trafia na stronę startową – pod zakładkę wybraną przez dziecko. Zatwierdzenie zostaje: dziecko może samo to usunąć i znów pobrać przez wyszukiwanie, dopóki go nie cofniesz.",
- "In der Suche am Display sucht eine Kachel „Podcasts“ in Apples Podcast-Verzeichnis (bei Deutsch auch in der ARD Audiothek) – nur Sendungen der Kinder-Kategorien. Das Kind kann sie ohne Freigabe auf die Startseite holen und selbst wieder entfernen. Gesucht wird erst beim Tippen auf die Kachel; der Suchbegriff geht dabei an Apple bzw. die ARD.": "W wyszukiwaniu na wyświetlaczu kafelek „Podcasty” przeszukuje katalog podcastów Apple (po niemiecku także ARD Audiothek) – tylko audycje z kategorii dziecięcych. Dziecko może dodać je na stronę startową bez zgody i samo je usunąć. Wyszukiwanie następuje dopiero po stuknięciu kafelka; wpisane hasło trafia wtedy do Apple lub ARD."
+ "In der Suche am Display sucht eine Kachel „Podcasts“ in Apples Podcast-Verzeichnis (bei Deutsch auch in der ARD Audiothek) – nur Sendungen der Kinder-Kategorien. Das Kind kann sie ohne Freigabe auf die Startseite holen und selbst wieder entfernen. Gesucht wird erst beim Tippen auf die Kachel; der Suchbegriff geht dabei an Apple bzw. die ARD.": "W wyszukiwaniu na wyświetlaczu kafelek „Podcasty” przeszukuje katalog podcastów Apple (po niemiecku także ARD Audiothek) – tylko audycje z kategorii dziecięcych. Dziecko może dodać je na stronę startową bez zgody i samo je usunąć. Wyszukiwanie następuje dopiero po stuknięciu kafelka; wpisane hasło trafia wtedy do Apple lub ARD.",
+ "Für die Suche freigegeben": "Dozwolone w wyszukiwaniu",
+ "{} freigegeben · {} vom Kind geholt": "Dozwolone: {} · pobrane przez dziecko: {}",
+ "Was das Kind in der Suche am Display finden und selbst auf die Startseite holen darf, und was es schon geholt hat.": "Co dziecko może znaleźć w wyszukiwaniu na wyświetlaczu i samo dodać na stronę startową, oraz co już pobrało.",
+ "Nichts davon steht auf der Startseite.": "Nic z tego nie jest na stronie startowej.",
+ "Freigegebene Wünsche kommen auch hierher.": "Zatwierdzone prośby też tu trafiają.",
+ "Was freigegeben ist und was das Kind geholt hat: Bibliothek › Für die Suche freigegeben.": "Co jest dozwolone i co dziecko pobrało: Biblioteka › Dozwolone w wyszukiwaniu.",
+ "Zeigt in der App beim Hinzufügen die Knöpfe „Nur in der Suche“. Aus: ausgeblendet, der Vorrat bleibt erhalten – die Suche am Display findet ihn weiter, solange sie an ist.": "Pokazuje w aplikacji przy dodawaniu przyciski „Tylko w wyszukiwaniu”. Wył.: ukryte, zapas zostaje – wyszukiwanie na wyświetlaczu nadal go znajduje, póki jest włączone.",
+ "Aus der Liste entfernen": "Usuń z listy",
+ "Aus der Liste entfernen ändert nichts an einer Freigabe – sie steht weiter unter Bibliothek › Für die Suche freigegeben.": "Usunięcie z listy nie zmienia zatwierdzenia – zostaje w Biblioteka › Dozwolone w wyszukiwaniu.",
+ "Liste leeren": "Wyczyść listę",
+ "Liste leeren?": "Wyczyścić listę?",
+ "Liste geleert": "Lista wyczyszczona",
+ "Die entschiedenen Wünsche verschwinden aus der Liste. Offene Wünsche und Freigaben bleiben.": "Rozstrzygnięte prośby znikną z listy. Otwarte prośby i zatwierdzenia zostają."
 }

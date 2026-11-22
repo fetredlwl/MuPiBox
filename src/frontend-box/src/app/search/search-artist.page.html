@@ -25,7 +25,10 @@
 
 <!-- the whole artist: on the start page (pool) or wished (Spotify) -->
 <ng-template #all>
-  @if (wishArtist()) {
+  @if (wishArtist()?.there) {
+    <!-- (the whole artist on the box already: nothing to wish) -->
+    <button class="srch-getall srch-wishall srch-onbox" type="button" disabled><span aria-hidden="true">✓</span>{{ texts.text('wishOnBox') }}</button>
+  } @else if (wishArtist()) {
     <button class="srch-getall srch-wishall" type="button" data-mupi-getall (click)="getAll()"><span aria-hidden="true">★</span>{{ texts.text('wishWhole', { n: name() }) }}</button>
   } @else {
     <button class="srch-getall" type="button" data-mupi-getall (click)="getAll()"><span aria-hidden="true">+</span>{{ texts.text('searchGetAll', { n: name() }) }}</button>

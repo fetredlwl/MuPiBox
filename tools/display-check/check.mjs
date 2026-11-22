@@ -118,6 +118,16 @@ const library = [
     artist: 'Biber Bande',
     index: 1,
   },
+  // (an album of Spotify's search on the box already: R8 - found, marked, not to wish)
+  {
+    type: 'spotify',
+    category: 'music',
+    id: 'wa000xxxxxxxxxxxxxxxxx',
+    title: 'Wunschalbum 1',
+    artist: 'Wunsch Künstler',
+    cover: '',
+    index: 2,
+  },
 ]
 
 function makeConfigDir() {
@@ -749,6 +759,21 @@ async function wishes(page, tag, dir) {
     `${tag}: the tile gives one page (${calls().length} calls, ${await tiles()} hits)${kept}`,
   )
   await shot(page, `${tag}-6-wuensche`)
+  // what the box has: found, marked; its page says so, nothing to wish
+  const there = await names(page, '.srch-wish.srch-there')
+  rule('R8', there.join('|') === 'Wunschalbum 1', `${tag}: what the box has is found and marked (${there.join(', ')})`)
+  if (!(await clickText(page, '.srch-wish.srch-there', 'Wunschalbum 1')) || (await topTag(page)) !== 'app-search-album')
+    throw new Error('no page for the album on the box')
+  const onBox = await page.evaluate((top) => eval(top)?.innerText ?? '', TOP)
+  rule(
+    'R8',
+    onBox.includes('Already on the box') &&
+      !onBox.includes('Wish for it') &&
+      (await visibleCount(page, '.sa-onbox[disabled]')) === 1,
+    `${tag}: an album on the box can be neither wished nor fetched`,
+  )
+  await page.click('app-search-album [data-mupi-back]')
+  await wait(900)
   // to the end of the hits: the next page, then nothing more
   const toEnd = () =>
     page.evaluate(() => {
@@ -975,6 +1000,34 @@ async function appWishes(browser, dir) {
       (w) => w.id === wished?.id,
     )
     rule('R10', revoked?.status === 'revoked' && !inPool(), 'app: revoked - out of the search, marked as revoked')
+    // the list tidied up: one decided wish, then all (the open ones stay)
+    const decided = () =>
+      JSON.parse(fs.readFileSync(path.join(dir, 'config', 'wishes.json'), 'utf8')).filter((w) => w.status !== 'open')
+    const before = decided().length
+    await page.click('[data-wish-forget]')
+    await wait(1500)
+    rule(
+      'R10',
+      decided().length === before - 1,
+      `app: a decided wish out of the list (${before} → ${decided().length})`,
+    )
+    if (decided().length) {
+      await page.click('#wish-forget-all')
+      await wait(600)
+      await page.click('[data-ok]')
+      await wait(1500)
+    }
+    rule(
+      'R10',
+      decided().length === 0 && !(await page.$('[data-wish-forget]')),
+      'app: "Clear the list" - no decided wish left',
+    )
+    // the search pool and what the child fetched: a page of their own in the library
+    await page.goto(`http://localhost:${STATIC_PORT}/app/#/suchfreigaben`, { waitUntil: 'networkidle2' })
+    await wait(2500)
+    if (shots) await page.screenshot({ path: path.join(shots, 'app-suchfreigaben.png') })
+    const stock = await page.evaluate(() => document.querySelectorAll('#pool-rows .lib-row').length)
+    rule('R10', stock >= 3, `app: the search's stock on its own page in the library (${stock} entries)`)
   } catch (err) {
     rule('R10', false, `app: the page "Wünsche" could not be checked (${firstLine(err)})`)
   } finally {

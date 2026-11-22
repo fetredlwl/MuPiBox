@@ -94,6 +94,8 @@ export interface WishItem {
   name: string
   artist: string
   cover: string
+  /** on the box already: shown (marked), not to wish or fetch again */
+  there?: boolean
 }
 /** the pages of a search or of an artist's albums loaded so far (kept on the display: back and again ask nothing) */
 export interface WishPages {

@@ -105,7 +105,8 @@
         "searchMove": "Somewhere else",
         "searchRemove": "Remove",
         "searchRemoveYes": "Yes, remove",
-        "wishAllowed": "You may fetch {n} yourself."
+        "wishAllowed": "You may fetch {n} yourself.",
+        "wishOnBox": "Already on the box"
       }
     },
     "de": {
@@ -212,7 +213,8 @@
         "searchMove": "Woanders hin",
         "searchRemove": "Entfernen",
         "searchRemoveYes": "Ja, entfernen",
-        "wishAllowed": "{n} darfst du dir selbst holen."
+        "wishAllowed": "{n} darfst du dir selbst holen.",
+        "wishOnBox": "Schon auf der Box"
       }
     },
     "fr": {
@@ -319,7 +321,8 @@
         "searchMove": "Ailleurs",
         "searchRemove": "Retirer",
         "searchRemoveYes": "Oui, retirer",
-        "wishAllowed": "Tu peux prendre {n} toi-même."
+        "wishAllowed": "Tu peux prendre {n} toi-même.",
+        "wishOnBox": "Déjà sur la box"
       }
     },
     "es": {
@@ -426,7 +429,8 @@
         "searchMove": "A otro sitio",
         "searchRemove": "Quitar",
         "searchRemoveYes": "Sí, quitar",
-        "wishAllowed": "Puedes coger {n} tú mismo."
+        "wishAllowed": "Puedes coger {n} tú mismo.",
+        "wishOnBox": "Ya está en la caja"
       }
     },
     "it": {
@@ -533,7 +537,8 @@
         "searchMove": "Altrove",
         "searchRemove": "Rimuovi",
         "searchRemoveYes": "Sì, rimuovi",
-        "wishAllowed": "Puoi prendere {n} da solo."
+        "wishAllowed": "Puoi prendere {n} da solo.",
+        "wishOnBox": "Già sul box"
       }
     },
     "nl": {
@@ -640,7 +645,8 @@
         "searchMove": "Ergens anders",
         "searchRemove": "Verwijderen",
         "searchRemoveYes": "Ja, verwijderen",
-        "wishAllowed": "{n} mag je zelf pakken."
+        "wishAllowed": "{n} mag je zelf pakken.",
+        "wishOnBox": "Al op de box"
       }
     },
     "sv": {
@@ -747,7 +753,8 @@
         "searchMove": "Någon annanstans",
         "searchRemove": "Ta bort",
         "searchRemoveYes": "Ja, ta bort",
-        "wishAllowed": "{n} får du hämta själv."
+        "wishAllowed": "{n} får du hämta själv.",
+        "wishOnBox": "Finns redan på boxen"
       }
     },
     "da": {
@@ -854,7 +861,8 @@
         "searchMove": "Et andet sted",
         "searchRemove": "Fjern",
         "searchRemoveYes": "Ja, fjern",
-        "wishAllowed": "{n} må du selv hente."
+        "wishAllowed": "{n} må du selv hente.",
+        "wishOnBox": "Allerede på boksen"
       }
     },
     "nb": {
@@ -961,7 +969,8 @@
         "searchMove": "Et annet sted",
         "searchRemove": "Fjern",
         "searchRemoveYes": "Ja, fjern",
-        "wishAllowed": "{n} kan du hente selv."
+        "wishAllowed": "{n} kan du hente selv.",
+        "wishOnBox": "Allerede på boksen"
       }
     },
     "fi": {
@@ -1068,7 +1077,8 @@
         "searchMove": "Muualle",
         "searchRemove": "Poista",
         "searchRemoveYes": "Kyllä, poista",
-        "wishAllowed": "Saat ottaa {n} itse."
+        "wishAllowed": "Saat ottaa {n} itse.",
+        "wishOnBox": "Jo laitteessa"
       }
     },
     "pl": {
@@ -1175,7 +1185,8 @@
         "searchMove": "Gdzie indziej",
         "searchRemove": "Usuń",
         "searchRemoveYes": "Tak, usuń",
-        "wishAllowed": "{n} możesz wziąć sam."
+        "wishAllowed": "{n} możesz wziąć sam.",
+        "wishOnBox": "Już na boxie"
       }
     },
     "pt": {
@@ -1282,7 +1293,8 @@
         "searchMove": "Para outro sítio",
         "searchRemove": "Remover",
         "searchRemoveYes": "Sim, remover",
-        "wishAllowed": "Podes buscar {n} sozinho."
+        "wishAllowed": "Podes buscar {n} sozinho.",
+        "wishOnBox": "Já está na caixa"
       }
     },
     "tr": {
@@ -1389,7 +1401,8 @@
         "searchMove": "Başka yere",
         "searchRemove": "Kaldır",
         "searchRemoveYes": "Evet, kaldır",
-        "wishAllowed": "{n} kendin alabilirsin."
+        "wishAllowed": "{n} kendin alabilirsin.",
+        "wishOnBox": "Zaten kutuda"
       }
     },
     "uk": {
@@ -1496,7 +1509,8 @@
         "searchMove": "В інше місце",
         "searchRemove": "Прибрати",
         "searchRemoveYes": "Так, прибрати",
-        "wishAllowed": "{n} можеш узяти сам."
+        "wishAllowed": "{n} можеш узяти сам.",
+        "wishOnBox": "Вже на боксі"
       }
     },
     "ru": {
@@ -1603,7 +1617,8 @@
         "searchMove": "В другое место",
         "searchRemove": "Убрать",
         "searchRemoveYes": "Да, убрать",
-        "wishAllowed": "{n} можешь взять сам."
+        "wishAllowed": "{n} можешь взять сам.",
+        "wishOnBox": "Уже на боксе"
       }
     },
     "cs": {
@@ -1710,7 +1725,8 @@
         "searchMove": "Jinam",
         "searchRemove": "Odebrat",
         "searchRemoveYes": "Ano, odebrat",
-        "wishAllowed": "{n} si můžeš vzít sám."
+        "wishAllowed": "{n} si můžeš vzít sám.",
+        "wishOnBox": "Už je na boxu"
       }
     },
     "el": {
@@ -1817,7 +1833,8 @@
         "searchMove": "Αλλού",
         "searchRemove": "Αφαίρεση",
         "searchRemoveYes": "Ναι, αφαίρεση",
-        "wishAllowed": "Μπορείς να πάρεις μόνος σου το {n}."
+        "wishAllowed": "Μπορείς να πάρεις μόνος σου το {n}.",
+        "wishOnBox": "Ήδη στο κουτί"
       }
     }
   }

@@ -3219,7 +3219,6 @@
  "Suche auf dem Display an": "Búsqueda en la pantalla activada",
  "Suche auf dem Display aus": "Búsqueda en la pantalla desactivada",
  "„Nur in der Suche“ in der App": "«Solo en la búsqueda» en la app",
- "Zeigt in der App die Knöpfe „Nur in der Suche“ und den Vorrat unten. Aus: alles davon ausgeblendet, der Vorrat bleibt erhalten – die Suche am Display findet ihn weiter, solange sie an ist.": "Muestra en la app los botones «Solo en la búsqueda» y la reserva de abajo. Desactivado: todo oculto, la reserva se conserva; la búsqueda en la pantalla la sigue encontrando mientras esté activada.",
  "„Nur in der Suche“ in der App an": "«Solo en la búsqueda» activado en la app",
  "„Nur in der Suche“ in der App ausgeblendet": "«Solo en la búsqueda» oculto en la app",
  "In der Suche am Display. „Aus der Suche nehmen“: das Kind findet es nicht mehr – was es schon auf die Startseite geholt hat, bleibt dort.": "En la búsqueda de la pantalla. «Quitar de la búsqueda»: el niño ya no lo encuentra; lo que ya puso en la página de inicio se queda allí.",
@@ -3256,5 +3255,18 @@
  "Radio für Kinder in der Suche aus": "Radio infantil en la búsqueda desactivada",
  "In der Suche am Display sucht eine Kachel „Radio“ im Senderverzeichnis radio-browser.info – nur Sender, die dort als Kinderradio markiert sind. Das Kind kann sie ohne Freigabe auf die Startseite holen und selbst wieder entfernen. Gesucht wird erst, wenn das Kind es will; der Suchbegriff geht dabei an radio-browser.info.": "En la búsqueda de la pantalla, un mosaico «Radio» busca en el directorio de emisoras radio-browser.info, solo emisoras marcadas allí como radio infantil. El niño puede ponerlas en la página de inicio sin autorización y quitarlas él mismo. Solo se busca cuando el niño quiere; el término de búsqueda se envía a radio-browser.info.",
  "Was das Kind in der Suche am Display bei Spotify gefunden und sich gewünscht hat. Freigegeben kommt es auf die Startseite – unter den Reiter, den das Kind gewählt hat. Die Freigabe bleibt: Das Kind kann es selbst entfernen und über die Suche wieder holen, bis du sie widerrufst.": "Lo que el niño encontró en Spotify con la búsqueda de la pantalla y pidió. Autorizado, va a la página de inicio, en la pestaña que eligió el niño. La autorización se mantiene: el niño puede quitarlo él mismo y volver a cogerlo con la búsqueda hasta que la retires.",
- "In der Suche am Display sucht eine Kachel „Podcasts“ in Apples Podcast-Verzeichnis (bei Deutsch auch in der ARD Audiothek) – nur Sendungen der Kinder-Kategorien. Das Kind kann sie ohne Freigabe auf die Startseite holen und selbst wieder entfernen. Gesucht wird erst beim Tippen auf die Kachel; der Suchbegriff geht dabei an Apple bzw. die ARD.": "En la búsqueda de la pantalla, un mosaico «Pódcasts» busca en el directorio de pódcasts de Apple (en alemán también en la ARD Audiothek), solo programas de las categorías infantiles. El niño puede ponerlos en la página de inicio sin autorización y quitarlos él mismo. Solo se busca al tocar el mosaico; el término se envía entonces a Apple o a la ARD."
+ "In der Suche am Display sucht eine Kachel „Podcasts“ in Apples Podcast-Verzeichnis (bei Deutsch auch in der ARD Audiothek) – nur Sendungen der Kinder-Kategorien. Das Kind kann sie ohne Freigabe auf die Startseite holen und selbst wieder entfernen. Gesucht wird erst beim Tippen auf die Kachel; der Suchbegriff geht dabei an Apple bzw. die ARD.": "En la búsqueda de la pantalla, un mosaico «Pódcasts» busca en el directorio de pódcasts de Apple (en alemán también en la ARD Audiothek), solo programas de las categorías infantiles. El niño puede ponerlos en la página de inicio sin autorización y quitarlos él mismo. Solo se busca al tocar el mosaico; el término se envía entonces a Apple o a la ARD.",
+ "Für die Suche freigegeben": "Autorizado para la búsqueda",
+ "{} freigegeben · {} vom Kind geholt": "{} autorizados · {} cogidos por el niño",
+ "Was das Kind in der Suche am Display finden und selbst auf die Startseite holen darf, und was es schon geholt hat.": "Lo que el niño puede encontrar en la búsqueda de la pantalla y poner él mismo en la página de inicio, y lo que ya ha cogido.",
+ "Nichts davon steht auf der Startseite.": "Nada de esto está en la página de inicio.",
+ "Freigegebene Wünsche kommen auch hierher.": "Los deseos autorizados también vienen aquí.",
+ "Was freigegeben ist und was das Kind geholt hat: Bibliothek › Für die Suche freigegeben.": "Lo autorizado y lo que el niño ha cogido: Biblioteca › Autorizado para la búsqueda.",
+ "Zeigt in der App beim Hinzufügen die Knöpfe „Nur in der Suche“. Aus: ausgeblendet, der Vorrat bleibt erhalten – die Suche am Display findet ihn weiter, solange sie an ist.": "Muestra en la app al añadir los botones «Solo en la búsqueda». Desactivado: ocultos, la reserva se mantiene; la búsqueda de la pantalla la sigue encontrando mientras esté activada.",
+ "Aus der Liste entfernen": "Quitar de la lista",
+ "Aus der Liste entfernen ändert nichts an einer Freigabe – sie steht weiter unter Bibliothek › Für die Suche freigegeben.": "Quitar de la lista no cambia una autorización: sigue en Biblioteca › Autorizado para la búsqueda.",
+ "Liste leeren": "Vaciar la lista",
+ "Liste leeren?": "¿Vaciar la lista?",
+ "Liste geleert": "Lista vaciada",
+ "Die entschiedenen Wünsche verschwinden aus der Liste. Offene Wünsche und Freigaben bleiben.": "Los deseos decididos desaparecen de la lista. Los pendientes y las autorizaciones se mantienen."
 }

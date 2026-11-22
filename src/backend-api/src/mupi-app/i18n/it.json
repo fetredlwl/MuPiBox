@@ -3219,7 +3219,6 @@
  "Suche auf dem Display an": "Ricerca sul display attiva",
  "Suche auf dem Display aus": "Ricerca sul display disattivata",
  "„Nur in der Suche“ in der App": "«Solo nella ricerca» nell’app",
- "Zeigt in der App die Knöpfe „Nur in der Suche“ und den Vorrat unten. Aus: alles davon ausgeblendet, der Vorrat bleibt erhalten – die Suche am Display findet ihn weiter, solange sie an ist.": "Mostra nell’app i pulsanti «Solo nella ricerca» e la riserva qui sotto. Spento: tutto nascosto, la riserva resta – la ricerca sul display la trova ancora finché è attiva.",
  "„Nur in der Suche“ in der App an": "«Solo nella ricerca» attivo nell’app",
  "„Nur in der Suche“ in der App ausgeblendet": "«Solo nella ricerca» nascosto nell’app",
  "In der Suche am Display. „Aus der Suche nehmen“: das Kind findet es nicht mehr – was es schon auf die Startseite geholt hat, bleibt dort.": "Nella ricerca sul display. «Togli dalla ricerca»: il bambino non lo trova più – ciò che ha già messo nella pagina iniziale resta lì.",
@@ -3256,5 +3255,18 @@
  "Radio für Kinder in der Suche aus": "Radio per bambini nella ricerca disattivata",
  "In der Suche am Display sucht eine Kachel „Radio“ im Senderverzeichnis radio-browser.info – nur Sender, die dort als Kinderradio markiert sind. Das Kind kann sie ohne Freigabe auf die Startseite holen und selbst wieder entfernen. Gesucht wird erst, wenn das Kind es will; der Suchbegriff geht dabei an radio-browser.info.": "Nella ricerca sul display una tessera «Radio» cerca nell’elenco di stazioni radio-browser.info – solo stazioni contrassegnate lì come radio per bambini. Il bambino può metterle nella pagina iniziale senza autorizzazione e rimuoverle da solo. Si cerca solo quando il bambino lo vuole; il termine di ricerca va a radio-browser.info.",
  "Was das Kind in der Suche am Display bei Spotify gefunden und sich gewünscht hat. Freigegeben kommt es auf die Startseite – unter den Reiter, den das Kind gewählt hat. Die Freigabe bleibt: Das Kind kann es selbst entfernen und über die Suche wieder holen, bis du sie widerrufst.": "Ciò che il bambino ha trovato su Spotify nella ricerca sul display e desiderato. Autorizzato, va nella pagina iniziale – sotto la scheda scelta dal bambino. L’autorizzazione resta: il bambino può rimuoverlo da solo e riprenderlo con la ricerca finché non la revochi.",
- "In der Suche am Display sucht eine Kachel „Podcasts“ in Apples Podcast-Verzeichnis (bei Deutsch auch in der ARD Audiothek) – nur Sendungen der Kinder-Kategorien. Das Kind kann sie ohne Freigabe auf die Startseite holen und selbst wieder entfernen. Gesucht wird erst beim Tippen auf die Kachel; der Suchbegriff geht dabei an Apple bzw. die ARD.": "Nella ricerca sul display una tessera «Podcast» cerca nell’elenco podcast di Apple (in tedesco anche nell’ARD Audiothek) – solo programmi delle categorie per bambini. Il bambino può metterli nella pagina iniziale senza autorizzazione e toglierli da solo. Si cerca solo toccando la tessera; il termine va allora ad Apple o all’ARD."
+ "In der Suche am Display sucht eine Kachel „Podcasts“ in Apples Podcast-Verzeichnis (bei Deutsch auch in der ARD Audiothek) – nur Sendungen der Kinder-Kategorien. Das Kind kann sie ohne Freigabe auf die Startseite holen und selbst wieder entfernen. Gesucht wird erst beim Tippen auf die Kachel; der Suchbegriff geht dabei an Apple bzw. die ARD.": "Nella ricerca sul display una tessera «Podcast» cerca nell’elenco podcast di Apple (in tedesco anche nell’ARD Audiothek) – solo programmi delle categorie per bambini. Il bambino può metterli nella pagina iniziale senza autorizzazione e toglierli da solo. Si cerca solo toccando la tessera; il termine va allora ad Apple o all’ARD.",
+ "Für die Suche freigegeben": "Autorizzato per la ricerca",
+ "{} freigegeben · {} vom Kind geholt": "{} autorizzati · {} presi dal bambino",
+ "Was das Kind in der Suche am Display finden und selbst auf die Startseite holen darf, und was es schon geholt hat.": "Ciò che il bambino può trovare nella ricerca sul display e mettere da solo nella pagina iniziale, e ciò che ha già preso.",
+ "Nichts davon steht auf der Startseite.": "Niente di questo è nella pagina iniziale.",
+ "Freigegebene Wünsche kommen auch hierher.": "Anche i desideri autorizzati arrivano qui.",
+ "Was freigegeben ist und was das Kind geholt hat: Bibliothek › Für die Suche freigegeben.": "Ciò che è autorizzato e ciò che il bambino ha preso: Libreria › Autorizzato per la ricerca.",
+ "Zeigt in der App beim Hinzufügen die Knöpfe „Nur in der Suche“. Aus: ausgeblendet, der Vorrat bleibt erhalten – die Suche am Display findet ihn weiter, solange sie an ist.": "Mostra nell’app, quando si aggiunge, i pulsanti «Solo nella ricerca». Spento: nascosti, la scorta resta – la ricerca sul display la trova finché è attiva.",
+ "Aus der Liste entfernen": "Rimuovi dalla lista",
+ "Aus der Liste entfernen ändert nichts an einer Freigabe – sie steht weiter unter Bibliothek › Für die Suche freigegeben.": "Rimuovere dalla lista non cambia un’autorizzazione – resta in Libreria › Autorizzato per la ricerca.",
+ "Liste leeren": "Svuota la lista",
+ "Liste leeren?": "Svuotare la lista?",
+ "Liste geleert": "Lista svuotata",
+ "Die entschiedenen Wünsche verschwinden aus der Liste. Offene Wünsche und Freigaben bleiben.": "I desideri decisi spariscono dalla lista. Quelli in sospeso e le autorizzazioni restano."
 }

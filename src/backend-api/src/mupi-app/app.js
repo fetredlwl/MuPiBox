@@ -2478,8 +2478,10 @@ async function loadLib() {
     ...CATS.map(([c]) => api(`/api/library/artists?category=${c}`)),
   ])
   // (fork "wishes": the tile "Wünsche" - when they are on or some are open)
-  const wishes = await api(`${API}/wishes`)
+  const [wishes, pool] = await Promise.all([api(`${API}/wishes`), api(`${API}/search-pool`)])
   lib.wishes = wishes.ok ? { on: wishes.body?.on === true, open: wishes.body?.open?.length ?? 0 } : null
+  // (the tile "Für die Suche freigegeben": when something is in it, the wishes are on or "Nur in der Suche" is shown)
+  lib.releases = pool.ok ? { n: pool.body?.entries?.length ?? 0, own: pool.body?.own?.length ?? 0, shown: pool.body?.appEnabled === true } : null
   lib.items = Array.isArray(data.body) ? data.body : []
   lib.sync = sync.ok ? sync.body : null
   lib.nas = Array.isArray(nas.body) ? nas.body : []
@@ -2559,6 +2561,7 @@ function drawLibTiles() {
     ['nas', 'server', 'NAS', lib.nasProfile ? `Profil ${lib.nasProfile}` : `${lib.nas.length} Ordner`],
     ['cover', 'image', 'Cover', lib.covers != null ? `${lib.covers} gefunden` : 'Eigene Bilder'],
     ...(lib.wishes && (lib.wishes.on || lib.wishes.open) ? [['wuensche', 'bulb', 'Wünsche', lib.wishes.open ? `${lib.wishes.open} offen` : 'Keine offenen']] : []),
+    ...(lib.releases && (lib.releases.n || lib.releases.own || lib.releases.shown || lib.wishes?.on) ? [['suchfreigaben', 'search', 'Für die Suche freigegeben', `${lib.releases.n} freigegeben · ${lib.releases.own} vom Kind geholt`]] : []),
   ]
   box.innerHTML = tiles
     .map(([id, ic, t, sub]) => `<button class="lib-tile" data-go="${id}"><span class="tile">${icon(ic, 18)}</span><span class="lbl"><b>${esc(t)}</b><small>${esc(sub)}</small></span></button>`)
@@ -8233,9 +8236,6 @@ async function loadControls() {
   state.values.set('dispRadio', o.displayRadio === true)
   // (wishes from Spotify in the display's search, approved by the parents - wishes.ts)
   state.values.set('dispWishes', o.displayWishes === true)
-  // the search pool and what the child put in from it (shown under "Suche")
-  const pool = await api(`${API}/search-pool`)
-  disp.pool = pool.ok ? pool.body : { entries: [], own: [] }
   state.values.set('resume', o.resume)
   state.values.set('listTimer', o.listviewTimer)
   state.values.set('setTimer', o.settingsAccessTimer)
@@ -8280,12 +8280,16 @@ function wishesTop() {
             .map((w) =>
               row(
                 w,
-                w.status === 'approved'
-                  ? `<span class="btns" style="flex-wrap:nowrap;align-items:center"><span class="in-lib">${esc('Freigegeben')}</span><button class="btn" data-wish-revoke="${esc(w.id)}">${esc('Widerrufen')}</button></span>`
-                  : `<span class="in-lib">${esc(w.status === 'revoked' ? 'Zurückgenommen' : 'Abgelehnt')}</span>`,
+                `<span class="btns" style="flex-wrap:nowrap;align-items:center">${
+                  w.status === 'approved'
+                    ? `<span class="in-lib">${esc('Freigegeben')}</span><button class="btn" data-wish-revoke="${esc(w.id)}">${esc('Widerrufen')}</button>`
+                    : `<span class="in-lib">${esc(w.status === 'revoked' ? 'Zurückgenommen' : 'Abgelehnt')}</span>`
+                }<button class="icon-btn" data-wish-forget="${esc(w.id)}" title="${esc('Aus der Liste entfernen')}" aria-label="${esc('Aus der Liste entfernen')}">${icon('close', 18)}</button></span>`,
               ),
             )
-            .join('')}</div></section>`,
+            .join('')}</div>
+          <p class="help">${esc('Aus der Liste entfernen ändert nichts an einer Freigabe – sie steht weiter unter Bibliothek › Für die Suche freigegeben.')}</p>
+          <div class="btns"><button class="btn" id="wish-forget-all">${icon('close', 18)}${esc('Liste leeren')}</button></div></section>`,
         ]
       : []),
   ]
@@ -8310,6 +8314,25 @@ function mountWishes(root, page) {
   }
   for (const b of root.querySelectorAll('[data-wish-yes]')) b.onclick = () => decide(b, true)
   for (const b of root.querySelectorAll('[data-wish-no]')) b.onclick = () => decide(b, false)
+  // decided wishes out of the list (an approval stays in the search)
+  const forget = async (b, body) => {
+    b.disabled = true
+    const r = await api(`${API}/wishes/forget`, { method: 'POST', body })
+    if (!r.ok) {
+      b.disabled = false
+      return toast('Das hat nicht geklappt', 'info')
+    }
+    await loadWishes()
+    renderPage(page, false)
+  }
+  for (const b of root.querySelectorAll('[data-wish-forget]')) b.onclick = () => forget(b, { id: b.dataset.wishForget })
+  const all = $('#wish-forget-all', root)
+  if (all)
+    all.onclick = async () => {
+      if (!(await ask('Liste leeren?', 'Die entschiedenen Wünsche verschwinden aus der Liste. Offene Wünsche und Freigaben bleiben.', 'Leeren'))) return
+      await forget(all, { all: true })
+      toast('Liste geleert')
+    }
   // an approval taken back: out of the search, off the start page
   for (const b of root.querySelectorAll('[data-wish-revoke]'))
     b.onclick = async () => {
@@ -8351,12 +8374,25 @@ function poolPageSize() {
   return poolView.size
 }
 
+/** the pool and what the child fetched itself (Bibliothek › Für die Suche freigegeben) */
+async function loadPool() {
+  const pool = await api(`${API}/search-pool`)
+  disp.pool = pool.ok ? pool.body : { entries: [], own: [] }
+}
+
+function releasesTop() {
+  return [
+    `<p class="page-intro">${esc('Was das Kind in der Suche am Display finden und selbst auf die Startseite holen darf, und was es schon geholt hat.')}</p>`,
+    `<section class="card wide">${poolListHtml()}</section>`,
+  ]
+}
+
 function poolListHtml() {
   const p = disp.pool ?? { entries: [], own: [] }
   const size = poolPageSize()
   const many = (p.entries?.length ?? 0) + (p.own?.length ?? 0) > 5
   return `<div class="field"><label>${esc('Vorrat der Suche')}</label>
-      <p class="help" style="margin:0">${esc('Hinzufügen: Bibliothek › Auf Spotify suchen › „Nur in der Suche“. Nichts davon steht auf der Startseite.')}</p>
+      <p class="help" style="margin:0">${esc(p.appEnabled ? 'Hinzufügen: Bibliothek › Auf Spotify suchen › „Nur in der Suche“. Nichts davon steht auf der Startseite.' : 'Nichts davon steht auf der Startseite.')} ${esc('Freigegebene Wünsche kommen auch hierher.')}</p>
       ${
         many
           ? `<div class="search">${icon('search')}<input class="input" id="pool-q" type="search" placeholder="${esc('Im Vorrat suchen')}" autocomplete="off" value="${esc(poolView.q)}"></div>
@@ -8431,7 +8467,7 @@ function drawPoolLists(root, page) {
         return toast('Das hat nicht geklappt', 'info')
       }
       toast('Aus der Suche entfernt')
-      await loadControls()
+      await loadPool()
       renderPage(page, false)
     }
   // what the child put on the start page: off it again (a library entry - asked first)
@@ -8447,7 +8483,7 @@ function drawPoolLists(root, page) {
       }
       toast(`Von der Startseite entfernt: ${name}`)
       libChanged()
-      await loadControls()
+      await loadPool()
       renderPage(page, false)
     }
 }
@@ -8474,7 +8510,7 @@ function wirePoolControls(root, page) {
         return toast('Das hat nicht geklappt', 'info')
       }
       toast('Alle Freigaben gelöscht')
-      await loadControls()
+      await loadPool()
       renderPage(page, false)
     }
   const seg = $('#pool-size', root)
@@ -12073,6 +12109,8 @@ const CONTROLLERS = {
     },
   },
   wuensche: { load: loadWishes, top: wishesTop, sections: () => [], mount: mountWishes },
+  // (fork "wishes") the search pool and what the child fetched itself - search field, pages, "Entfernen"
+  suchfreigaben: { load: loadPool, top: releasesTop, sections: () => [], mount: (root, page) => wirePoolControls(root, page) },
   verwaltet: {
     load: loadManaged,
     top: managedTop,
@@ -12577,10 +12615,6 @@ const CONTROLLERS = {
   },
   bedienung: {
     load: loadControls,
-    // the search pool's lists: search field, pages, "Entfernen" (drawPoolLists)
-    mount(root, page) {
-      wirePoolControls(root, page)
-    },
     // the tabs of the display (switched on = shown), how long to hold, where it goes on, podcasts
     sections: (page) => {
       const it = (key, over) => schemaItem(page, key, over)
@@ -12617,7 +12651,7 @@ const CONTROLLERS = {
               type: 'toggle',
               key: 'appPool',
               label: '„Nur in der Suche“ in der App',
-              help: 'Zeigt in der App die Knöpfe „Nur in der Suche“ und den Vorrat unten. Aus: alles davon ausgeblendet, der Vorrat bleibt erhalten – die Suche am Display findet ihn weiter, solange sie an ist.',
+              help: 'Zeigt in der App beim Hinzufügen die Knöpfe „Nur in der Suche“. Aus: ausgeblendet, der Vorrat bleibt erhalten – die Suche am Display findet ihn weiter, solange sie an ist.',
             },
             {
               type: 'toggle',
@@ -12637,7 +12671,7 @@ const CONTROLLERS = {
               label: 'Radio für Kinder in der Suche',
               help: 'In der Suche am Display sucht eine Kachel „Radio“ im Senderverzeichnis radio-browser.info – nur Sender, die dort als Kinderradio markiert sind. Das Kind kann sie ohne Freigabe auf die Startseite holen und selbst wieder entfernen. Gesucht wird erst, wenn das Kind es will; der Suchbegriff geht dabei an radio-browser.info.',
             },
-            ...(state.values.get('appPool') ? [{ type: 'html', html: poolListHtml() }] : []),
+            { type: 'html', html: `<p class="help" style="margin:0">${esc('Was freigegeben ist und was das Kind geholt hat: Bibliothek › Für die Suche freigegeben.')}</p>` },
           ],
         },
         {
@@ -12714,11 +12748,7 @@ const CONTROLLERS = {
       if (key === 'dispWishes') return saveDisplayOptions({ displayWishes: !!v }, v ? 'Wünsche aus Spotify an' : 'Wünsche aus Spotify aus')
       if (key === 'dispRadio') return saveDisplayOptions({ displayRadio: !!v }, v ? 'Radio für Kinder in der Suche an' : 'Radio für Kinder in der Suche aus')
       if (key === 'dispPodcasts') return saveDisplayOptions({ displayPodcasts: !!v }, v ? 'Podcasts für Kinder in der Suche an' : 'Podcasts für Kinder in der Suche aus')
-      if (key === 'appPool') {
-        const ok = await saveDisplayOptions({ appSearchPool: !!v }, v ? '„Nur in der Suche“ in der App an' : '„Nur in der Suche“ in der App ausgeblendet')
-        if (ok) renderPage(page, false)
-        return ok
-      }
+      if (key === 'appPool') return saveDisplayOptions({ appSearchPool: !!v }, v ? '„Nur in der Suche“ in der App an' : '„Nur in der Suche“ in der App ausgeblendet')
       if (key === 'epResume') return saveDisplayOptions({ episodeResume: !!v }, v ? 'Folgen gehen an der letzten Stelle weiter' : 'Folgen beginnen immer von vorn')
       if (key === 'epDays') {
         const days = EP_DAYS.find(([l]) => l === v)?.[1]

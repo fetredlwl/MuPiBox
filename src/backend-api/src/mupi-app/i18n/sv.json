@@ -3219,7 +3219,6 @@
  "Suche auf dem Display an": "Sökning på displayen på",
  "Suche auf dem Display aus": "Sökning på displayen av",
  "„Nur in der Suche“ in der App": "”Endast i sökningen” i appen",
- "Zeigt in der App die Knöpfe „Nur in der Suche“ und den Vorrat unten. Aus: alles davon ausgeblendet, der Vorrat bleibt erhalten – die Suche am Display findet ihn weiter, solange sie an ist.": "Visar knapparna ”Endast i sökningen” i appen och förrådet nedan. Av: allt dolt, förrådet finns kvar – sökningen på displayen hittar det så länge den är på.",
  "„Nur in der Suche“ in der App an": "”Endast i sökningen” i appen på",
  "„Nur in der Suche“ in der App ausgeblendet": "”Endast i sökningen” dolt i appen",
  "In der Suche am Display. „Aus der Suche nehmen“: das Kind findet es nicht mehr – was es schon auf die Startseite geholt hat, bleibt dort.": "I sökningen på displayen. ”Ta bort från sökningen”: barnet hittar det inte längre – det som redan ligger på startsidan finns kvar där.",
@@ -3256,5 +3255,18 @@
  "Radio für Kinder in der Suche aus": "Barnradio i sökningen av",
  "In der Suche am Display sucht eine Kachel „Radio“ im Senderverzeichnis radio-browser.info – nur Sender, die dort als Kinderradio markiert sind. Das Kind kann sie ohne Freigabe auf die Startseite holen und selbst wieder entfernen. Gesucht wird erst, wenn das Kind es will; der Suchbegriff geht dabei an radio-browser.info.": "I sökningen på displayen söker en ruta ”Radio” i kanalkatalogen radio-browser.info – bara kanaler som är märkta som barnradio där. Barnet kan lägga dem på startsidan utan godkännande och ta bort dem själv. Det söks först när barnet vill; sökordet skickas till radio-browser.info.",
  "Was das Kind in der Suche am Display bei Spotify gefunden und sich gewünscht hat. Freigegeben kommt es auf die Startseite – unter den Reiter, den das Kind gewählt hat. Die Freigabe bleibt: Das Kind kann es selbst entfernen und über die Suche wieder holen, bis du sie widerrufst.": "Det barnet hittade på Spotify i sökningen på displayen och önskade sig. Godkänt hamnar det på startsidan – under fliken barnet valde. Godkännandet består: barnet kan ta bort det själv och hämta det igen via sökningen tills du återkallar det.",
- "In der Suche am Display sucht eine Kachel „Podcasts“ in Apples Podcast-Verzeichnis (bei Deutsch auch in der ARD Audiothek) – nur Sendungen der Kinder-Kategorien. Das Kind kann sie ohne Freigabe auf die Startseite holen und selbst wieder entfernen. Gesucht wird erst beim Tippen auf die Kachel; der Suchbegriff geht dabei an Apple bzw. die ARD.": "I sökningen på displayen söker en ruta ”Poddar” i Apples poddkatalog (på tyska även i ARD Audiothek) – bara program i barnkategorierna. Barnet kan lägga dem på startsidan utan godkännande och själv ta bort dem igen. Sökningen sker först när rutan trycks; söktermen går då till Apple eller ARD."
+ "In der Suche am Display sucht eine Kachel „Podcasts“ in Apples Podcast-Verzeichnis (bei Deutsch auch in der ARD Audiothek) – nur Sendungen der Kinder-Kategorien. Das Kind kann sie ohne Freigabe auf die Startseite holen und selbst wieder entfernen. Gesucht wird erst beim Tippen auf die Kachel; der Suchbegriff geht dabei an Apple bzw. die ARD.": "I sökningen på displayen söker en ruta ”Poddar” i Apples poddkatalog (på tyska även i ARD Audiothek) – bara program i barnkategorierna. Barnet kan lägga dem på startsidan utan godkännande och själv ta bort dem igen. Sökningen sker först när rutan trycks; söktermen går då till Apple eller ARD.",
+ "Für die Suche freigegeben": "Godkänt för sökningen",
+ "{} freigegeben · {} vom Kind geholt": "{} godkända · {} hämtade av barnet",
+ "Was das Kind in der Suche am Display finden und selbst auf die Startseite holen darf, und was es schon geholt hat.": "Det barnet får hitta i sökningen på displayen och själv lägga på startsidan, och det det redan har hämtat.",
+ "Nichts davon steht auf der Startseite.": "Inget av detta finns på startsidan.",
+ "Freigegebene Wünsche kommen auch hierher.": "Godkända önskningar hamnar också här.",
+ "Was freigegeben ist und was das Kind geholt hat: Bibliothek › Für die Suche freigegeben.": "Det som är godkänt och det barnet har hämtat: Bibliotek › Godkänt för sökningen.",
+ "Zeigt in der App beim Hinzufügen die Knöpfe „Nur in der Suche“. Aus: ausgeblendet, der Vorrat bleibt erhalten – die Suche am Display findet ihn weiter, solange sie an ist.": "Visar knapparna ”Bara i sökningen” i appen när man lägger till. Av: dolda, förrådet finns kvar – sökningen på displayen hittar det så länge den är på.",
+ "Aus der Liste entfernen": "Ta bort från listan",
+ "Aus der Liste entfernen ändert nichts an einer Freigabe – sie steht weiter unter Bibliothek › Für die Suche freigegeben.": "Att ta bort från listan ändrar inte ett godkännande – det finns kvar under Bibliotek › Godkänt för sökningen.",
+ "Liste leeren": "Töm listan",
+ "Liste leeren?": "Töm listan?",
+ "Liste geleert": "Listan tömd",
+ "Die entschiedenen Wünsche verschwinden aus der Liste. Offene Wünsche und Freigaben bleiben.": "De avgjorda önskningarna försvinner ur listan. Öppna önskningar och godkännanden finns kvar."
 }

@@ -3219,7 +3219,6 @@
  "Suche auf dem Display an": "Αναζήτηση στην οθόνη ενεργή",
  "Suche auf dem Display aus": "Αναζήτηση στην οθόνη ανενεργή",
  "„Nur in der Suche“ in der App": "«Μόνο στην αναζήτηση» στην εφαρμογή",
- "Zeigt in der App die Knöpfe „Nur in der Suche“ und den Vorrat unten. Aus: alles davon ausgeblendet, der Vorrat bleibt erhalten – die Suche am Display findet ihn weiter, solange sie an ist.": "Δείχνει στην εφαρμογή τα κουμπιά «Μόνο στην αναζήτηση» και το απόθεμα παρακάτω. Ανενεργό: όλα κρυμμένα, το απόθεμα διατηρείται – η αναζήτηση στην οθόνη το βρίσκει όσο είναι ενεργή.",
  "„Nur in der Suche“ in der App an": "«Μόνο στην αναζήτηση» ενεργό στην εφαρμογή",
  "„Nur in der Suche“ in der App ausgeblendet": "«Μόνο στην αναζήτηση» κρυμμένο στην εφαρμογή",
  "In der Suche am Display. „Aus der Suche nehmen“: das Kind findet es nicht mehr – was es schon auf die Startseite geholt hat, bleibt dort.": "Στην αναζήτηση της οθόνης. «Αφαίρεση από την αναζήτηση»: το παιδί δεν το βρίσκει πια – ό,τι έχει ήδη βάλει στην αρχική σελίδα μένει εκεί.",
@@ -3256,5 +3255,18 @@
  "Radio für Kinder in der Suche aus": "Παιδικό ραδιόφωνο στην αναζήτηση ανενεργό",
  "In der Suche am Display sucht eine Kachel „Radio“ im Senderverzeichnis radio-browser.info – nur Sender, die dort als Kinderradio markiert sind. Das Kind kann sie ohne Freigabe auf die Startseite holen und selbst wieder entfernen. Gesucht wird erst, wenn das Kind es will; der Suchbegriff geht dabei an radio-browser.info.": "Στην αναζήτηση της οθόνης ένα πλακίδιο «Ραδιόφωνο» ψάχνει στον κατάλογο σταθμών radio-browser.info – μόνο σταθμούς που είναι σημειωμένοι εκεί ως παιδικό ραδιόφωνο. Το παιδί μπορεί να τους βάλει στην αρχική σελίδα χωρίς έγκριση και να τους αφαιρέσει μόνο του. Η αναζήτηση γίνεται μόνο όταν το θέλει το παιδί· ο όρος αναζήτησης πηγαίνει στο radio-browser.info.",
  "Was das Kind in der Suche am Display bei Spotify gefunden und sich gewünscht hat. Freigegeben kommt es auf die Startseite – unter den Reiter, den das Kind gewählt hat. Die Freigabe bleibt: Das Kind kann es selbst entfernen und über die Suche wieder holen, bis du sie widerrufst.": "Ό,τι βρήκε το παιδί στο Spotify με την αναζήτηση της οθόνης και ζήτησε. Μόλις εγκριθεί, μπαίνει στην αρχική σελίδα – στην καρτέλα που διάλεξε το παιδί. Η έγκριση μένει: το παιδί μπορεί να το αφαιρέσει μόνο του και να το ξαναπάρει από την αναζήτηση, μέχρι να την ανακαλέσεις.",
- "In der Suche am Display sucht eine Kachel „Podcasts“ in Apples Podcast-Verzeichnis (bei Deutsch auch in der ARD Audiothek) – nur Sendungen der Kinder-Kategorien. Das Kind kann sie ohne Freigabe auf die Startseite holen und selbst wieder entfernen. Gesucht wird erst beim Tippen auf die Kachel; der Suchbegriff geht dabei an Apple bzw. die ARD.": "Στην αναζήτηση της οθόνης ένα πλακίδιο «Podcasts» ψάχνει στον κατάλογο podcasts της Apple (στα γερμανικά και στην ARD Audiothek) – μόνο εκπομπές των παιδικών κατηγοριών. Το παιδί μπορεί να τις βάλει στην αρχική σελίδα χωρίς έγκριση και να τις αφαιρέσει μόνο του. Η αναζήτηση γίνεται μόνο όταν πατηθεί το πλακίδιο· ο όρος πηγαίνει τότε στην Apple ή στην ARD."
+ "In der Suche am Display sucht eine Kachel „Podcasts“ in Apples Podcast-Verzeichnis (bei Deutsch auch in der ARD Audiothek) – nur Sendungen der Kinder-Kategorien. Das Kind kann sie ohne Freigabe auf die Startseite holen und selbst wieder entfernen. Gesucht wird erst beim Tippen auf die Kachel; der Suchbegriff geht dabei an Apple bzw. die ARD.": "Στην αναζήτηση της οθόνης ένα πλακίδιο «Podcasts» ψάχνει στον κατάλογο podcasts της Apple (στα γερμανικά και στην ARD Audiothek) – μόνο εκπομπές των παιδικών κατηγοριών. Το παιδί μπορεί να τις βάλει στην αρχική σελίδα χωρίς έγκριση και να τις αφαιρέσει μόνο του. Η αναζήτηση γίνεται μόνο όταν πατηθεί το πλακίδιο· ο όρος πηγαίνει τότε στην Apple ή στην ARD.",
+ "Für die Suche freigegeben": "Επιτρέπεται στην αναζήτηση",
+ "{} freigegeben · {} vom Kind geholt": "{} επιτρέπονται · {} τα πήρε το παιδί",
+ "Was das Kind in der Suche am Display finden und selbst auf die Startseite holen darf, und was es schon geholt hat.": "Τι μπορεί να βρει το παιδί στην αναζήτηση της οθόνης και να βάλει μόνο του στην αρχική σελίδα, και τι έχει ήδη πάρει.",
+ "Nichts davon steht auf der Startseite.": "Τίποτα από αυτά δεν είναι στην αρχική σελίδα.",
+ "Freigegebene Wünsche kommen auch hierher.": "Οι εγκεκριμένες ευχές έρχονται κι εδώ.",
+ "Was freigegeben ist und was das Kind geholt hat: Bibliothek › Für die Suche freigegeben.": "Τι επιτρέπεται και τι πήρε το παιδί: Βιβλιοθήκη › Επιτρέπεται στην αναζήτηση.",
+ "Zeigt in der App beim Hinzufügen die Knöpfe „Nur in der Suche“. Aus: ausgeblendet, der Vorrat bleibt erhalten – die Suche am Display findet ihn weiter, solange sie an ist.": "Δείχνει στην εφαρμογή κατά την προσθήκη τα κουμπιά «Μόνο στην αναζήτηση». Ανενεργό: κρυφά, το απόθεμα μένει – η αναζήτηση της οθόνης το βρίσκει όσο είναι ενεργή.",
+ "Aus der Liste entfernen": "Αφαίρεση από τη λίστα",
+ "Aus der Liste entfernen ändert nichts an einer Freigabe – sie steht weiter unter Bibliothek › Für die Suche freigegeben.": "Η αφαίρεση από τη λίστα δεν αλλάζει μια έγκριση – μένει στη Βιβλιοθήκη › Επιτρέπεται στην αναζήτηση.",
+ "Liste leeren": "Εκκαθάριση λίστας",
+ "Liste leeren?": "Εκκαθάριση λίστας;",
+ "Liste geleert": "Η λίστα εκκαθαρίστηκε",
+ "Die entschiedenen Wünsche verschwinden aus der Liste. Offene Wünsche und Freigaben bleiben.": "Οι αποφασισμένες ευχές φεύγουν από τη λίστα. Οι ανοιχτές ευχές και οι εγκρίσεις μένουν."
 }

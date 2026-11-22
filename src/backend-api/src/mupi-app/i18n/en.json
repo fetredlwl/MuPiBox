@@ -3219,7 +3219,6 @@
  "Suche auf dem Display an": "Search on the display on",
  "Suche auf dem Display aus": "Search on the display off",
  "„Nur in der Suche“ in der App": "“Search only” in the app",
- "Zeigt in der App die Knöpfe „Nur in der Suche“ und den Vorrat unten. Aus: alles davon ausgeblendet, der Vorrat bleibt erhalten – die Suche am Display findet ihn weiter, solange sie an ist.": "Shows the “Search only” buttons in the app and the pool below. Off: all of it hidden, the pool is kept – the search on the display still finds it as long as it is on.",
  "„Nur in der Suche“ in der App an": "“Search only” in the app on",
  "„Nur in der Suche“ in der App ausgeblendet": "“Search only” hidden in the app",
  "In der Suche am Display. „Aus der Suche nehmen“: das Kind findet es nicht mehr – was es schon auf die Startseite geholt hat, bleibt dort.": "In the search on the display. “Remove from search”: the child no longer finds it – what it already put on the start page stays there.",
@@ -3256,5 +3255,18 @@
  "Radio für Kinder in der Suche aus": "Radio for children in the search off",
  "In der Suche am Display sucht eine Kachel „Radio“ im Senderverzeichnis radio-browser.info – nur Sender, die dort als Kinderradio markiert sind. Das Kind kann sie ohne Freigabe auf die Startseite holen und selbst wieder entfernen. Gesucht wird erst, wenn das Kind es will; der Suchbegriff geht dabei an radio-browser.info.": "In the search on the display a tile “Radio” searches the station directory radio-browser.info – only stations marked there as children’s radio. The child can put them on the start page without approval and remove them again itself. It only searches when the child wants to; the search term goes to radio-browser.info.",
  "Was das Kind in der Suche am Display bei Spotify gefunden und sich gewünscht hat. Freigegeben kommt es auf die Startseite – unter den Reiter, den das Kind gewählt hat. Die Freigabe bleibt: Das Kind kann es selbst entfernen und über die Suche wieder holen, bis du sie widerrufst.": "What the child found on Spotify in the search on the display and wished for. Approved, it goes on the start page – under the tab the child chose. Approval stays: the child can remove it itself and fetch it again through the search until you revoke it.",
- "In der Suche am Display sucht eine Kachel „Podcasts“ in Apples Podcast-Verzeichnis (bei Deutsch auch in der ARD Audiothek) – nur Sendungen der Kinder-Kategorien. Das Kind kann sie ohne Freigabe auf die Startseite holen und selbst wieder entfernen. Gesucht wird erst beim Tippen auf die Kachel; der Suchbegriff geht dabei an Apple bzw. die ARD.": "In the search on the display a tile “Podcasts” searches Apple’s podcast directory (for German also the ARD Audiothek) – only shows of the children’s categories. The child can put them on the start page without approval and remove them again itself. The search runs only when the tile is tapped; the search term then goes to Apple or the ARD."
+ "In der Suche am Display sucht eine Kachel „Podcasts“ in Apples Podcast-Verzeichnis (bei Deutsch auch in der ARD Audiothek) – nur Sendungen der Kinder-Kategorien. Das Kind kann sie ohne Freigabe auf die Startseite holen und selbst wieder entfernen. Gesucht wird erst beim Tippen auf die Kachel; der Suchbegriff geht dabei an Apple bzw. die ARD.": "In the search on the display a tile “Podcasts” searches Apple’s podcast directory (for German also the ARD Audiothek) – only shows of the children’s categories. The child can put them on the start page without approval and remove them again itself. The search runs only when the tile is tapped; the search term then goes to Apple or the ARD.",
+ "Für die Suche freigegeben": "Allowed for the search",
+ "{} freigegeben · {} vom Kind geholt": "{} allowed · {} fetched by the child",
+ "Was das Kind in der Suche am Display finden und selbst auf die Startseite holen darf, und was es schon geholt hat.": "What the child may find in the search on the display and put on the start page itself, and what it has already fetched.",
+ "Nichts davon steht auf der Startseite.": "None of it is on the start page.",
+ "Freigegebene Wünsche kommen auch hierher.": "Approved wishes come here too.",
+ "Was freigegeben ist und was das Kind geholt hat: Bibliothek › Für die Suche freigegeben.": "What is allowed and what the child has fetched: Library › Allowed for the search.",
+ "Zeigt in der App beim Hinzufügen die Knöpfe „Nur in der Suche“. Aus: ausgeblendet, der Vorrat bleibt erhalten – die Suche am Display findet ihn weiter, solange sie an ist.": "Shows the buttons “Only in the search” in the app when adding. Off: hidden, the stock stays – the search on the display still finds it as long as it is on.",
+ "Aus der Liste entfernen": "Remove from the list",
+ "Aus der Liste entfernen ändert nichts an einer Freigabe – sie steht weiter unter Bibliothek › Für die Suche freigegeben.": "Removing from the list does not change an approval – it stays under Library › Allowed for the search.",
+ "Liste leeren": "Clear the list",
+ "Liste leeren?": "Clear the list?",
+ "Liste geleert": "List cleared",
+ "Die entschiedenen Wünsche verschwinden aus der Liste. Offene Wünsche und Freigaben bleiben.": "The decided wishes disappear from the list. Open wishes and approvals stay."
 }

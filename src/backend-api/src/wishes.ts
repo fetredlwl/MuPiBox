@@ -37,6 +37,8 @@ export interface WishItem {
   cover: string
   /** an album: its artist on Spotify (the whole artist on the box: the album is there too) */
   artistId?: string
+  /** on the box already (the library as it is when handed out): shown, but not to wish */
+  there?: boolean
 }
 
 export interface Wish {
@@ -103,7 +105,7 @@ const normal = (q: string) => q.toLowerCase().normalize('NFKC').replace(/\s+/g, 
 const identOfWish = (kind: WishKind, id: string) => `${kind}:${id}`
 
 /**
- * Something found on Spotify the box has already - not shown: an album there (or its whole artist), an artist there,
+ * Something found on Spotify the box has already - shown, marked, not to wish: an album there (or its whole artist), an artist there,
  * a show there (or a podcast of the same name, as RSS feed).
  */
 export const onTheBox = (box: OnBox, i: WishItem): boolean =>
@@ -253,7 +255,7 @@ export class Wishes {
   ): Promise<'wished' | 'already' | 'there' | 'allowed' | 'unknown'> {
     const item = await this.offered(kind, id)
     if (!item) return 'unknown'
-    if ((await this.deps.pool.libraryIdents()).has(identOfWish(kind, id))) return 'there'
+    if (onTheBox(await this.deps.pool.onBox(), item)) return 'there'
     if ((await this.deps.pool.entries()).some((e) => e.kind === kind && e.spotifyId === id)) return 'allowed'
     const result = await this.serial(async () => {
       const list = await this.list()
@@ -329,6 +331,19 @@ export class Wishes {
   }
 
   /**
+   * Decided wishes out of the list in the app (one, or all decided ones) - an approval stays in the search pool, a
+   * revoked or refused one is only forgotten. Open wishes stay. Answer: how many went.
+   */
+  forget(id: string | null): Promise<number> {
+    return this.serial(async () => {
+      const list = await this.list()
+      const rest = list.filter((w) => w.status === 'open' || (id !== null && w.id !== id))
+      if (rest.length !== list.length) await this.save(rest)
+      return list.length - rest.length
+    })
+  }
+
+  /**
    * The approvals made before the pool kept them (fork state of 22.11.2026): into the pool once (marked pooled - taken
    * out of the pool in the app later, they are not put back).
    */
@@ -394,9 +409,9 @@ export function registerWishesRoutes(app: Express, deps: WishesDeps): Wishes {
     if (normal(q).length < 2 || offset < 0) return fail(res, 400, 'invalid_query')
     try {
       const { page, kept } = await wishes.search(q, offset)
-      // (what the box has already: not shown - the library as it is now, the page kept as Spotify gave it)
+      // (what the box has already: marked - the library as it is now, the page kept as Spotify gave it)
       const box = await deps.pool.onBox()
-      res.json({ ...page, items: page.items.filter((i) => !onTheBox(box, i)), kept })
+      res.json({ ...page, items: page.items.map((i) => ({ ...i, there: onTheBox(box, i) })), kept })
     } catch (err) {
       failed(res, err, 'search')
     }
@@ -411,7 +426,7 @@ export function registerWishesRoutes(app: Express, deps: WishesDeps): Wishes {
     try {
       const { page, kept } = await wishes.artistAlbums(id, offset)
       const box = await deps.pool.onBox()
-      res.json({ ...page, items: page.items.filter((i) => !onTheBox(box, i)), kept })
+      res.json({ ...page, items: page.items.map((i) => ({ ...i, there: onTheBox(box, i) })), kept })
     } catch (err) {
       failed(res, err, 'artist albums')
     }
@@ -479,6 +494,13 @@ export function registerWishesRoutes(app: Express, deps: WishesDeps): Wishes {
       console.error(`${new Date().toLocaleString()}: [wishes] revoke:`, err)
       fail(res, 500, 'could_not_revoke')
     }
+  })
+
+  /** POST /api/app/wishes/forget {id} | {all: true} - decided wishes out of the list (open ones stay) */
+  app.post('/api/app/wishes/forget', deps.session, deps.csrf, async (req, res) => {
+    const id = text(req.body?.id, 40)
+    if (!id && req.body?.all !== true) return fail(res, 400, 'invalid_request')
+    res.json({ ok: true, removed: await wishes.forget(id || null) })
   })
 
   // (the approvals of before into the pool, once - a moment after the start)

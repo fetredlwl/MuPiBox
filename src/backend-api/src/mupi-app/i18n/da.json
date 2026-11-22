@@ -3219,7 +3219,6 @@
  "Suche auf dem Display an": "Søgning på skærmen slået til",
  "Suche auf dem Display aus": "Søgning på skærmen slået fra",
  "„Nur in der Suche“ in der App": "»Kun i søgningen« i appen",
- "Zeigt in der App die Knöpfe „Nur in der Suche“ und den Vorrat unten. Aus: alles davon ausgeblendet, der Vorrat bleibt erhalten – die Suche am Display findet ihn weiter, solange sie an ist.": "Viser knapperne »Kun i søgningen« i appen og lageret nedenfor. Fra: alt skjult, lageret bevares – søgningen på skærmen finder det stadig, så længe den er slået til.",
  "„Nur in der Suche“ in der App an": "»Kun i søgningen« slået til i appen",
  "„Nur in der Suche“ in der App ausgeblendet": "»Kun i søgningen« skjult i appen",
  "In der Suche am Display. „Aus der Suche nehmen“: das Kind findet es nicht mehr – was es schon auf die Startseite geholt hat, bleibt dort.": "I søgningen på skærmen. »Fjern fra søgningen«: barnet finder det ikke længere – det, det allerede har lagt på startsiden, bliver der.",
@@ -3256,5 +3255,18 @@
  "Radio für Kinder in der Suche aus": "Børneradio i søgningen slået fra",
  "In der Suche am Display sucht eine Kachel „Radio“ im Senderverzeichnis radio-browser.info – nur Sender, die dort als Kinderradio markiert sind. Das Kind kann sie ohne Freigabe auf die Startseite holen und selbst wieder entfernen. Gesucht wird erst, wenn das Kind es will; der Suchbegriff geht dabei an radio-browser.info.": "I søgningen på skærmen søger en flise »Radio« i stationskataloget radio-browser.info – kun stationer, der dér er markeret som børneradio. Barnet kan lægge dem på startsiden uden godkendelse og selv fjerne dem igen. Der søges først, når barnet vil; søgeordet sendes til radio-browser.info.",
  "Was das Kind in der Suche am Display bei Spotify gefunden und sich gewünscht hat. Freigegeben kommt es auf die Startseite – unter den Reiter, den das Kind gewählt hat. Die Freigabe bleibt: Das Kind kann es selbst entfernen und über die Suche wieder holen, bis du sie widerrufst.": "Det, barnet fandt på Spotify i søgningen på skærmen og ønskede sig. Godkendt kommer det på startsiden – under den fane, barnet valgte. Godkendelsen bliver: barnet kan selv fjerne det og hente det igen via søgningen, indtil du tilbagekalder den.",
- "In der Suche am Display sucht eine Kachel „Podcasts“ in Apples Podcast-Verzeichnis (bei Deutsch auch in der ARD Audiothek) – nur Sendungen der Kinder-Kategorien. Das Kind kann sie ohne Freigabe auf die Startseite holen und selbst wieder entfernen. Gesucht wird erst beim Tippen auf die Kachel; der Suchbegriff geht dabei an Apple bzw. die ARD.": "I søgningen på skærmen søger en flise »Podcasts« i Apples podcastkatalog (på tysk også i ARD Audiothek) – kun udsendelser i børnekategorierne. Barnet kan lægge dem på startsiden uden godkendelse og selv fjerne dem igen. Der søges først, når der trykkes på flisen; søgeordet sendes så til Apple eller ARD."
+ "In der Suche am Display sucht eine Kachel „Podcasts“ in Apples Podcast-Verzeichnis (bei Deutsch auch in der ARD Audiothek) – nur Sendungen der Kinder-Kategorien. Das Kind kann sie ohne Freigabe auf die Startseite holen und selbst wieder entfernen. Gesucht wird erst beim Tippen auf die Kachel; der Suchbegriff geht dabei an Apple bzw. die ARD.": "I søgningen på skærmen søger en flise »Podcasts« i Apples podcastkatalog (på tysk også i ARD Audiothek) – kun udsendelser i børnekategorierne. Barnet kan lægge dem på startsiden uden godkendelse og selv fjerne dem igen. Der søges først, når der trykkes på flisen; søgeordet sendes så til Apple eller ARD.",
+ "Für die Suche freigegeben": "Godkendt til søgningen",
+ "{} freigegeben · {} vom Kind geholt": "{} godkendt · {} hentet af barnet",
+ "Was das Kind in der Suche am Display finden und selbst auf die Startseite holen darf, und was es schon geholt hat.": "Det, barnet må finde i søgningen på skærmen og selv lægge på startsiden, og det, det allerede har hentet.",
+ "Nichts davon steht auf der Startseite.": "Intet af det står på startsiden.",
+ "Freigegebene Wünsche kommen auch hierher.": "Godkendte ønsker kommer også hertil.",
+ "Was freigegeben ist und was das Kind geholt hat: Bibliothek › Für die Suche freigegeben.": "Det, der er godkendt, og det, barnet har hentet: Bibliotek › Godkendt til søgningen.",
+ "Zeigt in der App beim Hinzufügen die Knöpfe „Nur in der Suche“. Aus: ausgeblendet, der Vorrat bleibt erhalten – die Suche am Display findet ihn weiter, solange sie an ist.": "Viser knapperne »Kun i søgningen« i appen, når man tilføjer. Fra: skjult, forrådet bliver – søgningen på skærmen finder det, så længe den er slået til.",
+ "Aus der Liste entfernen": "Fjern fra listen",
+ "Aus der Liste entfernen ändert nichts an einer Freigabe – sie steht weiter unter Bibliothek › Für die Suche freigegeben.": "At fjerne fra listen ændrer ikke en godkendelse – den står fortsat under Bibliotek › Godkendt til søgningen.",
+ "Liste leeren": "Tøm listen",
+ "Liste leeren?": "Tøm listen?",
+ "Liste geleert": "Listen tømt",
+ "Die entschiedenen Wünsche verschwinden aus der Liste. Offene Wünsche und Freigaben bleiben.": "De afgjorte ønsker forsvinder fra listen. Åbne ønsker og godkendelser bliver."
 }

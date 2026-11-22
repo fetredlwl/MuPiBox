@@ -174,8 +174,8 @@ export class SearchArtistPage extends SwiperIonicEventsHelper {
 
   protected albumClicked(album: ArtistAlbum): void {
     if ('wish' in album) {
-      // (allowed already - an approved wish: fetched by the child itself, not wished again)
-      const allowed = this.flow.poolFor(album.wish)
+      // (allowed already - an approved wish: fetched by the child itself, not wished again; on the box: its page says so)
+      const allowed = album.wish.there ? undefined : this.flow.poolFor(album.wish)
       void this.navController.navigateForward(['/search-album'], {
         state: allowed ? { entry: allowed.entry, album: allowed.album } : { wish: album.wish },
       })

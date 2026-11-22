@@ -3219,7 +3219,6 @@
  "Suche auf dem Display an": "Haku näytöllä päällä",
  "Suche auf dem Display aus": "Haku näytöllä pois",
  "„Nur in der Suche“ in der App": "”Vain haussa” sovelluksessa",
- "Zeigt in der App die Knöpfe „Nur in der Suche“ und den Vorrat unten. Aus: alles davon ausgeblendet, der Vorrat bleibt erhalten – die Suche am Display findet ihn weiter, solange sie an ist.": "Näyttää sovelluksessa ”Vain haussa” -painikkeet ja alla olevan varaston. Pois: kaikki piilotettu, varasto säilyy – näytön haku löytää sen niin kauan kuin haku on päällä.",
  "„Nur in der Suche“ in der App an": "”Vain haussa” päällä sovelluksessa",
  "„Nur in der Suche“ in der App ausgeblendet": "”Vain haussa” piilotettu sovelluksessa",
  "In der Suche am Display. „Aus der Suche nehmen“: das Kind findet es nicht mehr – was es schon auf die Startseite geholt hat, bleibt dort.": "Näytön haussa. ”Poista hausta”: lapsi ei enää löydä sitä – mitä se on jo siirtänyt aloitussivulle, jää sinne.",
@@ -3256,5 +3255,18 @@
  "Radio für Kinder in der Suche aus": "Lastenradio haussa pois",
  "In der Suche am Display sucht eine Kachel „Radio“ im Senderverzeichnis radio-browser.info – nur Sender, die dort als Kinderradio markiert sind. Das Kind kann sie ohne Freigabe auf die Startseite holen und selbst wieder entfernen. Gesucht wird erst, wenn das Kind es will; der Suchbegriff geht dabei an radio-browser.info.": "Näytön haussa ruutu ”Radio” hakee asemahakemistosta radio-browser.info – vain asemia, jotka on merkitty siellä lastenradioksi. Lapsi voi lisätä ne aloitussivulle ilman hyväksyntää ja poistaa ne itse. Haku tehdään vasta, kun lapsi haluaa; hakusana lähetetään radio-browser.infoon.",
  "Was das Kind in der Suche am Display bei Spotify gefunden und sich gewünscht hat. Freigegeben kommt es auf die Startseite – unter den Reiter, den das Kind gewählt hat. Die Freigabe bleibt: Das Kind kann es selbst entfernen und über die Suche wieder holen, bis du sie widerrufst.": "Mitä lapsi löysi Spotifysta näytön haulla ja toivoi. Hyväksyttynä se siirtyy aloitussivulle – lapsen valitsemalle välilehdelle. Hyväksyntä pysyy: lapsi voi poistaa sen itse ja hakea sen uudelleen haulla, kunnes perut hyväksynnän.",
- "In der Suche am Display sucht eine Kachel „Podcasts“ in Apples Podcast-Verzeichnis (bei Deutsch auch in der ARD Audiothek) – nur Sendungen der Kinder-Kategorien. Das Kind kann sie ohne Freigabe auf die Startseite holen und selbst wieder entfernen. Gesucht wird erst beim Tippen auf die Kachel; der Suchbegriff geht dabei an Apple bzw. die ARD.": "Näytön haussa ruutu ”Podcastit” hakee Applen podcast-hakemistosta (saksaksi myös ARD Audiothekista) – vain lastenluokkien ohjelmia. Lapsi voi lisätä ne aloitussivulle ilman hyväksyntää ja poistaa ne itse. Haku tehdään vasta ruutua napautettaessa; hakusana menee silloin Applelle tai ARD:lle."
+ "In der Suche am Display sucht eine Kachel „Podcasts“ in Apples Podcast-Verzeichnis (bei Deutsch auch in der ARD Audiothek) – nur Sendungen der Kinder-Kategorien. Das Kind kann sie ohne Freigabe auf die Startseite holen und selbst wieder entfernen. Gesucht wird erst beim Tippen auf die Kachel; der Suchbegriff geht dabei an Apple bzw. die ARD.": "Näytön haussa ruutu ”Podcastit” hakee Applen podcast-hakemistosta (saksaksi myös ARD Audiothekista) – vain lastenluokkien ohjelmia. Lapsi voi lisätä ne aloitussivulle ilman hyväksyntää ja poistaa ne itse. Haku tehdään vasta ruutua napautettaessa; hakusana menee silloin Applelle tai ARD:lle.",
+ "Für die Suche freigegeben": "Sallittu hakuun",
+ "{} freigegeben · {} vom Kind geholt": "{} sallittu · {} lapsen hakemaa",
+ "Was das Kind in der Suche am Display finden und selbst auf die Startseite holen darf, und was es schon geholt hat.": "Mitä lapsi saa löytää näytön haulla ja lisätä itse aloitussivulle, ja mitä se on jo hakenut.",
+ "Nichts davon steht auf der Startseite.": "Mikään tästä ei ole aloitussivulla.",
+ "Freigegebene Wünsche kommen auch hierher.": "Hyväksytyt toiveet tulevat myös tänne.",
+ "Was freigegeben ist und was das Kind geholt hat: Bibliothek › Für die Suche freigegeben.": "Mitä on sallittu ja mitä lapsi on hakenut: Kirjasto › Sallittu hakuun.",
+ "Zeigt in der App beim Hinzufügen die Knöpfe „Nur in der Suche“. Aus: ausgeblendet, der Vorrat bleibt erhalten – die Suche am Display findet ihn weiter, solange sie an ist.": "Näyttää sovelluksessa lisättäessä painikkeet ”Vain haussa”. Pois: piilotettu, varasto säilyy – näytön haku löytää sen, kun haku on päällä.",
+ "Aus der Liste entfernen": "Poista listalta",
+ "Aus der Liste entfernen ändert nichts an einer Freigabe – sie steht weiter unter Bibliothek › Für die Suche freigegeben.": "Listalta poistaminen ei muuta hyväksyntää – se on edelleen kohdassa Kirjasto › Sallittu hakuun.",
+ "Liste leeren": "Tyhjennä lista",
+ "Liste leeren?": "Tyhjennetäänkö lista?",
+ "Liste geleert": "Lista tyhjennetty",
+ "Die entschiedenen Wünsche verschwinden aus der Liste. Offene Wünsche und Freigaben bleiben.": "Ratkaistut toiveet katoavat listalta. Avoimet toiveet ja hyväksynnät säilyvät."
 }

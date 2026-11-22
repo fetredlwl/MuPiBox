@@ -712,8 +712,8 @@ export class SearchPage implements AfterViewInit, OnDestroy {
 
   /** a hit of Spotify: an artist its albums, an album / a show its page with "Wünschen" */
   protected openWish(w: WishItem): void {
-    // (allowed already - an approved wish: the pool's page, the child fetches it itself)
-    const allowed = this.flow.poolFor(w)
+    // (allowed already - an approved wish: the pool's page, the child fetches it itself; on the box: its page says so)
+    const allowed = w.there ? undefined : this.flow.poolFor(w)
     if (allowed) {
       if (allowed.entry.kind === 'artist' && !allowed.album) this.openPoolArtist(allowed.entry)
       else this.openPoolItem(allowed.entry, allowed.album)

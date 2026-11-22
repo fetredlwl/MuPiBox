@@ -100,10 +100,10 @@
 <!-- found on Spotify: the child may wish it (the parents decide in the app) -->
 <ng-template #wishList let-ws>
   @for (w of ws; track w.kind + w.id) {
-    <button class="srch-hit srch-wish" type="button" [class.srch-artist]="w.kind === 'artist'" (click)="openWish(w)">
-      <span class="srch-cover"><img [src]="coverUrl(w.cover)" alt="" loading="lazy" /><span class="srch-star" aria-hidden="true">★</span></span>
+    <button class="srch-hit srch-wish" type="button" [class.srch-artist]="w.kind === 'artist'" [class.srch-there]="w.there" (click)="openWish(w)">
+      <span class="srch-cover"><img [src]="coverUrl(w.cover)" alt="" loading="lazy" /><span class="srch-star" aria-hidden="true">{{ w.there ? '✓' : '★' }}</span></span>
       <span class="srch-name">{{ w.name }}</span>
-      <span class="srch-sub">{{ isWished(w) ? texts.text('wishWished') : w.artist }}</span>
+      <span class="srch-sub">{{ w.there ? texts.text('wishOnBox') : isWished(w) ? texts.text('wishWished') : w.artist }}</span>
     </button>
   }
   @if (wishMore()) {

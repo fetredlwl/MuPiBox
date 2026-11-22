@@ -3219,7 +3219,6 @@
  "Suche auf dem Display an": "Пошук на дисплеї увімкнено",
  "Suche auf dem Display aus": "Пошук на дисплеї вимкнено",
  "„Nur in der Suche“ in der App": "«Лише в пошуку» в застосунку",
- "Zeigt in der App die Knöpfe „Nur in der Suche“ und den Vorrat unten. Aus: alles davon ausgeblendet, der Vorrat bleibt erhalten – die Suche am Display findet ihn weiter, solange sie an ist.": "Показує в застосунку кнопки «Лише в пошуку» та запас нижче. Вимк.: усе приховано, запас зберігається – пошук на дисплеї й далі його знаходить, поки увімкнений.",
  "„Nur in der Suche“ in der App an": "«Лише в пошуку» в застосунку увімкнено",
  "„Nur in der Suche“ in der App ausgeblendet": "«Лише в пошуку» приховано в застосунку",
  "In der Suche am Display. „Aus der Suche nehmen“: das Kind findet es nicht mehr – was es schon auf die Startseite geholt hat, bleibt dort.": "У пошуку на дисплеї. «Прибрати з пошуку»: дитина більше не знайде – те, що вже додано на стартову сторінку, там і залишиться.",
@@ -3256,5 +3255,18 @@
  "Radio für Kinder in der Suche aus": "Дитяче радіо в пошуку вимкнено",
  "In der Suche am Display sucht eine Kachel „Radio“ im Senderverzeichnis radio-browser.info – nur Sender, die dort als Kinderradio markiert sind. Das Kind kann sie ohne Freigabe auf die Startseite holen und selbst wieder entfernen. Gesucht wird erst, wenn das Kind es will; der Suchbegriff geht dabei an radio-browser.info.": "У пошуку на дисплеї плитка «Радіо» шукає в каталозі станцій radio-browser.info – лише станції, позначені там як дитяче радіо. Дитина може додати їх на стартову сторінку без схвалення й сама прибрати. Пошук виконується лише тоді, коли дитина хоче; пошуковий запит надходить до radio-browser.info.",
  "Was das Kind in der Suche am Display bei Spotify gefunden und sich gewünscht hat. Freigegeben kommt es auf die Startseite – unter den Reiter, den das Kind gewählt hat. Die Freigabe bleibt: Das Kind kann es selbst entfernen und über die Suche wieder holen, bis du sie widerrufst.": "Те, що дитина знайшла в Spotify пошуком на дисплеї й побажала. Після схвалення воно з’явиться на стартовій сторінці – у вибраній дитиною вкладці. Схвалення лишається: дитина може сама це прибрати й знову взяти через пошук, доки ти його не відкличеш.",
- "In der Suche am Display sucht eine Kachel „Podcasts“ in Apples Podcast-Verzeichnis (bei Deutsch auch in der ARD Audiothek) – nur Sendungen der Kinder-Kategorien. Das Kind kann sie ohne Freigabe auf die Startseite holen und selbst wieder entfernen. Gesucht wird erst beim Tippen auf die Kachel; der Suchbegriff geht dabei an Apple bzw. die ARD.": "У пошуку на дисплеї плитка «Подкасти» шукає в каталозі подкастів Apple (німецькою також в ARD Audiothek) – лише передачі дитячих категорій. Дитина може додати їх на стартову сторінку без дозволу й сама прибрати. Пошук іде лише після торкання плитки; пошуковий запит тоді надходить до Apple або ARD."
+ "In der Suche am Display sucht eine Kachel „Podcasts“ in Apples Podcast-Verzeichnis (bei Deutsch auch in der ARD Audiothek) – nur Sendungen der Kinder-Kategorien. Das Kind kann sie ohne Freigabe auf die Startseite holen und selbst wieder entfernen. Gesucht wird erst beim Tippen auf die Kachel; der Suchbegriff geht dabei an Apple bzw. die ARD.": "У пошуку на дисплеї плитка «Подкасти» шукає в каталозі подкастів Apple (німецькою також в ARD Audiothek) – лише передачі дитячих категорій. Дитина може додати їх на стартову сторінку без дозволу й сама прибрати. Пошук іде лише після торкання плитки; пошуковий запит тоді надходить до Apple або ARD.",
+ "Für die Suche freigegeben": "Дозволено для пошуку",
+ "{} freigegeben · {} vom Kind geholt": "Дозволено: {} · узяла дитина: {}",
+ "Was das Kind in der Suche am Display finden und selbst auf die Startseite holen darf, und was es schon geholt hat.": "Що дитина може знайти в пошуку на дисплеї й сама додати на стартову сторінку, і що вона вже взяла.",
+ "Nichts davon steht auf der Startseite.": "Нічого з цього немає на стартовій сторінці.",
+ "Freigegebene Wünsche kommen auch hierher.": "Схвалені бажання теж потрапляють сюди.",
+ "Was freigegeben ist und was das Kind geholt hat: Bibliothek › Für die Suche freigegeben.": "Що дозволено і що взяла дитина: Бібліотека › Дозволено для пошуку.",
+ "Zeigt in der App beim Hinzufügen die Knöpfe „Nur in der Suche“. Aus: ausgeblendet, der Vorrat bleibt erhalten – die Suche am Display findet ihn weiter, solange sie an ist.": "Показує в застосунку під час додавання кнопки «Лише в пошуку». Вимк.: приховано, запас лишається – пошук на дисплеї знаходить його, доки він увімкнений.",
+ "Aus der Liste entfernen": "Прибрати зі списку",
+ "Aus der Liste entfernen ändert nichts an einer Freigabe – sie steht weiter unter Bibliothek › Für die Suche freigegeben.": "Видалення зі списку не змінює схвалення – воно лишається в Бібліотека › Дозволено для пошуку.",
+ "Liste leeren": "Очистити список",
+ "Liste leeren?": "Очистити список?",
+ "Liste geleert": "Список очищено",
+ "Die entschiedenen Wünsche verschwinden aus der Liste. Offene Wünsche und Freigaben bleiben.": "Вирішені бажання зникнуть зі списку. Відкриті бажання й схвалення лишаються."
 }

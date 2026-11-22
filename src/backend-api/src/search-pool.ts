@@ -354,12 +354,6 @@ export class SearchPool {
     return { idents, names }
   }
 
-  /** what is in the library ("album:<id>", "artist:<id>", …): a wish of something there is not made (wishes.ts) */
-  async libraryIdents(): Promise<Set<string>> {
-    const data = await this.readLibrary()
-    return new Set((data ?? []).map((r) => identOf(r)).filter((i): i is string => !!i))
-  }
-
   private async readLibrary(): Promise<Record<string, unknown>[] | null> {
     const data = await readJson<unknown>(this.deps.dataFile, null)
     return Array.isArray(data) ? (data as Record<string, unknown>[]) : null

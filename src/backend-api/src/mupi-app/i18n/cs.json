@@ -3219,7 +3219,6 @@
  "Suche auf dem Display an": "Vyhledávání na displeji zapnuto",
  "Suche auf dem Display aus": "Vyhledávání na displeji vypnuto",
  "„Nur in der Suche“ in der App": "„Jen ve vyhledávání“ v aplikaci",
- "Zeigt in der App die Knöpfe „Nur in der Suche“ und den Vorrat unten. Aus: alles davon ausgeblendet, der Vorrat bleibt erhalten – die Suche am Display findet ihn weiter, solange sie an ist.": "Zobrazí v aplikaci tlačítka „Jen ve vyhledávání“ a zásobu níže. Vypnuto: vše skryto, zásoba zůstává – vyhledávání na displeji ji dál najde, dokud je zapnuté.",
  "„Nur in der Suche“ in der App an": "„Jen ve vyhledávání“ v aplikaci zapnuto",
  "„Nur in der Suche“ in der App ausgeblendet": "„Jen ve vyhledávání“ v aplikaci skryto",
  "In der Suche am Display. „Aus der Suche nehmen“: das Kind findet es nicht mehr – was es schon auf die Startseite geholt hat, bleibt dort.": "Ve vyhledávání na displeji. „Odebrat z vyhledávání“: dítě to už nenajde – co už dalo na úvodní stránku, tam zůstane.",
@@ -3256,5 +3255,18 @@
  "Radio für Kinder in der Suche aus": "Rádio pro děti ve vyhledávání vypnuto",
  "In der Suche am Display sucht eine Kachel „Radio“ im Senderverzeichnis radio-browser.info – nur Sender, die dort als Kinderradio markiert sind. Das Kind kann sie ohne Freigabe auf die Startseite holen und selbst wieder entfernen. Gesucht wird erst, wenn das Kind es will; der Suchbegriff geht dabei an radio-browser.info.": "Ve vyhledávání na displeji hledá dlaždice „Rádio“ v adresáři stanic radio-browser.info – jen stanice, které jsou tam označené jako rádio pro děti. Dítě je může bez schválení přidat na úvodní stránku a samo je zase odebrat. Hledá se až tehdy, když dítě chce; hledaný výraz jde na radio-browser.info.",
  "Was das Kind in der Suche am Display bei Spotify gefunden und sich gewünscht hat. Freigegeben kommt es auf die Startseite – unter den Reiter, den das Kind gewählt hat. Die Freigabe bleibt: Das Kind kann es selbst entfernen und über die Suche wieder holen, bis du sie widerrufst.": "Co dítě našlo na Spotify ve vyhledávání na displeji a přálo si. Po schválení to přijde na úvodní stránku – pod kartu, kterou dítě vybralo. Schválení zůstává: dítě to může samo odebrat a znovu si to vzít přes vyhledávání, dokud ho neodvoláš.",
- "In der Suche am Display sucht eine Kachel „Podcasts“ in Apples Podcast-Verzeichnis (bei Deutsch auch in der ARD Audiothek) – nur Sendungen der Kinder-Kategorien. Das Kind kann sie ohne Freigabe auf die Startseite holen und selbst wieder entfernen. Gesucht wird erst beim Tippen auf die Kachel; der Suchbegriff geht dabei an Apple bzw. die ARD.": "Ve vyhledávání na displeji hledá dlaždice „Podcasty“ v adresáři podcastů Apple (v němčině i v ARD Audiothek) – jen pořady dětských kategorií. Dítě je může bez povolení dát na úvodní stránku a samo je zase odebrat. Hledá se až po klepnutí na dlaždici; hledaný výraz pak jde do Apple nebo ARD."
+ "In der Suche am Display sucht eine Kachel „Podcasts“ in Apples Podcast-Verzeichnis (bei Deutsch auch in der ARD Audiothek) – nur Sendungen der Kinder-Kategorien. Das Kind kann sie ohne Freigabe auf die Startseite holen und selbst wieder entfernen. Gesucht wird erst beim Tippen auf die Kachel; der Suchbegriff geht dabei an Apple bzw. die ARD.": "Ve vyhledávání na displeji hledá dlaždice „Podcasty“ v adresáři podcastů Apple (v němčině i v ARD Audiothek) – jen pořady dětských kategorií. Dítě je může bez povolení dát na úvodní stránku a samo je zase odebrat. Hledá se až po klepnutí na dlaždici; hledaný výraz pak jde do Apple nebo ARD.",
+ "Für die Suche freigegeben": "Povoleno pro vyhledávání",
+ "{} freigegeben · {} vom Kind geholt": "Povoleno: {} · vzalo si dítě: {}",
+ "Was das Kind in der Suche am Display finden und selbst auf die Startseite holen darf, und was es schon geholt hat.": "Co dítě smí najít ve vyhledávání na displeji a samo přidat na úvodní stránku, a co si už vzalo.",
+ "Nichts davon steht auf der Startseite.": "Nic z toho není na úvodní stránce.",
+ "Freigegebene Wünsche kommen auch hierher.": "Schválená přání sem přicházejí také.",
+ "Was freigegeben ist und was das Kind geholt hat: Bibliothek › Für die Suche freigegeben.": "Co je povoleno a co si dítě vzalo: Knihovna › Povoleno pro vyhledávání.",
+ "Zeigt in der App beim Hinzufügen die Knöpfe „Nur in der Suche“. Aus: ausgeblendet, der Vorrat bleibt erhalten – die Suche am Display findet ihn weiter, solange sie an ist.": "Ukazuje v aplikaci při přidávání tlačítka „Jen ve vyhledávání“. Vypnuto: skryté, zásoba zůstává – vyhledávání na displeji ji najde, dokud je zapnuté.",
+ "Aus der Liste entfernen": "Odebrat ze seznamu",
+ "Aus der Liste entfernen ändert nichts an einer Freigabe – sie steht weiter unter Bibliothek › Für die Suche freigegeben.": "Odebrání ze seznamu schválení nemění – zůstává v Knihovna › Povoleno pro vyhledávání.",
+ "Liste leeren": "Vyprázdnit seznam",
+ "Liste leeren?": "Vyprázdnit seznam?",
+ "Liste geleert": "Seznam vyprázdněn",
+ "Die entschiedenen Wünsche verschwinden aus der Liste. Offene Wünsche und Freigaben bleiben.": "Rozhodnutá přání zmizí ze seznamu. Otevřená přání a schválení zůstávají."
 }

@@ -624,6 +624,16 @@
    "sections": []
   },
   {
+   "id": "suchfreigaben",
+   "slug": "suchfreigaben",
+   "area": "bibliothek",
+   "parent": "bibliothek",
+   "title": "Für die Suche freigegeben",
+   "description": "",
+   "icon": "search",
+   "sections": []
+  },
+  {
    "id": "podsuche",
    "slug": "podcast-search",
    "area": "bibliothek",

@@ -157,10 +157,18 @@ describe('wishes: few requests to Spotify', () => {
   })
 })
 
-describe('wishes: what the box has is not offered', () => {
+describe('wishes: what the box has is found, marked, not to wish', () => {
   it('an album there, every album of an artist there, the artist, a show there or a podcast of its name', async () => {
-    const r = await request(app).get('/api/wishes/search?q=peter').expect(200)
-    assert.equal(r.body.items.length, 3)
+    const there = async (url: string) =>
+      (await request(app).get(url).expect(200)).body.items.map((i: { kind: string; there: boolean }) => [
+        i.kind,
+        i.there,
+      ])
+    assert.deepEqual(await there('/api/wishes/search?q=peter'), [
+      ['artist', false],
+      ['album', false],
+      ['show', false],
+    ])
     writeFileSync(
       dataFile,
       JSON.stringify([
@@ -168,19 +176,66 @@ describe('wishes: what the box has is not offered', () => {
         { type: 'rss', category: 'audiobook', id: 'https://example.invalid/hz.xml', artist: 'Hörspielzeit' },
       ]),
     )
-    const there = await request(app).get('/api/wishes/search?q=peter').expect(200)
-    assert.deepEqual(
-      there.body.items.map((i: { kind: string }) => i.kind),
-      ['artist'],
-    )
-    // the whole artist on the box: neither it nor its albums
+    assert.deepEqual(await there('/api/wishes/search?q=peter'), [
+      ['artist', false],
+      ['album', true],
+      ['show', true],
+    ])
+    // not to wish: "there"
+    const w = await request(app).post('/api/wishes').send({ kind: 'show', id: SHOW, category: 'audiobook' }).expect(200)
+    assert.equal(w.body.result, 'there')
+    // the whole artist on the box: it and its albums marked
     writeFileSync(dataFile, JSON.stringify([{ type: 'spotify', category: 'music', artistid: ARTIST }]))
-    const artist = await request(app).get(`/api/wishes/artist?id=${ARTIST}&offset=0`).expect(200)
-    assert.equal(artist.body.items.length, 0)
-    const s = await request(app).get('/api/wishes/search?q=peter').expect(200)
-    assert.ok(!s.body.items.some((i: { kind: string }) => i.kind === 'artist'))
+    assert.deepEqual((await there('/api/wishes/search?q=peter'))[0], ['artist', true])
+    const albums = await there(`/api/wishes/artist?id=${ARTIST}&offset=0`)
+    assert.ok(albums.length === 10 && albums.every(([, t]: [string, boolean]) => t))
     // (all of it from the pages kept: Spotify asked once for the search, once for the artist)
     assert.equal(calls.length, 2)
+  })
+})
+
+describe('wishes: the list in the app tidied up', () => {
+  it('one decided wish or all of them out of the list; open ones stay, an approval stays in the pool', async () => {
+    await request(app).get('/api/wishes/search?q=peter').expect(200)
+    await request(app).post('/api/wishes').send({ kind: 'album', id: ALBUM, category: 'music' }).expect(200)
+    await request(app).post('/api/wishes').send({ kind: 'artist', id: ARTIST, category: 'music' }).expect(200)
+    await request(app).post('/api/wishes').send({ kind: 'show', id: SHOW, category: 'audiobook' }).expect(200)
+    const app_ = () => request(app).get('/api/app/wishes').set('x-test-session', 'yes')
+    const open = (await app_()).body.open as { id: string; kind: string }[]
+    const id = (k: string) => open.find((w) => w.kind === k)?.id
+    for (const [k, approve] of [
+      ['album', true],
+      ['artist', false],
+    ] as const)
+      await request(app)
+        .post('/api/app/wishes/decide')
+        .set('x-test-session', 'yes')
+        .send({ id: id(k), approve })
+        .expect(200)
+    await request(app).post('/api/app/wishes/forget').send({ all: true }).expect(401)
+    // an open one is not forgotten
+    const keep = await request(app)
+      .post('/api/app/wishes/forget')
+      .set('x-test-session', 'yes')
+      .send({ id: id('show') })
+      .expect(200)
+    assert.equal(keep.body.removed, 0)
+    const one = await request(app)
+      .post('/api/app/wishes/forget')
+      .set('x-test-session', 'yes')
+      .send({ id: id('artist') })
+      .expect(200)
+    assert.equal(one.body.removed, 1)
+    const all = await request(app)
+      .post('/api/app/wishes/forget')
+      .set('x-test-session', 'yes')
+      .send({ all: true })
+      .expect(200)
+    assert.equal(all.body.removed, 1)
+    const after = (await app_()).body
+    assert.equal(after.decided.length, 0)
+    assert.equal(after.open.length, 1)
+    assert.ok((await pool.entries()).some((e) => e.kind === 'album' && e.spotifyId === ALBUM))
   })
 })
 
