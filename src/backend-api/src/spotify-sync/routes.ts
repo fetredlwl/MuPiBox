@@ -17,7 +17,7 @@ import { loadSpotifySyncConfig, loadSpotifyTokenStore } from './config-loader'
 import { getValidAccessToken, requiresReAuth, tokenStillValid } from './auth'
 import { fetchArtistAlbums, SpotifyApiException, spotifyGet } from './playlists'
 import { playlistMatchesPrefix } from './categorizer'
-import { spotifyBlock } from '../spotify-block'
+import { playerUntilOf, spotifyBlock } from '../spotify-block'
 import { readStateFile } from './state-file'
 import { triggerManualSync } from './scheduler'
 import type { RunSyncDeps } from './state-machine'
@@ -54,7 +54,15 @@ export function createSpotifySyncRouter(deps: RunSyncDeps): Router {
       // the app shows until when
       spotify_block: (() => {
         const block = spotifyBlock()
-        return block ? { until: new Date(block.until).toISOString(), source: block.source, reason: block.reason } : null
+        if (!block) return null
+        // (playback: whether the player waits too - a quota block of the catalog leaves the box playing)
+        const playerUntil = playerUntilOf(block)
+        return {
+          until: new Date(block.until).toISOString(),
+          source: block.source,
+          reason: block.reason,
+          playback_until: playerUntil > Date.now() ? new Date(playerUntil).toISOString() : null,
+        }
       })(),
     })
   })

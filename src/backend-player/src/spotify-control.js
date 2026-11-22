@@ -1105,6 +1105,8 @@ const spotifyAlbumLastTrack = new Map()
 async function spotifyLastTrackOfAlbum(album) {
   if (!album?.id) return null
   if (spotifyAlbumLastTrack.has(album.id)) return spotifyAlbumLastTrack.get(album.id)
+  // (a catalog request: not during a quota block of the catalog - the track number decides then)
+  if (spotifyCatalogBlockedUntil()) return null
   const total = album.total_tracks ?? 0
   if (total <= 0) return null
   const { body } = await spotifyApi.getAlbumTracks(album.id, { offset: total - 1, limit: 1 })
@@ -1695,18 +1697,34 @@ function mplayerToggle() {
 // here (with a wait of more than a few seconds) is written into it, so the server and the Smart-Sync wait as well.
 const SPOTIFY_BLOCK_FILE =
   process.env.SPOTIFY_BLOCK_FILE || path.resolve(__dirname, '..', 'Sonos-Kids-Controller-master', 'cache', 'spotify-block.json')
-let spotifyBlockKept = { mtimeMs: -1, until: 0 }
-function spotifyBlockedUntil() {
+// Fork "wishes": a quota block of the catalog (playerUntil 0 - Spotify's QUOTA_EXCEEDED to the server's album lists,
+// searches, ...) holds back the catalog only - playback, its state and the devices are in a bucket of their own (seen
+// 22.11.2026: /me/player answered during such a block), the box goes on playing. A file of an older version has no
+// playerUntil: all of it waits.
+let spotifyBlockKept = { mtimeMs: -1, until: 0, playerUntil: 0 }
+function readSpotifyBlock() {
   try {
     const { mtimeMs } = fs.statSync(SPOTIFY_BLOCK_FILE)
     if (mtimeMs !== spotifyBlockKept.mtimeMs) {
-      const until = Number(JSON.parse(fs.readFileSync(SPOTIFY_BLOCK_FILE, 'utf8'))?.until) || 0
-      spotifyBlockKept = { mtimeMs, until }
+      const kept = JSON.parse(fs.readFileSync(SPOTIFY_BLOCK_FILE, 'utf8'))
+      const until = Number(kept?.until) || 0
+      const playerUntil = typeof kept?.playerUntil === 'number' ? Math.min(kept.playerUntil, until) : until
+      spotifyBlockKept = { mtimeMs, until, playerUntil }
     }
   } catch {
-    spotifyBlockKept = { mtimeMs: -1, until: 0 }
+    spotifyBlockKept = { mtimeMs: -1, until: 0, playerUntil: 0 }
   }
-  return spotifyBlockKept.until > Date.now() ? spotifyBlockKept.until : 0
+  return spotifyBlockKept
+}
+/** Until when the player's own requests wait (playback, its state, the devices) - 0: not blocked. */
+function spotifyBlockedUntil() {
+  const { playerUntil } = readSpotifyBlock()
+  return playerUntil > Date.now() ? playerUntil : 0
+}
+/** Until when a catalog request of the player waits (an album's tracks) - every block. */
+function spotifyCatalogBlockedUntil() {
+  const { until } = readSpotifyBlock()
+  return until > Date.now() ? until : 0
 }
 // a 429 of any request of the player: into the shared block - also where nothing is recovered (the state, a pause)
 function isSpotify429(err, from) {
@@ -1723,8 +1741,20 @@ function noteSpotifyBlockFromPlayer(err, from) {
   if (until <= spotifyBlockedUntil()) return
   try {
     fs.mkdirSync(path.dirname(SPOTIFY_BLOCK_FILE), { recursive: true })
+    // (into the block kept there: a longer one of the catalog stays as it was, only the player waits now too)
+    const kept = readSpotifyBlock()
+    const mine = { until, source: 'player', reason: `429 from the player (${from}, Spotify: wait ${seconds} s)`, since: Date.now() }
+    let block = mine
+    if (kept.until > until) {
+      try {
+        block = JSON.parse(fs.readFileSync(SPOTIFY_BLOCK_FILE, 'utf8'))
+      } catch {
+        block = { ...mine, until: kept.until }
+      }
+    }
+    block = { ...block, playerUntil: until }
     const tmp = `${SPOTIFY_BLOCK_FILE}.player.tmp`
-    fs.writeFileSync(tmp, JSON.stringify({ until, source: 'player', reason: `429 from the player (${from}, Spotify: wait ${seconds} s)`, since: Date.now() }))
+    fs.writeFileSync(tmp, JSON.stringify(block))
     fs.renameSync(tmp, SPOTIFY_BLOCK_FILE)
   } catch (e) {
     console.warn(`${now()}: [Spotify Control] Spotify block not written: ${e.message}`)

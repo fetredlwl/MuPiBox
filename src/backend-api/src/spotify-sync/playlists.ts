@@ -23,7 +23,7 @@ import {
 import type { CategoryType } from './category-types'
 import type { DiscoveredPlaylist, FailedSource, SpotifySyncConfig, SyncItem } from './types'
 import { type AlbumPage, artistAlbums } from '../artist-albums-store'
-import { noteSpotifyBlock, spotifyBlock } from '../spotify-block'
+import { noteSpotifyBlock, QUOTA_EXCEEDED, spotifyBlock } from '../spotify-block'
 import {
   type CachedAlbum,
   keepAlbum,
@@ -111,7 +111,9 @@ export async function spotifyGet<T>(path: string, accessToken: string, source: '
     const header = response.headers.get('retry-after')
     const parsed = Number.parseInt(header ?? '', 10)
     const retryAfter = Number.isFinite(parsed) && parsed > 0 ? parsed : 60
-    const reason = `429 from ${path} (Spotify: wait ${retryAfter} s${header ? '' : ', no Retry-After given'})`
+    // (its QUOTA_EXCEEDED holds back the catalog only, see spotify-block.ts)
+    const quota = (await response.text().catch(() => '')).includes(QUOTA_EXCEEDED) ? `, ${QUOTA_EXCEEDED}` : ''
+    const reason = `429 from ${path} (Spotify: wait ${retryAfter} s${header ? '' : ', no Retry-After given'}${quota})`
     noteSpotifyBlock(Date.now() + retryAfter * 1000, source, reason)
     throw new SpotifyApiException({ kind: 'rate-limit', reason, retryAfterSeconds: retryAfter })
   }

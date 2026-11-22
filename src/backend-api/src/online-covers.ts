@@ -1,7 +1,7 @@
 import crypto from 'node:crypto'
 import fs from 'node:fs'
 import path from 'node:path'
-import { noteSpotifyBlock, spotifyBlock } from './spotify-block'
+import { noteSpotifyBlock, QUOTA_EXCEEDED, spotifyBlock } from './spotify-block'
 
 /**
  * Covers from the internet for albums (NAS or local folders) that have no picture of their own.
@@ -113,7 +113,8 @@ export async function searchSpotify(q: string, limit = 10): Promise<CoverCandida
   if (r.status === 429) {
     const wait = Number.parseInt(r.headers.get('retry-after') ?? '', 10)
     const seconds = Number.isFinite(wait) && wait > 0 ? wait : 60
-    noteSpotifyBlock(Date.now() + seconds * 1000, 'display', `429 from /search (Spotify: wait ${seconds} s)`)
+    const quota = (await r.text().catch(() => '')).includes(QUOTA_EXCEEDED) ? `, ${QUOTA_EXCEEDED}` : ''
+    noteSpotifyBlock(Date.now() + seconds * 1000, 'display', `429 from /search (Spotify: wait ${seconds} s${quota})`)
   }
   if (!r.ok) throw new Error(`Spotify ${r.status}`)
   const body = (await r.json()) as {

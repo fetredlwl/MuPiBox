@@ -1522,7 +1522,13 @@ async function loadNotices(root) {
   const block = sync.body?.spotify_block
   clearTimeout(root.blockOver)
   if (block?.until && Date.parse(block.until) > Date.now()) {
-    notes.push(['sync', 'Spotify sperrt die Box gerade', `Zu viele Anfragen – bis ${untilWhen(Date.parse(block.until))} zeigt die Box gespeicherte Spotify-Inhalte, Neues kommt danach.`, 'spotify'])
+    // (a quota block of the catalog: the box goes on playing what it has - an older version's answer has no
+    // playback_until, all of it waited there)
+    const playing = 'playback_until' in block && block.playback_until === null
+    const text = playing
+      ? `Spotify-Kontingent für Kataloganfragen aufgebraucht – bis ${untilWhen(Date.parse(block.until))} keine Suche, keine Künstlerseiten und kein Sync in der App. Die Box spielt weiter ab, was sie schon hat.`
+      : `Zu viele Anfragen – bis ${untilWhen(Date.parse(block.until))} zeigt die Box gespeicherte Spotify-Inhalte, Neues kommt danach.`
+    notes.push(['sync', playing ? 'Spotify sperrt die Kataloganfragen' : 'Spotify sperrt die Box gerade', text, 'spotify'])
     // (the start page stays open: the note goes when the block is over, not only at the next visit)
     const left = Date.parse(block.until) - Date.now() + 5000
     if (left < 2 ** 31) root.blockOver = setTimeout(() => root.isConnected && loadNotices(root), left)
@@ -5719,7 +5725,12 @@ function spotifyTop() {
             ? [
                 // Spotify blocks the box (too many requests): until when - the sync and the display's lists wait
                 s.spotify_block?.until && Date.parse(s.spotify_block.until) > Date.now()
-                  ? ['Spotify-Sperre', `bis ${untilWhen(Date.parse(s.spotify_block.until))} (zu viele Anfragen)`]
+                  ? [
+                      'Spotify-Sperre',
+                      s.spotify_block.playback_until === null
+                        ? `bis ${untilWhen(Date.parse(s.spotify_block.until))} (Kontingent für Kataloganfragen aufgebraucht – die Box spielt weiter ab)`
+                        : `bis ${untilWhen(Date.parse(s.spotify_block.until))} (zu viele Anfragen)`,
+                    ]
                   : null,
                 ['Letzter Sync', running ? 'läuft gerade …' : relTime(st.last_sync_end)],
                 ['Ergebnis', result],

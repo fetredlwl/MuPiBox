@@ -6,7 +6,7 @@ import path from 'node:path'
 import { SpotifyApi } from '@spotify/web-api-ts-sdk'
 import type { ServerConfig } from '../models/server.model'
 import { artistAlbums, keptArtistAlbums } from '../artist-albums-store'
-import { noteSpotifyBlock, spotifyBlock } from '../spotify-block'
+import { noteSpotifyBlock, QUOTA_EXCEEDED, spotifyBlock } from '../spotify-block'
 import type {
   CachedSpotifyData,
   SpotifyApiAlbumDetails,
@@ -368,7 +368,9 @@ export class SpotifyApiService {
         }
         this.rateLimitedUntil = Date.now() + retryAfter
         // (the same block for the Smart-Sync - same Spotify app - and kept over a restart of the server)
-        noteSpotifyBlock(this.rateLimitedUntil, 'display', `429 (Spotify: wait ${Math.round(retryAfter / 1000)} s)`)
+        // (Spotify's answer is in the message, see the responseValidator: its QUOTA_EXCEEDED holds back the catalog only)
+        const quota = String(error?.message ?? '').includes(QUOTA_EXCEEDED) ? `, ${QUOTA_EXCEEDED}` : ''
+        noteSpotifyBlock(this.rateLimitedUntil, 'display', `429 (Spotify: wait ${Math.round(retryAfter / 1000)} s${quota})`)
         console.warn(
           `Spotify API blocks requests for ${Math.round(retryAfter / 60000)} min (until ${new Date(this.rateLimitedUntil).toLocaleString()}) - using cached data meanwhile`,
         )
