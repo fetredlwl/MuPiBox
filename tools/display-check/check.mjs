@@ -25,7 +25,7 @@
 //   R12 "Einträge verwalten": what the child fetched itself, on a page of its own - another tab or off the start page
 //   R13 radio for children: tips of children's stations only, asked once; on the start page without approval
 //
-// Usage: node check.mjs <www dir> [--shots <dir>]   (needs Chrome; port 8200 and 4300 free)
+// Usage: node check.mjs <www dir> [--shots <dir>] [--theme <id>]   (needs Chrome; port 8200 and 4300 free)
 // Exit code 0: all rules kept; 1: a rule broken (listed); 2: could not run.
 
 import { spawn } from 'node:child_process'
@@ -41,6 +41,9 @@ const repo = path.resolve(here, '..', '..')
 const www = path.resolve(process.argv[2] ?? path.join(repo, 'src', 'deploy', 'www'))
 const shotsAt = process.argv.indexOf('--shots')
 const shots = shotsAt > 0 ? path.resolve(process.argv[shotsAt + 1]) : null
+// (--theme <id>: the display in one of its themes, e.g. weltraum or einhorn - the build checks the default one)
+const themeAt = process.argv.indexOf('--theme')
+const theme = themeAt > 0 ? process.argv[themeAt + 1] : null
 const STATIC_PORT = 4300
 const API = 'http://localhost:8200/api'
 const CHROME = [
@@ -144,6 +147,7 @@ function makeConfigDir() {
     displayRadio: true,
     displayWishes: true,
     hiddenCategories: [],
+    ...(theme ? { theme } : {}),
   }
   // (R5: an English box - a German text on the page is one not taken from the translations)
   box.displayLanguage = 'en'
@@ -281,6 +285,18 @@ function serveWww() {
       return
     }
     const url = decodeURIComponent((req.url ?? '/').split('?')[0])
+    // (--theme: the theme's stylesheet and pictures, as the box links them - themes/<id>.css, themes/<id>/…)
+    const themes = path.join(repo, 'themes')
+    const themed =
+      theme && url === '/active_theme.css'
+        ? path.join(themes, `${theme}.css`)
+        : url.startsWith('/theme-data/')
+          ? path.join(themes, url.slice('/theme-data/'.length))
+          : null
+    if (themed && themed.startsWith(themes) && fs.existsSync(themed)) {
+      res.writeHead(200, { 'Content-Type': types[path.extname(themed)] ?? 'application/octet-stream' })
+      return void fs.createReadStream(themed).pipe(res)
+    }
     let file = path.join(www, url)
     if (!file.startsWith(www) || !fs.existsSync(file) || fs.statSync(file).isDirectory())
       file = path.join(www, 'index.html')
@@ -560,6 +576,26 @@ async function start(page, tag, asked) {
     'R11',
     !asked.some((u) => /\/api\/(search-podcasts|search-radio|wishes\/search)/.test(u)),
     `${tag}: nothing asked before a tile is chosen`,
+  )
+  // as the start page's covers: round, the name on the theme's name bar (readable on any picture), read aloud on a tap
+  const look = await page.evaluate(() => {
+    const ic = document.querySelector('app-search .srch-ways .srch-way-ic')
+    const bar = document.querySelector('app-search .srch-ways .srch-way-name')
+    if (!ic || !bar) return null
+    const r = ic.getBoundingClientRect()
+    const bg = getComputedStyle(bar).backgroundColor
+    return {
+      round: getComputedStyle(ic).borderRadius === '50%' && Math.abs(r.width - r.height) < 2,
+      bar: bg !== 'rgba(0, 0, 0, 0)' && bg !== 'transparent',
+    }
+  })
+  rule('R11', !!look?.round && !!look?.bar, `${tag}: the tiles round, their names on a bar (${JSON.stringify(look)})`)
+  await page.click('app-search .srch-ways .srch-way-name')
+  await wait(200)
+  rule(
+    'R11',
+    (await visibleCount(page, '.srch-way-name.srch-speaking')) === 1 && (await visibleCount(page, '.srch-mode')) === 0,
+    `${tag}: a tap on a name reads it aloud (the search stays at its start)`,
   )
   await shot(page, `${tag}-0-start`)
   await page.click('app-search .srch-field')

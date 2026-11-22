@@ -42,11 +42,40 @@
   </div>
 </ng-template>
 
+<!-- the tiles' icons (the hits' tiles and the round ones of the start); Spotify's sign as a ring with three arcs -->
+<ng-template #wayIcon let-w>
+  @switch (w) {
+    @case ('own') {
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h10M4 12h10M4 18h6" /><path d="M17 14l3 3-3 3M20 17h-6" /></svg>
+    }
+    @case ('spotify') {
+      <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9" /><path d="M7.2 9.6c3.3-1 6.9-.7 9.8.9" /><path d="M7.8 12.7c2.7-.8 5.6-.5 8 .8" /><path d="M8.5 15.6c2-.5 4.2-.3 5.9.6" /></svg>
+    }
+    @case ('podcasts') {
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 15v-3a8 8 0 0 1 16 0v3" /><path d="M4 15h3v6H5a1 1 0 0 1-1-1zM20 15h-3v6h2a1 1 0 0 0 1-1z" /></svg>
+    }
+    @case ('radio') {
+      <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="9" width="18" height="12" rx="2" /><path d="M7 9 17 4" /><circle cx="15.5" cy="15" r="2.5" /><path d="M6.5 13.5h3M6.5 16.5h3" /></svg>
+    }
+  }
+</ng-template>
+
+<!-- a tile of the start, as the start page's covers: round, its name below on the theme's name bar - tapped, the name
+     is read aloud (as on the start page); the round picture chooses where the search looks -->
+<ng-template #way let-w>
+  <div class="srch-way" [attr.data-way]="w">
+    <button class="srch-way-ic" type="button" [class.srch-own-btn]="w === 'own'" [class.srch-wish-btn]="w === 'spotify'" [class.srch-podcasts-btn]="w === 'podcasts'" [class.srch-radio-btn]="w === 'radio'" (click)="enterMode(w)">
+      <ng-container *ngTemplateOutlet="wayIcon; context: { $implicit: w }"></ng-container>
+    </button>
+    <button class="srch-way-name" type="button" [class.srch-speaking]="speaking() === w" (click)="sayWay(w)"><span class="srch-name">{{ wayName(w) }}</span></button>
+  </div>
+</ng-template>
+
 <!-- the tiles: where to search (the start) or what to ask for the typed text (after the hits of the box) -->
 <ng-template #ownTile>
   <button class="srch-hit srch-pod-btn srch-way srch-own-btn" type="button" (click)="enterMode('own')">
     <span class="srch-cover srch-pod-ic">
-      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h10M4 12h10M4 18h6" /><path d="M17 14l3 3-3 3M20 17h-6" /></svg>
+      <ng-container *ngTemplateOutlet="wayIcon; context: { $implicit: 'own' }"></ng-container>
     </span>
     <span class="srch-name">{{ texts.text('searchManageTile') }}</span>
   </button>
@@ -55,8 +84,7 @@
   <!-- Spotify is asked only now (never while typing) -->
   <button class="srch-hit srch-pod-btn srch-way srch-wish-btn" type="button" [disabled]="wishBusy()" (click)="wishTileClicked()">
     <span class="srch-cover srch-pod-ic">
-      <!-- (Spotify's sign drawn as the other tiles' icons: a ring, three arcs) -->
-      <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9" /><path d="M7.2 9.6c3.3-1 6.9-.7 9.8.9" /><path d="M7.8 12.7c2.7-.8 5.6-.5 8 .8" /><path d="M8.5 15.6c2-.5 4.2-.3 5.9.6" /></svg>
+      <ng-container *ngTemplateOutlet="wayIcon; context: { $implicit: 'spotify' }"></ng-container>
     </span>
     <span class="srch-name">{{ texts.text(wishBusy() ? 'wishLoading' : 'wishSearchTile') }}</span>
   </button>
@@ -65,7 +93,7 @@
   <!-- the directories are asked only now (never while typing) -->
   <button class="srch-hit srch-pod-btn srch-way srch-podcasts-btn" type="button" [disabled]="podBusy()" (click)="podTileClicked()">
     <span class="srch-cover srch-pod-ic">
-      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 15v-3a8 8 0 0 1 16 0v3" /><path d="M4 15h3v6H5a1 1 0 0 1-1-1zM20 15h-3v6h2a1 1 0 0 0 1-1z" /></svg>
+      <ng-container *ngTemplateOutlet="wayIcon; context: { $implicit: 'podcasts' }"></ng-container>
     </span>
     <span class="srch-name">{{ texts.text(podBusy() ? 'searchPodcastsLoading' : 'searchPodcastsButton') }}</span>
   </button>
@@ -74,7 +102,7 @@
   <!-- the directory is asked only now (never while typing) -->
   <button class="srch-hit srch-pod-btn srch-way srch-radio-btn" type="button" [disabled]="radioBusy()" (click)="radioTileClicked()">
     <span class="srch-cover srch-pod-ic">
-      <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="9" width="18" height="12" rx="2" /><path d="M7 9 17 4" /><circle cx="15.5" cy="15" r="2.5" /><path d="M6.5 13.5h3M6.5 16.5h3" /></svg>
+      <ng-container *ngTemplateOutlet="wayIcon; context: { $implicit: 'radio' }"></ng-container>
     </span>
     <span class="srch-name">{{ texts.text(radioBusy() ? 'searchPodcastsLoading' : 'searchRadioButton') }}</span>
   </button>
@@ -193,16 +221,16 @@
         @if (waysShown()) {
           <div class="srch-hits srch-ways">
             @if (own().length) {
-              <ng-container *ngTemplateOutlet="ownTile"></ng-container>
+              <ng-container *ngTemplateOutlet="way; context: { $implicit: 'own' }"></ng-container>
             }
             @if (wishesOn()) {
-              <ng-container *ngTemplateOutlet="wishTile"></ng-container>
+              <ng-container *ngTemplateOutlet="way; context: { $implicit: 'spotify' }"></ng-container>
             }
             @if (podcastsOn()) {
-              <ng-container *ngTemplateOutlet="podTile"></ng-container>
+              <ng-container *ngTemplateOutlet="way; context: { $implicit: 'podcasts' }"></ng-container>
             }
             @if (radioOn()) {
-              <ng-container *ngTemplateOutlet="radioTile"></ng-container>
+              <ng-container *ngTemplateOutlet="way; context: { $implicit: 'radio' }"></ng-container>
             }
           </div>
         } @else {

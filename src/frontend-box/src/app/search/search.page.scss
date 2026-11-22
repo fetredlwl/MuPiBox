@@ -114,21 +114,23 @@ app-search {
     }
   }
 
-  // ---------- the hits (on the theme's picture: the texts with a shadow, readable on a light part of it) ----------
-  .srch-note,
-  .srch-name,
-  .srch-sub {
-    text-shadow:
-      0 1px 2px rgba(0, 0, 0, 0.9),
-      0 0 8px rgba(0, 0, 0, 0.6);
-  }
+  // ---------- the hits (on the theme's picture: every text on the theme's name bar - cream with ink in the km themes,
+  // as the start page's names; readable on a light picture as on a dark one) ----------
+  --srch-bar: var(--km-cream, var(--ion-color-light, #fff));
+  --srch-on-bar: var(--km-ink, var(--ion-color-light-contrast, #000));
 
   .srch-note {
-    margin: 14px 0 0;
+    display: block;
+    width: fit-content;
+    max-width: calc(100% - 28px);
+    margin: 14px auto 0;
+    padding: 8px 20px;
+    border-radius: 22px;
+    background: var(--srch-bar);
+    color: var(--srch-on-bar);
     text-align: center;
     font-size: 22px;
     font-weight: 600;
-    color: var(--srch-on);
   }
 
   // keyboard shown: one row to swipe through, covers 112
@@ -183,7 +185,14 @@ app-search {
 
   .srch-name,
   .srch-sub {
-    width: 100%;
+    display: block;
+    width: fit-content;
+    max-width: 100%;
+    box-sizing: border-box;
+    padding: 1px 10px;
+    border-radius: 12px;
+    background: var(--srch-bar);
+    color: var(--srch-on-bar);
     text-align: center;
     white-space: nowrap;
     overflow: hidden;
@@ -196,10 +205,9 @@ app-search {
   }
 
   .srch-sub {
-    margin-top: -3px;
+    margin-top: -1px;
+    padding: 0 8px;
     font-size: 12px;
-    color: var(--srch-on);
-    opacity: 0.85;
   }
 
   .srch-cover {
@@ -245,11 +253,14 @@ app-search {
   }
 
   .srch-label {
+    width: fit-content;
     margin: 8px 14px 0;
+    padding: 2px 12px;
+    border-radius: 12px;
+    background: var(--srch-bar);
+    color: var(--srch-on-bar);
     font-size: 15px;
     font-weight: 600;
-    color: var(--srch-on);
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.9);
   }
 
   .srch-toast {
@@ -266,6 +277,119 @@ app-search {
     font-weight: 600;
     box-shadow: 0 4px 14px rgba(0, 0, 0, 0.45);
     z-index: 20;
+  }
+
+  // ---------- the tiles of the start: as the start page's covers - round, the name below on the theme's name bar ----------
+  .srch-ways {
+    gap: 30px;
+    align-items: flex-start;
+  }
+
+  .srch-way {
+    flex: 0 0 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .srch-way-ic {
+    width: 200px;
+    height: 200px;
+    padding: 0;
+    border-radius: 50%;
+    border: 6px solid var(--km-ring, transparent);
+    background: var(--srch-accent);
+    color: var(--km-ink, #fff);
+    box-shadow: 0 6px 0 var(--km-shadow, rgba(0, 0, 0, 0.25));
+    display: grid;
+    place-items: center;
+    -webkit-tap-highlight-color: transparent;
+    transition: transform 180ms var(--km-spring, ease);
+
+    svg {
+      width: 48%;
+      height: 48%;
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    &:active {
+      transform: scale(0.93);
+    }
+  }
+
+  // the name bar of the theme (km / coverflow: cream with ink, as under the start page's covers; the other themes:
+  // their light card colour) - readable on any background picture
+  .srch-way-name {
+    min-width: 150px;
+    max-width: 232px;
+    height: 44px;
+    padding: 0 18px;
+    border: 0;
+    border-radius: 22px;
+    background: var(--km-cream, var(--ion-color-light, #fff));
+    color: var(--km-ink, var(--ion-color-light-contrast, #000));
+    box-shadow: 0 4px 0 var(--km-shadow, rgba(0, 0, 0, 0.25));
+    -webkit-tap-highlight-color: transparent;
+    transition:
+      transform 180ms var(--km-spring, ease),
+      background-color 200ms;
+
+    // (the bar is the name's background: no second one)
+    .srch-name {
+      width: auto;
+      padding: 0;
+      background: none;
+      font-size: 20px;
+      font-weight: 600;
+      color: inherit;
+    }
+
+    &:active {
+      transform: scale(0.95);
+    }
+
+    // read aloud: lit up, as the start page's name bar
+    &.srch-speaking {
+      background: var(--km-moon, var(--srch-accent));
+      transform: scale(1.05);
+    }
+  }
+
+  // the keyboard shown: smaller, still round
+  .srch-kb-open {
+    .srch-ways {
+      gap: 18px;
+      padding-top: 8px;
+    }
+
+    .srch-way {
+      gap: 8px;
+    }
+
+    .srch-way-ic {
+      width: 100px;
+      height: 100px;
+      border-width: 4px;
+      box-shadow: 0 4px 0 var(--km-shadow, rgba(0, 0, 0, 0.25));
+    }
+
+    .srch-way-name {
+      min-width: 110px;
+      max-width: 170px;
+      height: 34px;
+      padding: 0 12px;
+      border-radius: 17px;
+      box-shadow: 0 3px 0 var(--km-shadow, rgba(0, 0, 0, 0.25));
+
+      .srch-name {
+        font-size: 15px;
+      }
+    }
   }
 
   // podcasts for children: the tile that asks for them (a headphone on the accent colour) and "none found"
@@ -301,9 +425,12 @@ app-search {
   .srch-pod-none {
     align-self: center;
     margin: 0 8px;
+    padding: 6px 16px;
+    border-radius: 18px;
+    background: var(--srch-bar);
+    color: var(--srch-on-bar);
     font-size: 17px;
     font-weight: 600;
-    color: var(--srch-on);
   }
 
   // wishes from Spotify: a star in the corner (the parents decide); the end of the list that asks for the next page

@@ -39,6 +39,7 @@ import { KmStatusGroupComponent } from '../km-header/km-status-group.component'
 import type { CategoryType, Media } from '../media'
 import { isStandaloneMedia, MediaService } from '../media.service'
 import type { MupiboxConfig } from '../mupibox-config.model'
+import { PlayerService } from '../player.service'
 import { SpotifyBlockService } from '../spotify-block.service'
 import { StatusComponent } from '../status/status.component'
 import { KmThemeService } from '../theme/km-theme.service'
@@ -66,6 +67,13 @@ import {
 // after the hits (each asks for the typed text when tapped).
 type SearchMode = 'own' | 'spotify' | 'podcasts' | 'radio'
 // (the word in the search field: where it looks)
+// (the tiles' names at the start)
+const WAY_LABEL: Record<SearchMode, DisplayTextKey> = {
+  own: 'searchManageTile',
+  spotify: 'wishSearchTile',
+  podcasts: 'searchPodcastsButton',
+  radio: 'searchRadioButton',
+}
 const MODE_LABEL: Record<SearchMode, DisplayTextKey> = {
   own: 'searchMine',
   spotify: 'searchSpotify',
@@ -168,6 +176,10 @@ export class SearchPage implements AfterViewInit, OnDestroy {
   /** the tile chosen at the start: the search looks only there (none: the box's library and the pool) */
   protected readonly mode = signal<SearchMode | null>(null)
   protected readonly modeLabel = MODE_LABEL
+  // a tile's name read aloud (its bar lights up meanwhile, as the start page's names)
+  private readonly player = inject(PlayerService)
+  protected readonly speaking = signal<SearchMode | null>(null)
+  private speakingTimer = 0
   protected readonly loading = signal(true)
   // the tabs shown on the start page (the ones a pool hit can go to)
   protected readonly categories = signal<CategoryType[]>([])
@@ -491,6 +503,7 @@ export class SearchPage implements AfterViewInit, OnDestroy {
     this.keyboard?.destroy()
     window.clearTimeout(this.noteTimer)
     window.clearInterval(this.poolTimer)
+    window.clearTimeout(this.speakingTimer)
   }
 
   private keyPressed(button: string): void {
@@ -524,6 +537,19 @@ export class SearchPage implements AfterViewInit, OnDestroy {
   /** a tap on the field: the keyboard comes back */
   protected showKeyboard(): void {
     this.keyboardShown.set(true)
+  }
+
+  /** a tile's name in the box's language */
+  protected wayName(m: SearchMode): string {
+    return this.texts.text(WAY_LABEL[m])
+  }
+
+  /** a tile's name tapped: read aloud, as a name on the start page */
+  protected sayWay(m: SearchMode): void {
+    this.player.sayText(this.texts.text(WAY_LABEL[m]))
+    this.speaking.set(m)
+    window.clearTimeout(this.speakingTimer)
+    this.speakingTimer = window.setTimeout(() => this.speaking.set(null), 1800)
   }
 
   /** a tile of the start: the search looks only there (Spotify: the keyboard at once - nothing to show before) */
