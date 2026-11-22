@@ -276,6 +276,44 @@ app-search {
     z-index: 20;
   }
 
+  // podcasts for children: the tile that asks for them (a headphone on the accent colour) and "none found"
+  .srch-pod-ic {
+    display: grid;
+    place-items: center;
+    background: var(--srch-accent);
+    color: var(--km-ink, #fff);
+
+    svg {
+      width: 56%;
+      height: 56%;
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 2;
+      stroke-linejoin: round;
+    }
+  }
+
+  .srch-pod-btn[disabled] {
+    opacity: 0.6;
+  }
+
+  // (its name on two lines: "Podcasts für Kinder" does not fit one)
+  .srch-pod-btn .srch-name {
+    white-space: normal;
+    line-height: 1.15;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+  }
+
+  .srch-pod-none {
+    align-self: center;
+    margin: 0 8px;
+    font-size: 17px;
+    font-weight: 600;
+    color: var(--srch-on);
+  }
+
   // Spotify blocks the box and does not play: its hits grey (a tap tells why)
   .srch-off {
     filter: grayscale(1);

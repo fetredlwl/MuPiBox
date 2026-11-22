@@ -43,7 +43,14 @@ import { SpotifyBlockService } from '../spotify-block.service'
 import { StatusComponent } from '../status/status.component'
 import { KmThemeService } from '../theme/km-theme.service'
 import { localizeCoverUrl } from '../utils'
-import { CATEGORY_LABEL, type PoolAlbum, type PoolEntry, SearchFlowService } from './search-flow.service'
+import {
+  CATEGORY_LABEL,
+  type KidsPodcast,
+  kidsPodcastEntry,
+  type PoolAlbum,
+  type PoolEntry,
+  SearchFlowService,
+} from './search-flow.service'
 
 // The search pool ("Nur in der Suche", backend search-pool.ts): allowed by the parents, not on the start page
 // (podcast: an RSS feed, feedUrl instead of spotifyId - put on the start page only: its episodes come with it) - its
@@ -250,6 +257,17 @@ export class SearchPage implements AfterViewInit, OnDestroy {
   })
 
   // "nothing found" only once something was typed and the library is there
+  // ---------- podcasts for children (Apple's directory / the ARD Audiothek, search-podcasts.ts) ----------
+  // switched on in the app (Bedienung › Suche); asked only when the child taps the tile, for the text typed then
+  protected readonly podcastsOn = signal(false)
+  private readonly podFor = signal('')
+  private readonly podHits = signal<KidsPodcast[]>([])
+  protected readonly podBusy = signal(false)
+  /** the podcasts found for the text as it is now (another text: the tile again) */
+  protected readonly podShown = computed(() =>
+    this.podFor() && this.podFor() === normalizeForSearch(this.query()).trim() ? this.podHits() : null,
+  )
+
   protected readonly nothingFound = computed(
     () => !this.loading() && this.query().trim().length >= 2 && this.hits().length === 0,
   )
@@ -270,6 +288,7 @@ export class SearchPage implements AfterViewInit, OnDestroy {
       .subscribe((config) => {
         const hidden = config?.mupibox?.hiddenCategories ?? []
         this.categories.set(SEARCHED.filter((c) => !hidden.includes(c)))
+        this.podcastsOn.set((config?.mupibox as { displayPodcasts?: boolean } | undefined)?.displayPodcasts === true)
         this.flow.categories.set(this.categories())
         this.loadLibrary()
       })
@@ -427,6 +446,30 @@ export class SearchPage implements AfterViewInit, OnDestroy {
     } else if (hit.media) {
       this.openMedia(hit.media)
     }
+  }
+
+  /** "Podcasts für Kinder": the directories asked for the typed text (the backend keeps each text a day) */
+  protected async searchPodcasts(): Promise<void> {
+    const q = normalizeForSearch(this.query()).trim()
+    if (q.length < 2 || this.podBusy()) return
+    this.podBusy.set(true)
+    try {
+      const r = await firstValueFrom(
+        this.http.get<{ shows: KidsPodcast[] }>(`${this.api}/search-podcasts`, { params: { q } }),
+      )
+      this.podHits.set(r?.shows ?? [])
+      this.podFor.set(q)
+    } catch {
+      this.showNote(this.texts.text('searchFailed'))
+    } finally {
+      this.podBusy.set(false)
+    }
+  }
+
+  /** a podcast for children: its page, "Auf die Startseite" (no approval needed) */
+  protected openKidsPodcast(p: KidsPodcast): void {
+    this.flow.openedOwnPage()
+    void this.navController.navigateForward(['/search-album'], { state: { entry: kidsPodcastEntry(p) } })
   }
 
   // ---------- a pool hit: a page of its own (the search stays as it is behind it, the back arrow comes back here) ----------

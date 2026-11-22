@@ -8219,6 +8219,8 @@ async function loadControls() {
   state.values.set('dispSearch', o.displaySearch === true)
   // ("Nur in der Suche" in this app: its buttons and the pool's list below - off: hidden, the pool is kept)
   state.values.set('appPool', o.appSearchPool === true)
+  // (podcasts for children in the display's search, put on the start page by the child - search-podcasts.ts)
+  state.values.set('dispPodcasts', o.displayPodcasts === true)
   // the search pool and what the child put in from it (shown under "Suche")
   const pool = await api(`${API}/search-pool`)
   disp.pool = pool.ok ? pool.body : { entries: [], own: [] }
@@ -12521,6 +12523,12 @@ const CONTROLLERS = {
               label: '„Nur in der Suche“ in der App',
               help: 'Zeigt in der App die Knöpfe „Nur in der Suche“ und den Vorrat unten. Aus: alles davon ausgeblendet, der Vorrat bleibt erhalten – die Suche am Display findet ihn weiter, solange sie an ist.',
             },
+            {
+              type: 'toggle',
+              key: 'dispPodcasts',
+              label: 'Podcasts für Kinder in der Suche',
+              help: 'In der Suche am Display sucht eine Kachel „Podcasts für Kinder“ in Apples Podcast-Verzeichnis (bei Deutsch auch in der ARD Audiothek) – nur Sendungen der Kinder-Kategorien. Das Kind kann sie ohne Freigabe auf die Startseite holen und selbst wieder entfernen. Gesucht wird erst beim Tippen auf die Kachel; der Suchbegriff geht dabei an Apple bzw. die ARD.',
+            },
             ...(state.values.get('appPool') ? [{ type: 'html', html: poolListHtml() }] : []),
           ],
         },
@@ -12595,6 +12603,7 @@ const CONTROLLERS = {
       if (key === 'setTimer') return saveDisplayOptions({ settingsAccessTimer: v }, `Einstellungen nach ${fmtSec(v)}`)
       if (key === 'outPick') return saveDisplayOptions({ outputPicker: !!v }, v ? 'Kinder können am Display umschalten' : 'Umschalten nur in der App')
       if (key === 'dispSearch') return saveDisplayOptions({ displaySearch: !!v }, v ? 'Suche auf dem Display an' : 'Suche auf dem Display aus')
+      if (key === 'dispPodcasts') return saveDisplayOptions({ displayPodcasts: !!v }, v ? 'Podcasts für Kinder in der Suche an' : 'Podcasts für Kinder in der Suche aus')
       if (key === 'appPool') {
         const ok = await saveDisplayOptions({ appSearchPool: !!v }, v ? '„Nur in der Suche“ in der App an' : '„Nur in der Suche“ in der App ausgeblendet')
         if (ok) renderPage(page, false)

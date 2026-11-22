@@ -3222,5 +3222,9 @@
  "Zeigt in der App die Knöpfe „Nur in der Suche“ und den Vorrat unten. Aus: alles davon ausgeblendet, der Vorrat bleibt erhalten – die Suche am Display findet ihn weiter, solange sie an ist.": "Muestra en la app los botones «Solo en la búsqueda» y la reserva de abajo. Desactivado: todo oculto, la reserva se conserva; la búsqueda en la pantalla la sigue encontrando mientras esté activada.",
  "„Nur in der Suche“ in der App an": "«Solo en la búsqueda» activado en la app",
  "„Nur in der Suche“ in der App ausgeblendet": "«Solo en la búsqueda» oculto en la app",
- "In der Suche am Display. „Aus der Suche nehmen“: das Kind findet es nicht mehr – was es schon auf die Startseite geholt hat, bleibt dort.": "En la búsqueda de la pantalla. «Quitar de la búsqueda»: el niño ya no lo encuentra; lo que ya puso en la página de inicio se queda allí."
+ "In der Suche am Display. „Aus der Suche nehmen“: das Kind findet es nicht mehr – was es schon auf die Startseite geholt hat, bleibt dort.": "En la búsqueda de la pantalla. «Quitar de la búsqueda»: el niño ya no lo encuentra; lo que ya puso en la página de inicio se queda allí.",
+ "Podcasts für Kinder in der Suche": "Pódcasts para niños en la búsqueda",
+ "In der Suche am Display sucht eine Kachel „Podcasts für Kinder“ in Apples Podcast-Verzeichnis (bei Deutsch auch in der ARD Audiothek) – nur Sendungen der Kinder-Kategorien. Das Kind kann sie ohne Freigabe auf die Startseite holen und selbst wieder entfernen. Gesucht wird erst beim Tippen auf die Kachel; der Suchbegriff geht dabei an Apple bzw. die ARD.": "En la búsqueda de la pantalla, un mosaico «Pódcasts para niños» busca en el directorio de pódcasts de Apple (en alemán también en la ARD Audiothek), solo programas de las categorías infantiles. El niño puede ponerlos en la página de inicio sin autorización y quitarlos él mismo. Solo se busca al tocar el mosaico; el término se envía entonces a Apple o a la ARD.",
+ "Podcasts für Kinder in der Suche an": "Pódcasts para niños en la búsqueda activados",
+ "Podcasts für Kinder in der Suche aus": "Pódcasts para niños en la búsqueda desactivados"
 }

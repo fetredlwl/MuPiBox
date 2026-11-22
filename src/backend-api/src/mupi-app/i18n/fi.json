@@ -3222,5 +3222,9 @@
  "Zeigt in der App die Knöpfe „Nur in der Suche“ und den Vorrat unten. Aus: alles davon ausgeblendet, der Vorrat bleibt erhalten – die Suche am Display findet ihn weiter, solange sie an ist.": "Näyttää sovelluksessa ”Vain haussa” -painikkeet ja alla olevan varaston. Pois: kaikki piilotettu, varasto säilyy – näytön haku löytää sen niin kauan kuin haku on päällä.",
  "„Nur in der Suche“ in der App an": "”Vain haussa” päällä sovelluksessa",
  "„Nur in der Suche“ in der App ausgeblendet": "”Vain haussa” piilotettu sovelluksessa",
- "In der Suche am Display. „Aus der Suche nehmen“: das Kind findet es nicht mehr – was es schon auf die Startseite geholt hat, bleibt dort.": "Näytön haussa. ”Poista hausta”: lapsi ei enää löydä sitä – mitä se on jo siirtänyt aloitussivulle, jää sinne."
+ "In der Suche am Display. „Aus der Suche nehmen“: das Kind findet es nicht mehr – was es schon auf die Startseite geholt hat, bleibt dort.": "Näytön haussa. ”Poista hausta”: lapsi ei enää löydä sitä – mitä se on jo siirtänyt aloitussivulle, jää sinne.",
+ "Podcasts für Kinder in der Suche": "Lasten podcastit haussa",
+ "In der Suche am Display sucht eine Kachel „Podcasts für Kinder“ in Apples Podcast-Verzeichnis (bei Deutsch auch in der ARD Audiothek) – nur Sendungen der Kinder-Kategorien. Das Kind kann sie ohne Freigabe auf die Startseite holen und selbst wieder entfernen. Gesucht wird erst beim Tippen auf die Kachel; der Suchbegriff geht dabei an Apple bzw. die ARD.": "Näytön haussa ruutu ”Lasten podcastit” hakee Applen podcast-hakemistosta (saksaksi myös ARD Audiothekista) – vain lastenluokkien ohjelmia. Lapsi voi lisätä ne aloitussivulle ilman hyväksyntää ja poistaa ne itse. Haku tehdään vasta ruutua napautettaessa; hakusana menee silloin Applelle tai ARD:lle.",
+ "Podcasts für Kinder in der Suche an": "Lasten podcastit haussa päällä",
+ "Podcasts für Kinder in der Suche aus": "Lasten podcastit haussa pois"
 }

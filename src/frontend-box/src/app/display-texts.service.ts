@@ -103,6 +103,10 @@ export const DEFAULT_DISPLAY_TEXTS = {
   searchCatAudiobook: 'Audio books',
   searchCatMusic: 'Music',
   searchCatRadio: 'Radio',
+  // (fork "wishes") podcasts for children in the search (search-podcasts.ts)
+  searchPodcastsButton: 'Podcasts for children',
+  searchPodcastsLoading: 'Searching …',
+  searchPodcastsNone: 'No podcasts for children found.',
 }
 export type DisplayTextKey = keyof typeof DEFAULT_DISPLAY_TEXTS
 type TextSet = Partial<Record<DisplayTextKey, string>>

@@ -81,7 +81,10 @@
         "searchFailed": "That did not work.",
         "searchCatAudiobook": "Audio books",
         "searchCatMusic": "Music",
-        "searchCatRadio": "Radio"
+        "searchCatRadio": "Radio",
+        "searchPodcastsButton": "Podcasts for children",
+        "searchPodcastsLoading": "Searching …",
+        "searchPodcastsNone": "No podcasts for children found."
       }
     },
     "de": {
@@ -164,7 +167,10 @@
         "searchFailed": "Das hat nicht geklappt.",
         "searchCatAudiobook": "Hörspiele",
         "searchCatMusic": "Musik",
-        "searchCatRadio": "Radio"
+        "searchCatRadio": "Radio",
+        "searchPodcastsButton": "Podcasts für Kinder",
+        "searchPodcastsLoading": "Suche …",
+        "searchPodcastsNone": "Keine Podcasts für Kinder gefunden."
       }
     },
     "fr": {
@@ -247,7 +253,10 @@
         "searchFailed": "Ça n’a pas marché.",
         "searchCatAudiobook": "Histoires audio",
         "searchCatMusic": "Musique",
-        "searchCatRadio": "Radio"
+        "searchCatRadio": "Radio",
+        "searchPodcastsButton": "Podcasts pour enfants",
+        "searchPodcastsLoading": "Recherche …",
+        "searchPodcastsNone": "Aucun podcast pour enfants trouvé."
       }
     },
     "es": {
@@ -330,7 +339,10 @@
         "searchFailed": "No ha funcionado.",
         "searchCatAudiobook": "Audiocuentos",
         "searchCatMusic": "Música",
-        "searchCatRadio": "Radio"
+        "searchCatRadio": "Radio",
+        "searchPodcastsButton": "Pódcasts para niños",
+        "searchPodcastsLoading": "Buscando …",
+        "searchPodcastsNone": "No se encontraron pódcasts para niños."
       }
     },
     "it": {
@@ -413,7 +425,10 @@
         "searchFailed": "Non ha funzionato.",
         "searchCatAudiobook": "Audiostorie",
         "searchCatMusic": "Musica",
-        "searchCatRadio": "Radio"
+        "searchCatRadio": "Radio",
+        "searchPodcastsButton": "Podcast per bambini",
+        "searchPodcastsLoading": "Ricerca …",
+        "searchPodcastsNone": "Nessun podcast per bambini trovato."
       }
     },
     "nl": {
@@ -496,7 +511,10 @@
         "searchFailed": "Dat is niet gelukt.",
         "searchCatAudiobook": "Luisterverhalen",
         "searchCatMusic": "Muziek",
-        "searchCatRadio": "Radio"
+        "searchCatRadio": "Radio",
+        "searchPodcastsButton": "Podcasts voor kinderen",
+        "searchPodcastsLoading": "Zoeken …",
+        "searchPodcastsNone": "Geen podcasts voor kinderen gevonden."
       }
     },
     "sv": {
@@ -579,7 +597,10 @@
         "searchFailed": "Det fungerade inte.",
         "searchCatAudiobook": "Ljudsagor",
         "searchCatMusic": "Musik",
-        "searchCatRadio": "Radio"
+        "searchCatRadio": "Radio",
+        "searchPodcastsButton": "Poddar för barn",
+        "searchPodcastsLoading": "Söker …",
+        "searchPodcastsNone": "Inga poddar för barn hittades."
       }
     },
     "da": {
@@ -662,7 +683,10 @@
         "searchFailed": "Det virkede ikke.",
         "searchCatAudiobook": "Lydbøger",
         "searchCatMusic": "Musik",
-        "searchCatRadio": "Radio"
+        "searchCatRadio": "Radio",
+        "searchPodcastsButton": "Podcasts for børn",
+        "searchPodcastsLoading": "Søger …",
+        "searchPodcastsNone": "Ingen podcasts for børn fundet."
       }
     },
     "nb": {
@@ -745,7 +769,10 @@
         "searchFailed": "Det fungerte ikke.",
         "searchCatAudiobook": "Lydbøker",
         "searchCatMusic": "Musikk",
-        "searchCatRadio": "Radio"
+        "searchCatRadio": "Radio",
+        "searchPodcastsButton": "Podkaster for barn",
+        "searchPodcastsLoading": "Søker …",
+        "searchPodcastsNone": "Ingen podkaster for barn funnet."
       }
     },
     "fi": {
@@ -828,7 +855,10 @@
         "searchFailed": "Se ei onnistunut.",
         "searchCatAudiobook": "Kuunnelmat",
         "searchCatMusic": "Musiikki",
-        "searchCatRadio": "Radio"
+        "searchCatRadio": "Radio",
+        "searchPodcastsButton": "Lasten podcastit",
+        "searchPodcastsLoading": "Haetaan …",
+        "searchPodcastsNone": "Lasten podcasteja ei löytynyt."
       }
     },
     "pl": {
@@ -911,7 +941,10 @@
         "searchFailed": "Nie udało się.",
         "searchCatAudiobook": "Słuchowiska",
         "searchCatMusic": "Muzyka",
-        "searchCatRadio": "Radio"
+        "searchCatRadio": "Radio",
+        "searchPodcastsButton": "Podcasty dla dzieci",
+        "searchPodcastsLoading": "Szukam …",
+        "searchPodcastsNone": "Nie znaleziono podcastów dla dzieci."
       }
     },
     "pt": {
@@ -994,7 +1027,10 @@
         "searchFailed": "Não funcionou.",
         "searchCatAudiobook": "Histórias áudio",
         "searchCatMusic": "Música",
-        "searchCatRadio": "Rádio"
+        "searchCatRadio": "Rádio",
+        "searchPodcastsButton": "Podcasts para crianças",
+        "searchPodcastsLoading": "A procurar …",
+        "searchPodcastsNone": "Nenhum podcast para crianças encontrado."
       }
     },
     "tr": {
@@ -1077,7 +1113,10 @@
         "searchFailed": "Olmadı.",
         "searchCatAudiobook": "Sesli hikâyeler",
         "searchCatMusic": "Müzik",
-        "searchCatRadio": "Radyo"
+        "searchCatRadio": "Radyo",
+        "searchPodcastsButton": "Çocuklar için podcast’ler",
+        "searchPodcastsLoading": "Aranıyor …",
+        "searchPodcastsNone": "Çocuklar için podcast bulunamadı."
       }
     },
     "uk": {
@@ -1160,7 +1199,10 @@
         "searchFailed": "Не вийшло.",
         "searchCatAudiobook": "Аудіоказки",
         "searchCatMusic": "Музика",
-        "searchCatRadio": "Радіо"
+        "searchCatRadio": "Радіо",
+        "searchPodcastsButton": "Подкасти для дітей",
+        "searchPodcastsLoading": "Пошук …",
+        "searchPodcastsNone": "Подкастів для дітей не знайдено."
       }
     },
     "ru": {
@@ -1243,7 +1285,10 @@
         "searchFailed": "Не получилось.",
         "searchCatAudiobook": "Аудиосказки",
         "searchCatMusic": "Музыка",
-        "searchCatRadio": "Радио"
+        "searchCatRadio": "Радио",
+        "searchPodcastsButton": "Подкасты для детей",
+        "searchPodcastsLoading": "Поиск …",
+        "searchPodcastsNone": "Подкасты для детей не найдены."
       }
     },
     "cs": {
@@ -1326,7 +1371,10 @@
         "searchFailed": "Nepovedlo se.",
         "searchCatAudiobook": "Audioknihy",
         "searchCatMusic": "Hudba",
-        "searchCatRadio": "Rádio"
+        "searchCatRadio": "Rádio",
+        "searchPodcastsButton": "Podcasty pro děti",
+        "searchPodcastsLoading": "Hledám …",
+        "searchPodcastsNone": "Žádné podcasty pro děti nenalezeny."
       }
     },
     "el": {
@@ -1409,7 +1457,10 @@
         "searchFailed": "Δεν πέτυχε.",
         "searchCatAudiobook": "Ηχητικές ιστορίες",
         "searchCatMusic": "Μουσική",
-        "searchCatRadio": "Ραδιόφωνο"
+        "searchCatRadio": "Ραδιόφωνο",
+        "searchPodcastsButton": "Podcasts για παιδιά",
+        "searchPodcastsLoading": "Αναζήτηση …",
+        "searchPodcastsNone": "Δεν βρέθηκαν podcasts για παιδιά."
       }
     }
   }

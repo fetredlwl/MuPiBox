@@ -3222,5 +3222,9 @@
  "Zeigt in der App die Knöpfe „Nur in der Suche“ und den Vorrat unten. Aus: alles davon ausgeblendet, der Vorrat bleibt erhalten – die Suche am Display findet ihn weiter, solange sie an ist.": "Mostra na app os botões «Só na pesquisa» e a reserva abaixo. Desligado: tudo oculto, a reserva mantém-se – a pesquisa no ecrã continua a encontrá-la enquanto estiver ligada.",
  "„Nur in der Suche“ in der App an": "«Só na pesquisa» ligado na app",
  "„Nur in der Suche“ in der App ausgeblendet": "«Só na pesquisa» oculto na app",
- "In der Suche am Display. „Aus der Suche nehmen“: das Kind findet es nicht mehr – was es schon auf die Startseite geholt hat, bleibt dort.": "Na pesquisa do ecrã. «Retirar da pesquisa»: a criança deixa de o encontrar – o que já pôs na página inicial fica lá."
+ "In der Suche am Display. „Aus der Suche nehmen“: das Kind findet es nicht mehr – was es schon auf die Startseite geholt hat, bleibt dort.": "Na pesquisa do ecrã. «Retirar da pesquisa»: a criança deixa de o encontrar – o que já pôs na página inicial fica lá.",
+ "Podcasts für Kinder in der Suche": "Podcasts para crianças na pesquisa",
+ "In der Suche am Display sucht eine Kachel „Podcasts für Kinder“ in Apples Podcast-Verzeichnis (bei Deutsch auch in der ARD Audiothek) – nur Sendungen der Kinder-Kategorien. Das Kind kann sie ohne Freigabe auf die Startseite holen und selbst wieder entfernen. Gesucht wird erst beim Tippen auf die Kachel; der Suchbegriff geht dabei an Apple bzw. die ARD.": "Na pesquisa do ecrã, um mosaico «Podcasts para crianças» procura no diretório de podcasts da Apple (em alemão também na ARD Audiothek) – só programas das categorias infantis. A criança pode pô-los na página inicial sem autorização e retirá-los ela própria. Só se pesquisa ao tocar no mosaico; o termo vai então para a Apple ou a ARD.",
+ "Podcasts für Kinder in der Suche an": "Podcasts para crianças na pesquisa ligados",
+ "Podcasts für Kinder in der Suche aus": "Podcasts para crianças na pesquisa desligados"
 }

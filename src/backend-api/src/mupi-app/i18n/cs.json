@@ -3222,5 +3222,9 @@
  "Zeigt in der App die Knöpfe „Nur in der Suche“ und den Vorrat unten. Aus: alles davon ausgeblendet, der Vorrat bleibt erhalten – die Suche am Display findet ihn weiter, solange sie an ist.": "Zobrazí v aplikaci tlačítka „Jen ve vyhledávání“ a zásobu níže. Vypnuto: vše skryto, zásoba zůstává – vyhledávání na displeji ji dál najde, dokud je zapnuté.",
  "„Nur in der Suche“ in der App an": "„Jen ve vyhledávání“ v aplikaci zapnuto",
  "„Nur in der Suche“ in der App ausgeblendet": "„Jen ve vyhledávání“ v aplikaci skryto",
- "In der Suche am Display. „Aus der Suche nehmen“: das Kind findet es nicht mehr – was es schon auf die Startseite geholt hat, bleibt dort.": "Ve vyhledávání na displeji. „Odebrat z vyhledávání“: dítě to už nenajde – co už dalo na úvodní stránku, tam zůstane."
+ "In der Suche am Display. „Aus der Suche nehmen“: das Kind findet es nicht mehr – was es schon auf die Startseite geholt hat, bleibt dort.": "Ve vyhledávání na displeji. „Odebrat z vyhledávání“: dítě to už nenajde – co už dalo na úvodní stránku, tam zůstane.",
+ "Podcasts für Kinder in der Suche": "Podcasty pro děti ve vyhledávání",
+ "In der Suche am Display sucht eine Kachel „Podcasts für Kinder“ in Apples Podcast-Verzeichnis (bei Deutsch auch in der ARD Audiothek) – nur Sendungen der Kinder-Kategorien. Das Kind kann sie ohne Freigabe auf die Startseite holen und selbst wieder entfernen. Gesucht wird erst beim Tippen auf die Kachel; der Suchbegriff geht dabei an Apple bzw. die ARD.": "Ve vyhledávání na displeji hledá dlaždice „Podcasty pro děti“ v adresáři podcastů Apple (v němčině i v ARD Audiothek) – jen pořady dětských kategorií. Dítě je může bez povolení dát na úvodní stránku a samo je zase odebrat. Hledá se až po klepnutí na dlaždici; hledaný výraz pak jde do Apple nebo ARD.",
+ "Podcasts für Kinder in der Suche an": "Podcasty pro děti ve vyhledávání zapnuty",
+ "Podcasts für Kinder in der Suche aus": "Podcasty pro děti ve vyhledávání vypnuty"
 }

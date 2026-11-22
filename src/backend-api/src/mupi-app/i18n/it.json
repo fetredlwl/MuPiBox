@@ -3222,5 +3222,9 @@
  "Zeigt in der App die Knöpfe „Nur in der Suche“ und den Vorrat unten. Aus: alles davon ausgeblendet, der Vorrat bleibt erhalten – die Suche am Display findet ihn weiter, solange sie an ist.": "Mostra nell’app i pulsanti «Solo nella ricerca» e la riserva qui sotto. Spento: tutto nascosto, la riserva resta – la ricerca sul display la trova ancora finché è attiva.",
  "„Nur in der Suche“ in der App an": "«Solo nella ricerca» attivo nell’app",
  "„Nur in der Suche“ in der App ausgeblendet": "«Solo nella ricerca» nascosto nell’app",
- "In der Suche am Display. „Aus der Suche nehmen“: das Kind findet es nicht mehr – was es schon auf die Startseite geholt hat, bleibt dort.": "Nella ricerca sul display. «Togli dalla ricerca»: il bambino non lo trova più – ciò che ha già messo nella pagina iniziale resta lì."
+ "In der Suche am Display. „Aus der Suche nehmen“: das Kind findet es nicht mehr – was es schon auf die Startseite geholt hat, bleibt dort.": "Nella ricerca sul display. «Togli dalla ricerca»: il bambino non lo trova più – ciò che ha già messo nella pagina iniziale resta lì.",
+ "Podcasts für Kinder in der Suche": "Podcast per bambini nella ricerca",
+ "In der Suche am Display sucht eine Kachel „Podcasts für Kinder“ in Apples Podcast-Verzeichnis (bei Deutsch auch in der ARD Audiothek) – nur Sendungen der Kinder-Kategorien. Das Kind kann sie ohne Freigabe auf die Startseite holen und selbst wieder entfernen. Gesucht wird erst beim Tippen auf die Kachel; der Suchbegriff geht dabei an Apple bzw. die ARD.": "Nella ricerca sul display una tessera «Podcast per bambini» cerca nell’elenco podcast di Apple (in tedesco anche nell’ARD Audiothek) – solo programmi delle categorie per bambini. Il bambino può metterli nella pagina iniziale senza autorizzazione e toglierli da solo. Si cerca solo toccando la tessera; il termine va allora ad Apple o all’ARD.",
+ "Podcasts für Kinder in der Suche an": "Podcast per bambini nella ricerca attivi",
+ "Podcasts für Kinder in der Suche aus": "Podcast per bambini nella ricerca disattivati"
 }

@@ -54,6 +54,7 @@ import type { Duplex } from 'node:stream'
 import { SUDO_BACKUP_SNIPPET, backupBeforeWrite } from './file-backup'
 import { readEmbeddedPicture } from './embedded-cover'
 import { acquireLock, releaseLock, staleReason } from './file-lock'
+import { registerSearchPodcastsRoutes } from './search-podcasts'
 import { registerSearchPoolRoutes } from './search-pool'
 import { type AlbumFillDeps, fillSpotifyAlbums, isBareAlbum, startSpotifyAlbumFill } from './spotify-album-fill'
 import { coverHidden } from './hidden-covers'
@@ -1219,6 +1220,16 @@ const searchPool = registerSearchPoolRoutes(app, {
   appEnabled: () => (getMupiboxConfigSync()?.mupibox as Record<string, unknown> | undefined)?.appSearchPool === true,
   session: requireSession,
   csrf: requireCsrf,
+})
+
+// (fork "wishes") podcasts for children in the display's search (Apple's directory / the ARD Audiothek, children's
+// categories only); MUPIBOX_PODCAST_FIXTURE: invented hits for the development server and tools/display-check
+registerSearchPodcastsRoutes(app, {
+  getMupiboxConfig: () => getMupiboxConfigSync() as unknown as MupiboxConfig | undefined,
+  pool: searchPool,
+  ...(!productionServe && process.env.MUPIBOX_PODCAST_FIXTURE
+    ? { search: async () => JSON.parse(fs.readFileSync(String(process.env.MUPIBOX_PODCAST_FIXTURE), 'utf8')) }
+    : {}),
 })
 
 // (fork "wishes") whether a quota block of the catalog leaves the box playing: Sync-Einstellungen › Spotify-Sperren

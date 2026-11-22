@@ -77,6 +77,29 @@
           }
         </button>
       }
+      @if (podcastsOn()) {
+        @if (podShown(); as pods) {
+          <!-- podcasts for children found for this text: the child may put them on the start page itself -->
+          @for (p of pods; track p.feedUrl) {
+            <button class="srch-hit srch-pod" type="button" (click)="openKidsPodcast(p)">
+              <span class="srch-cover"><img [src]="coverUrl(p.image)" alt="" loading="lazy" /><span class="srch-plus" aria-hidden="true">+</span></span>
+              <span class="srch-name">{{ p.title }}</span>
+              <span class="srch-sub">{{ p.author }}</span>
+            </button>
+          }
+          @if (!pods.length) {
+            <p class="srch-pod-none">{{ texts.text('searchPodcastsNone') }}</p>
+          }
+        } @else {
+          <!-- the directories are asked only now (never while typing) -->
+          <button class="srch-hit srch-pod-btn" type="button" [disabled]="podBusy()" (click)="searchPodcasts()">
+            <span class="srch-cover srch-pod-ic">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 15v-3a8 8 0 0 1 16 0v3" /><path d="M4 15h3v6H5a1 1 0 0 1-1-1zM20 15h-3v6h2a1 1 0 0 0 1-1z" /></svg>
+            </span>
+            <span class="srch-name">{{ texts.text(podBusy() ? 'searchPodcastsLoading' : 'searchPodcastsButton') }}</span>
+          </button>
+        }
+      }
     </div>
   }
   @if (note()) {

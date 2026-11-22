@@ -3222,5 +3222,9 @@
  "Zeigt in der App die Knöpfe „Nur in der Suche“ und den Vorrat unten. Aus: alles davon ausgeblendet, der Vorrat bleibt erhalten – die Suche am Display findet ihn weiter, solange sie an ist.": "Pokazuje w aplikacji przyciski „Tylko w wyszukiwaniu” i zasób poniżej. Wył.: wszystko ukryte, zasób zostaje – wyszukiwanie na wyświetlaczu nadal go znajduje, dopóki jest włączone.",
  "„Nur in der Suche“ in der App an": "„Tylko w wyszukiwaniu” w aplikacji włączone",
  "„Nur in der Suche“ in der App ausgeblendet": "„Tylko w wyszukiwaniu” ukryte w aplikacji",
- "In der Suche am Display. „Aus der Suche nehmen“: das Kind findet es nicht mehr – was es schon auf die Startseite geholt hat, bleibt dort.": "W wyszukiwaniu na wyświetlaczu. „Usuń z wyszukiwania”: dziecko już tego nie znajdzie – to, co już dodało na stronę startową, tam zostaje."
+ "In der Suche am Display. „Aus der Suche nehmen“: das Kind findet es nicht mehr – was es schon auf die Startseite geholt hat, bleibt dort.": "W wyszukiwaniu na wyświetlaczu. „Usuń z wyszukiwania”: dziecko już tego nie znajdzie – to, co już dodało na stronę startową, tam zostaje.",
+ "Podcasts für Kinder in der Suche": "Podcasty dla dzieci w wyszukiwaniu",
+ "In der Suche am Display sucht eine Kachel „Podcasts für Kinder“ in Apples Podcast-Verzeichnis (bei Deutsch auch in der ARD Audiothek) – nur Sendungen der Kinder-Kategorien. Das Kind kann sie ohne Freigabe auf die Startseite holen und selbst wieder entfernen. Gesucht wird erst beim Tippen auf die Kachel; der Suchbegriff geht dabei an Apple bzw. die ARD.": "W wyszukiwaniu na wyświetlaczu kafelek „Podcasty dla dzieci” przeszukuje katalog podcastów Apple (po niemiecku także ARD Audiothek) – tylko audycje z kategorii dziecięcych. Dziecko może dodać je na stronę startową bez zgody i samo je usunąć. Wyszukiwanie następuje dopiero po stuknięciu kafelka; wpisane hasło trafia wtedy do Apple lub ARD.",
+ "Podcasts für Kinder in der Suche an": "Podcasty dla dzieci w wyszukiwaniu włączone",
+ "Podcasts für Kinder in der Suche aus": "Podcasty dla dzieci w wyszukiwaniu wyłączone"
 }

@@ -3222,5 +3222,9 @@
  "Zeigt in der App die Knöpfe „Nur in der Suche“ und den Vorrat unten. Aus: alles davon ausgeblendet, der Vorrat bleibt erhalten – die Suche am Display findet ihn weiter, solange sie an ist.": "Shows the “Search only” buttons in the app and the pool below. Off: all of it hidden, the pool is kept – the search on the display still finds it as long as it is on.",
  "„Nur in der Suche“ in der App an": "“Search only” in the app on",
  "„Nur in der Suche“ in der App ausgeblendet": "“Search only” hidden in the app",
- "In der Suche am Display. „Aus der Suche nehmen“: das Kind findet es nicht mehr – was es schon auf die Startseite geholt hat, bleibt dort.": "In the search on the display. “Remove from search”: the child no longer finds it – what it already put on the start page stays there."
+ "In der Suche am Display. „Aus der Suche nehmen“: das Kind findet es nicht mehr – was es schon auf die Startseite geholt hat, bleibt dort.": "In the search on the display. “Remove from search”: the child no longer finds it – what it already put on the start page stays there.",
+ "Podcasts für Kinder in der Suche": "Podcasts for children in the search",
+ "In der Suche am Display sucht eine Kachel „Podcasts für Kinder“ in Apples Podcast-Verzeichnis (bei Deutsch auch in der ARD Audiothek) – nur Sendungen der Kinder-Kategorien. Das Kind kann sie ohne Freigabe auf die Startseite holen und selbst wieder entfernen. Gesucht wird erst beim Tippen auf die Kachel; der Suchbegriff geht dabei an Apple bzw. die ARD.": "In the search on the display a tile “Podcasts for children” searches Apple’s podcast directory (for German also the ARD Audiothek) – only shows of the children’s categories. The child can put them on the start page without approval and remove them again itself. The search runs only when the tile is tapped; the search term then goes to Apple or the ARD.",
+ "Podcasts für Kinder in der Suche an": "Podcasts for children in the search on",
+ "Podcasts für Kinder in der Suche aus": "Podcasts for children in the search off"
 }

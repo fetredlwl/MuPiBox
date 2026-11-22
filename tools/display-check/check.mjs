@@ -9,6 +9,8 @@
 //   R3  the artist and album pages look like the start page's (album list header, covers) and nothing scrolls
 //   R4  one way back on each page (no second "close" doing the same)
 //   R5  the texts come from the display's translations (English box: no German on the page)
+//   R6  podcasts for children: nothing asked while typing, only the tile asks; children's shows only; on the start
+//       page without approval (no "play" on the way), then among what the child fetched itself
 //
 // Usage: node check.mjs <www dir> [--shots <dir>]   (needs Chrome; port 8200 and 4300 free)
 // Exit code 0: all rules kept; 1: a rule broken (listed); 2: could not run.
@@ -104,13 +106,32 @@ function makeConfigDir() {
   fs.mkdirSync(path.join(dir, 'cache'))
   fs.copyFileSync(path.join(repo, 'config', 'templates', 'www.json'), path.join(cfg, 'config.json'))
   const box = JSON.parse(fs.readFileSync(path.join(repo, 'config', 'templates', 'mupiboxconfig.json'), 'utf8'))
-  box.mupibox = { ...box.mupibox, displaySearch: true, hiddenCategories: [] }
+  box.mupibox = { ...box.mupibox, displaySearch: true, displayPodcasts: true, hiddenCategories: [] }
   // (R5: an English box - a German text on the page is one not taken from the translations)
   box.displayLanguage = 'en'
   box.spotify_sync = { ...(box.spotify_sync ?? {}), split_quota_block: true }
   fs.writeFileSync(path.join(cfg, 'mupiboxconfig.json'), JSON.stringify(box, null, 2))
   fs.writeFileSync(path.join(cfg, 'data.json'), JSON.stringify(library, null, 2))
   fs.writeFileSync(path.join(cfg, 'search-pool.json'), JSON.stringify(pool, null, 2))
+  // (the directories' answer for any term: one show for children, one for grown-ups - MUPIBOX_PODCAST_FIXTURE)
+  const show = (title, feed, kids) => ({
+    title,
+    author: 'Testsender',
+    feedUrl: feed,
+    image: '',
+    genre: 'Kids',
+    episodes: 9,
+    country: 'DE',
+    kids,
+    explicit: false,
+  })
+  fs.writeFileSync(
+    path.join(dir, 'podcasts.json'),
+    JSON.stringify([
+      show('Frosch Funkhaus', 'https://example.invalid/frosch-funkhaus.xml', true),
+      show('Erwachsenenfunk', 'https://example.invalid/erwachsen.xml', false),
+    ]),
+  )
   return dir
 }
 
@@ -188,7 +209,7 @@ async function startBackend(dir) {
   const server = path.join(repo, 'src', 'backend-api', 'src', 'server.ts')
   const proc = spawn(process.execPath, [tsx, server], {
     cwd: dir,
-    env: { ...process.env, NODE_ENV: 'development' },
+    env: { ...process.env, NODE_ENV: 'development', MUPIBOX_PODCAST_FIXTURE: path.join(dir, 'podcasts.json') },
     stdio: ['ignore', 'pipe', 'pipe'],
   })
   let log = ''
@@ -356,6 +377,12 @@ async function run(browser, dir, size) {
   }
 
   try {
+    await podcasts(page, tag, asked)
+  } catch (err) {
+    rule('R6', false, `${tag}: the podcast checks stopped (${firstLine(err)})`)
+  }
+
+  try {
     await blocks(page, tag, dir)
   } catch (err) {
     rule('R1', false, `${tag}: the block checks stopped (${firstLine(err)})`)
@@ -364,6 +391,51 @@ async function run(browser, dir, size) {
   // (the next run starts without a block)
   await wait(Math.max(0, blockEnds - Date.now() + 1500))
   await page.close()
+}
+
+async function podcasts(page, tag, asked) {
+  const podAsks = () => asked.filter((u) => u.includes('/api/search-podcasts?')).length
+  rule('R6', podAsks() === 0, `${tag}: no podcast search while typing`)
+  rule('R6', (await visibleCount(page, '.srch-pod-btn')) === 1, `${tag}: the tile "podcasts for children" is there`)
+  await page.click('app-search .srch-pod-btn')
+  await wait(1200)
+  rule('R6', podAsks() === 1, `${tag}: the tile asks once`)
+  const names = await page.evaluate(() =>
+    [...document.querySelectorAll('app-search .srch-pod .srch-name')].map((e) => e.textContent.trim()),
+  )
+  rule(
+    'R6',
+    names.includes('Frosch Funkhaus') && !names.includes('Erwachsenenfunk'),
+    `${tag}: children's shows only (${names.join(', ')})`,
+  )
+  const opened = await clickText(page, '.srch-pod', 'Frosch Funkhaus')
+  if (!opened || (await topTag(page)) !== 'app-search-album') throw new Error('no page for the podcast')
+  const words = await page.evaluate((top) => eval(top)?.innerText ?? '', TOP)
+  rule(
+    'R6',
+    words.includes('To the start page') && !words.includes('Play'),
+    `${tag}: a podcast goes on the start page (nothing to play there)`,
+  )
+  const o = await overflow(page)
+  rule('R3', !o.scrolls && !o.below, `${tag}: podcast page fits the screen`)
+  await clickText(page, '.sa-btn', 'To the start page')
+  await clickText(page, '.sa-btn', 'Audio books')
+  await wait(800)
+  const note = await page.evaluate(() => document.querySelector('app-search .srch-toast')?.textContent ?? '')
+  rule(
+    'R6',
+    (await topTag(page)) === 'app-search' && /Frosch Funkhaus/.test(note),
+    `${tag}: put on the start page without approval ("${note.trim()}")`,
+  )
+  await page.click('app-search .srch-clear')
+  await wait(900)
+  const own = await page.evaluate(() =>
+    [...document.querySelectorAll('app-search .srch-own .srch-name')].map((e) => e.textContent.trim()),
+  )
+  rule('R6', own.includes('Frosch Funkhaus'), `${tag}: among what the child fetched itself`)
+  // (taken out again: the next run starts as this one)
+  await clickText(page, '.srch-own', 'Frosch Funkhaus')
+  await clickText(page, '.srch-own', 'Remove?')
 }
 
 async function navigation(page, tag, hitsBefore, asked) {

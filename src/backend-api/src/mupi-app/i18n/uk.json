@@ -3222,5 +3222,9 @@
  "Zeigt in der App die Knöpfe „Nur in der Suche“ und den Vorrat unten. Aus: alles davon ausgeblendet, der Vorrat bleibt erhalten – die Suche am Display findet ihn weiter, solange sie an ist.": "Показує в застосунку кнопки «Лише в пошуку» та запас нижче. Вимк.: усе приховано, запас зберігається – пошук на дисплеї й далі його знаходить, поки увімкнений.",
  "„Nur in der Suche“ in der App an": "«Лише в пошуку» в застосунку увімкнено",
  "„Nur in der Suche“ in der App ausgeblendet": "«Лише в пошуку» приховано в застосунку",
- "In der Suche am Display. „Aus der Suche nehmen“: das Kind findet es nicht mehr – was es schon auf die Startseite geholt hat, bleibt dort.": "У пошуку на дисплеї. «Прибрати з пошуку»: дитина більше не знайде – те, що вже додано на стартову сторінку, там і залишиться."
+ "In der Suche am Display. „Aus der Suche nehmen“: das Kind findet es nicht mehr – was es schon auf die Startseite geholt hat, bleibt dort.": "У пошуку на дисплеї. «Прибрати з пошуку»: дитина більше не знайде – те, що вже додано на стартову сторінку, там і залишиться.",
+ "Podcasts für Kinder in der Suche": "Подкасти для дітей у пошуку",
+ "In der Suche am Display sucht eine Kachel „Podcasts für Kinder“ in Apples Podcast-Verzeichnis (bei Deutsch auch in der ARD Audiothek) – nur Sendungen der Kinder-Kategorien. Das Kind kann sie ohne Freigabe auf die Startseite holen und selbst wieder entfernen. Gesucht wird erst beim Tippen auf die Kachel; der Suchbegriff geht dabei an Apple bzw. die ARD.": "У пошуку на дисплеї плитка «Подкасти для дітей» шукає в каталозі подкастів Apple (німецькою також в ARD Audiothek) – лише передачі дитячих категорій. Дитина може додати їх на стартову сторінку без дозволу й сама прибрати. Пошук іде лише після торкання плитки; пошуковий запит тоді надходить до Apple або ARD.",
+ "Podcasts für Kinder in der Suche an": "Подкасти для дітей у пошуку увімкнено",
+ "Podcasts für Kinder in der Suche aus": "Подкасти для дітей у пошуку вимкнено"
 }

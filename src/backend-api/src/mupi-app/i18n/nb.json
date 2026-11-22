@@ -3222,5 +3222,9 @@
  "Zeigt in der App die Knöpfe „Nur in der Suche“ und den Vorrat unten. Aus: alles davon ausgeblendet, der Vorrat bleibt erhalten – die Suche am Display findet ihn weiter, solange sie an ist.": "Viser knappene «Bare i søket» i appen og lageret nedenfor. Av: alt skjult, lageret beholdes – søket på displayet finner det fortsatt så lenge det er på.",
  "„Nur in der Suche“ in der App an": "«Bare i søket» på i appen",
  "„Nur in der Suche“ in der App ausgeblendet": "«Bare i søket» skjult i appen",
- "In der Suche am Display. „Aus der Suche nehmen“: das Kind findet es nicht mehr – was es schon auf die Startseite geholt hat, bleibt dort.": "I søket på displayet. «Fjern fra søket»: barnet finner det ikke lenger – det som allerede ligger på startsiden, blir der."
+ "In der Suche am Display. „Aus der Suche nehmen“: das Kind findet es nicht mehr – was es schon auf die Startseite geholt hat, bleibt dort.": "I søket på displayet. «Fjern fra søket»: barnet finner det ikke lenger – det som allerede ligger på startsiden, blir der.",
+ "Podcasts für Kinder in der Suche": "Podkaster for barn i søket",
+ "In der Suche am Display sucht eine Kachel „Podcasts für Kinder“ in Apples Podcast-Verzeichnis (bei Deutsch auch in der ARD Audiothek) – nur Sendungen der Kinder-Kategorien. Das Kind kann sie ohne Freigabe auf die Startseite holen und selbst wieder entfernen. Gesucht wird erst beim Tippen auf die Kachel; der Suchbegriff geht dabei an Apple bzw. die ARD.": "I søket på displayet søker en flis «Podkaster for barn» i Apples podkastkatalog (på tysk også i ARD Audiothek) – bare programmer i barnekategoriene. Barnet kan legge dem på startsiden uten godkjenning og selv fjerne dem igjen. Det søkes først når flisen trykkes; søkeordet går da til Apple eller ARD.",
+ "Podcasts für Kinder in der Suche an": "Podkaster for barn i søket på",
+ "Podcasts für Kinder in der Suche aus": "Podkaster for barn i søket av"
 }

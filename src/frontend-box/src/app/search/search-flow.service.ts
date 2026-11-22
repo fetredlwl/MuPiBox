@@ -32,6 +32,28 @@ export interface PoolEntry {
   albumsAt?: string
 }
 
+/** a podcast for children from the directories (search-podcasts.ts): put on the start page by the child, no approval */
+export interface KidsPodcast {
+  feedUrl: string
+  title: string
+  author: string
+  image: string
+  episodes: number
+}
+
+/** (the id a kids podcast has as an entry of the search's pages - it is no entry of the pool) */
+export const KIDS_PODCAST = 'kids-podcast'
+
+export const kidsPodcastEntry = (p: KidsPodcast): PoolEntry => ({
+  id: KIDS_PODCAST,
+  kind: 'podcast',
+  spotifyId: '',
+  feedUrl: p.feedUrl,
+  name: p.title,
+  artist: p.author,
+  cover: p.image,
+})
+
 /** the names of the tabs in the box's language (display-texts.json) and their icons */
 export const CATEGORY_LABEL: Record<string, { label: DisplayTextKey; icon: string }> = {
   audiobook: { label: 'searchCatAudiobook', icon: 'book-outline' },
@@ -112,12 +134,18 @@ export class SearchFlowService {
   async addTo(entry: PoolEntry, category: CategoryType, album?: PoolAlbum): Promise<void> {
     const name = album?.name ?? entry.name
     try {
+      // (a podcast for children found by the search: its own way in, only shows the search handed out)
       const r = await firstValueFrom(
-        this.http.post<{ ok: boolean; result: 'added' | 'already' }>(`${this.api}/search-pool/add-to-library`, {
-          poolId: entry.id,
-          albumId: album?.id,
-          category,
-        }),
+        entry.id === KIDS_PODCAST
+          ? this.http.post<{ ok: boolean; result: 'added' | 'already' }>(`${this.api}/search-podcasts/add`, {
+              feedUrl: entry.feedUrl,
+              category,
+            })
+          : this.http.post<{ ok: boolean; result: 'added' | 'already' }>(`${this.api}/search-pool/add-to-library`, {
+              poolId: entry.id,
+              albumId: album?.id,
+              category,
+            }),
       )
       this.note =
         r?.result === 'already'

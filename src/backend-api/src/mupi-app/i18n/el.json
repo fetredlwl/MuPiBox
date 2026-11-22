@@ -3222,5 +3222,9 @@
  "Zeigt in der App die Knöpfe „Nur in der Suche“ und den Vorrat unten. Aus: alles davon ausgeblendet, der Vorrat bleibt erhalten – die Suche am Display findet ihn weiter, solange sie an ist.": "Δείχνει στην εφαρμογή τα κουμπιά «Μόνο στην αναζήτηση» και το απόθεμα παρακάτω. Ανενεργό: όλα κρυμμένα, το απόθεμα διατηρείται – η αναζήτηση στην οθόνη το βρίσκει όσο είναι ενεργή.",
  "„Nur in der Suche“ in der App an": "«Μόνο στην αναζήτηση» ενεργό στην εφαρμογή",
  "„Nur in der Suche“ in der App ausgeblendet": "«Μόνο στην αναζήτηση» κρυμμένο στην εφαρμογή",
- "In der Suche am Display. „Aus der Suche nehmen“: das Kind findet es nicht mehr – was es schon auf die Startseite geholt hat, bleibt dort.": "Στην αναζήτηση της οθόνης. «Αφαίρεση από την αναζήτηση»: το παιδί δεν το βρίσκει πια – ό,τι έχει ήδη βάλει στην αρχική σελίδα μένει εκεί."
+ "In der Suche am Display. „Aus der Suche nehmen“: das Kind findet es nicht mehr – was es schon auf die Startseite geholt hat, bleibt dort.": "Στην αναζήτηση της οθόνης. «Αφαίρεση από την αναζήτηση»: το παιδί δεν το βρίσκει πια – ό,τι έχει ήδη βάλει στην αρχική σελίδα μένει εκεί.",
+ "Podcasts für Kinder in der Suche": "Podcasts για παιδιά στην αναζήτηση",
+ "In der Suche am Display sucht eine Kachel „Podcasts für Kinder“ in Apples Podcast-Verzeichnis (bei Deutsch auch in der ARD Audiothek) – nur Sendungen der Kinder-Kategorien. Das Kind kann sie ohne Freigabe auf die Startseite holen und selbst wieder entfernen. Gesucht wird erst beim Tippen auf die Kachel; der Suchbegriff geht dabei an Apple bzw. die ARD.": "Στην αναζήτηση της οθόνης ένα πλακίδιο «Podcasts για παιδιά» ψάχνει στον κατάλογο podcasts της Apple (στα γερμανικά και στην ARD Audiothek) – μόνο εκπομπές των παιδικών κατηγοριών. Το παιδί μπορεί να τις βάλει στην αρχική σελίδα χωρίς έγκριση και να τις αφαιρέσει μόνο του. Η αναζήτηση γίνεται μόνο όταν πατηθεί το πλακίδιο· ο όρος πηγαίνει τότε στην Apple ή στην ARD.",
+ "Podcasts für Kinder in der Suche an": "Podcasts για παιδιά στην αναζήτηση ενεργά",
+ "Podcasts für Kinder in der Suche aus": "Podcasts για παιδιά στην αναζήτηση ανενεργά"
 }

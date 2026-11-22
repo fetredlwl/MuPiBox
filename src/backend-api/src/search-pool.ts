@@ -354,7 +354,27 @@ export class SearchPool {
       if (!album) return 'unknown'
       what = { kind: 'album', spotifyId: album.id, name: album.name, artist: entry.name, cover: album.cover }
     }
-    const row = libraryRow(what, category, entry.id)
+    return this.putInLibrary(what, category, entry.id)
+  }
+
+  /**
+   * A podcast for children the display's search found (search-podcasts.ts: Apple's directory / the ARD Audiothek, the
+   * children's categories only) - put on the start page by the child without the parents' approval, as one of its own
+   * (it may take it out again, the parents see it in the app).
+   */
+  async addKidsPodcast(
+    show: { feedUrl: string; name: string; artist: string; cover: string },
+    category: LibraryCategory,
+  ): Promise<'added' | 'already' | 'locked'> {
+    return this.putInLibrary({ kind: 'podcast', spotifyId: '', ...show }, category, 'kids-podcast')
+  }
+
+  private async putInLibrary(
+    what: { kind: PoolKind; spotifyId: string; feedUrl?: string; name: string; artist: string; cover: string },
+    category: LibraryCategory,
+    poolId: string,
+  ): Promise<'added' | 'already' | 'locked'> {
+    const row = libraryRow(what, category, poolId)
     const ident = identOf(row)
     const result = await withLock(this.deps.dataLock, 'search pool add', async () => {
       const data = await this.readLibrary()
