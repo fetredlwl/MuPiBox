@@ -150,6 +150,45 @@ describe('the pool', () => {
   })
 })
 
+describe('the background queue (Spotify blocked the app after many artists at once)', () => {
+  it('asks one artist after the other, with the spacing of the setting, and hands it on for the pages', async () => {
+    const calls: { id: string; at: number; delay?: number }[] = []
+    const paced: SearchPoolDeps = {
+      ...deps,
+      backgroundSeconds: () => 0.12,
+      spotify: () => ({
+        getAllArtistAlbums: async (id: string, _types?: string, opts?: { pageDelayMs?: number }) => {
+          calls.push({ id, at: Date.now(), delay: opts?.pageDelayMs })
+          return [{ id: ALBUM_1, name: 'Ein Album', images: [], release_date: '2020' }]
+        },
+      }),
+    }
+    const app2 = express()
+    app2.use(express.json())
+    const p = registerSearchPoolRoutes(app2, paced)
+    await p.add({ kind: 'artist', spotifyId: 'E'.repeat(22), name: 'Eins', artist: '', cover: '' })
+    await p.add({ kind: 'artist', spotifyId: 'F'.repeat(22), name: 'Zwei', artist: '', cover: '' })
+    await new Promise((r) => setTimeout(r, 400))
+    assert.equal(calls.length, 2)
+    assert.equal(calls[0].delay, 120)
+    assert.ok(calls[1].at - calls[0].at >= 110, `zweiter Künstler nach ${calls[1].at - calls[0].at} ms`)
+    assert.equal((await p.entries()).filter((e) => e.albums?.length === 1).length, 2)
+  })
+
+  it('takes the spacing from the sync settings, within 5..120 s', async () => {
+    const { loadSpotifySyncConfig } = await import('./spotify-sync/config-loader')
+    const of = (v: unknown) =>
+      loadSpotifySyncConfig({ spotify_sync: { background_request_seconds: v } } as unknown as Parameters<
+        typeof loadSpotifySyncConfig
+      >[0]).background_request_seconds
+    assert.equal(of(undefined), 15)
+    assert.equal(of(30), 30)
+    assert.equal(of(1), 5)
+    assert.equal(of(999), 120)
+    assert.equal(of('kaputt'), 15)
+  })
+})
+
 describe('the routes', () => {
   it('parents: add and list need a session', async () => {
     await request(app).post('/api/app/search-pool').send({ kind: 'album', spotifyId: ALBUM_1, name: 'X' }).expect(401)

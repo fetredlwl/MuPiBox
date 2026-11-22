@@ -52,6 +52,14 @@ interface Kept {
 
 const memory = new Map<string, Kept & { checkedAt: number }>()
 
+/**
+ * The list kept for an artist, without asking Spotify - undefined while none is kept (fork "wishes": the app's
+ * artist page shows a kept list at once and asks Spotify only for what is needed).
+ */
+export function keptArtistAlbums(artistId: string, groups: string): StoredAlbum[] | undefined {
+  return read(keyOf(artistId, groups))?.albums
+}
+
 /** Forgets the lists kept in memory (after "clear cache" removed their files). */
 export function clearArtistAlbumsMemory(): void {
   memory.clear()

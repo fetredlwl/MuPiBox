@@ -3901,7 +3901,8 @@ async function addToPool(item) {
   search.pool.set(poolKey(item), r.body?.entry?.id)
   drawSearch()
   drawSpotifyMine()
-  toast(`In der Suche: ${item.name}`)
+  // (an artist: its albums come in the background, one page after the other - see Sync-Einstellungen)
+  toast(item.kind === 'artist' ? `In der Suche: ${item.name} – die Alben lädt die Box im Hintergrund nach` : `In der Suche: ${item.name}`)
   return true
 }
 
@@ -4130,14 +4131,27 @@ function drawSearch() {
         <p class="help" style="margin:0">${esc(lib.sync && !lib.sync.enabled ? 'Abonnieren holt alle Folgen auf die Box. Später erscheinende kommen nur mit Smart-Sync von selbst (Bibliothek › Spotify). Einzelne Alben fügst du unten hinzu.' : 'Abonnieren holt alle Folgen auf die Box und später auch neue. Einzelne Alben fügst du unten hinzu.')}</p>
         <div class="btns"><button class="btn primary" id="s-sub">${icon(subscribed ? 'check' : 'plus', 18)}${esc(subscribed ? 'Abonniert' : 'Ganzen Künstler abonnieren')}</button>${subscribed && !pooled ? '' : poolButton(pooled, 'data-s-pool')}</div>
         ${subscribed && !pooled ? '' : `<p class="help" style="margin:0">${esc(pooled ? 'In der Suche am Display. „Aus der Suche nehmen“: das Kind findet ihn nicht mehr – was es schon auf die Startseite geholt hat, bleibt dort.' : POOL_HELP)}</p>`}</section>
-      <section class="card"><h2>${esc('Alben')}</h2>${artistControls('s')}<div class="rows" id="s-alist"></div></section>`
+      <section class="card"><h2>${esc('Alben')}</h2>${artistControls('s')}<div class="rows" id="s-alist"></div><div id="s-amore"></div></section>`
     const list = () => {
       const el = $('#s-alist', box)
       if (!a.albums) el.innerHTML = '<div class="loading"><p>Lade …</p></div>'
       else {
         const rows = filterAlbums(a.albums)
-        el.innerHTML = rows.length ? rowsOf('albums', rows) : `<p class="help" style="margin:0">${esc(a.albums.length ? 'Nichts gefunden.' : 'Keine Alben gefunden.')}</p>`
+        el.innerHTML = rows.length
+          ? rowsOf('albums', rows)
+          : `<p class="help" style="margin:0">${esc(a.failed ? 'Die Alben ließen sich nicht laden – sperrt Spotify gerade? (Bibliothek › Spotify)' : a.albums.length ? 'Nichts gefunden.' : 'Keine Alben gefunden.')}</p>`
       }
+      // (fork "wishes") not all there yet: each further page is a request to Spotify - on a tap only
+      const more = $('#s-amore', box)
+      more.innerHTML =
+        a.albums && !a.complete
+          ? `<p class="help" style="margin:0">${esc(`${a.albums.length} von ${a.total} Alben geladen. Jede weitere Seite ist eine Anfrage an Spotify – bei vielen Künstlern auf einmal sperrt Spotify die Box für Stunden.`)}</p>
+            <div class="btns"><button class="btn" id="s-more"${a.loadingMore ? ' disabled' : ''}>${esc('Weitere 10 laden')}</button><button class="btn" id="s-all"${a.loadingMore ? ' disabled' : ''}>${esc(`Alle ${a.total} laden`)}</button></div>`
+          : ''
+      const mBtn = $('#s-more', box)
+      if (mBtn) mBtn.onclick = () => moreArtistAlbums(false)
+      const aBtn = $('#s-all', box)
+      if (aBtn) aBtn.onclick = () => moreArtistAlbums(true)
       wire()
     }
     list()
@@ -4187,14 +4201,52 @@ function viaSubscription(r) {
 
 // An artist from the search: its albums (all at once - the backend keeps them, see getAllArtistAlbums), and
 // subscribing to all of it
+// (fork "wishes") The whole list only when the box keeps it already (no request to Spotify) - else one page of 10, and
+// more only on a tap: looking through ten big artists asked 74 pages in a few minutes, and Spotify blocked the app
+// for 11 hours. complete: all albums are there; total: Spotify's count.
 async function openSpotifyArtist(r) {
   artistView.q = ''
-  search.artist = { ...r, albums: null }
+  search.artist = { ...r, albums: null, total: null, complete: false, loadingMore: false }
   drawSearch()
   $('#s-results')?.scrollIntoView({ block: 'start' })
-  const res = await api(`/api/spotify/artist/${encodeURIComponent(r.id)}/albums?all=1`)
+  const base = `/api/spotify/artist/${encodeURIComponent(r.id)}/albums`
+  const kept = await api(`${base}?kept=1`)
   if (search.artist?.id !== r.id) return
-  search.artist.albums = (res.body?.items ?? []).filter((a) => a?.id).map(spAlbum)
+  if (kept.ok && kept.body?.kept) {
+    Object.assign(search.artist, { albums: (kept.body.items ?? []).filter((a) => a?.id).map(spAlbum), complete: true })
+    search.artist.total = search.artist.albums.length
+    return drawSearch()
+  }
+  const res = await api(`${base}?limit=10&offset=0`)
+  if (search.artist?.id !== r.id) return
+  const albums = res.ok ? (res.body?.items ?? []).filter((a) => a?.id).map(spAlbum) : []
+  const total = res.ok ? Number(res.body?.total) || albums.length : 0
+  Object.assign(search.artist, { albums, total, complete: !res.ok || albums.length >= total, failed: !res.ok })
+  drawSearch()
+}
+
+// the next page of 10, or all at once (all: the whole list - kept on the box afterwards)
+async function moreArtistAlbums(all) {
+  const a = search.artist
+  if (!a || a.complete || a.loadingMore) return
+  a.loadingMore = true
+  drawSearch()
+  const base = `/api/spotify/artist/${encodeURIComponent(a.id)}/albums`
+  const res = await api(all ? `${base}?all=1` : `${base}?limit=10&offset=${a.albums.length}`)
+  if (search.artist !== a) return
+  a.loadingMore = false
+  if (!res.ok) {
+    toast('Die Alben ließen sich nicht laden – sperrt Spotify gerade? (Bibliothek › Spotify)', 'info')
+    return drawSearch()
+  }
+  const items = (res.body?.items ?? []).filter((x) => x?.id).map(spAlbum)
+  if (all) a.albums = items
+  else {
+    const known = new Set(a.albums.map((x) => x.id))
+    a.albums = [...a.albums, ...items.filter((x) => !known.has(x.id))]
+  }
+  a.complete = all || items.length === 0 || a.albums.length >= a.total
+  if (all) a.total = a.albums.length
   drawSearch()
 }
 
@@ -5909,6 +5961,8 @@ async function loadSyncConfig() {
   // the prefix is prefilled with the box's name while none was chosen (the backend fills in its default "MuPiBox")
   state.values.set('prefix', (c.prefix_set && c.playlist_prefix) || state.boxName)
   state.values.set('syncInt', Math.max(5, Math.min(60, Math.round((c.polling_interval_seconds ?? 900) / 60 / 5) * 5)))
+  // (fork "wishes": seconds between the Spotify requests of the background work)
+  state.values.set('bgSec', Math.max(5, Math.min(120, Math.round((c.background_request_seconds ?? 15) / 5) * 5)))
   state.values.set('syncOn', !!c.enabled)
 }
 
@@ -8224,7 +8278,7 @@ function drawPoolLists(root, page) {
     rowsEl.innerHTML =
       shown
         .map((e) => {
-          const sub = [POOL_KIND[e.kind] ?? e.kind, e.artist, e.kind === 'artist' ? (e.albums ? `${e.albums.length} Alben` : 'Alben werden geladen') : ''].filter(Boolean).join(' · ')
+          const sub = [POOL_KIND[e.kind] ?? e.kind, e.artist, e.kind === 'artist' ? (e.loading ? (e.albums ? `${e.albums.length} Alben · wird aufgefrischt` : 'Alben werden im Hintergrund geladen') : e.albums ? `${e.albums.length} Alben` : 'Alben noch nicht geladen') : ''].filter(Boolean).join(' · ')
           return `<div class="entry lib-row">${thumb(e.cover)}<span class="lbl"><b translate="no">${esc(e.name)}</b><small translate="no">${esc(sub)}</small></span><button class="btn" data-pool-rm="${esc(e.id)}">${esc('Entfernen')}</button></div>`
         })
         .join('') || `<p class="help" style="margin:0">${esc(q ? 'Nichts gefunden.' : 'Noch leer.')}</p>`
@@ -12152,11 +12206,21 @@ const CONTROLLERS = {
   syncopt: {
     load: loadSyncConfig,
     // (the prototype said a manual sync stays possible: it does not, see the scheduler)
-    sections: (page) =>
-      page.sections.map((sec) => ({
+    sections: (page) => {
+      const secs = page.sections.map((sec) => ({
         ...sec,
         items: sec.items.map((it) => (it.key === 'syncOn' ? { ...it, help: 'Aus = kein Abgleich der Playlists, auch nicht von Hand (Knopf, Telegram /resync), und keine später erschienenen Folgen von selbst. Was du unter „Verwaltete Inhalte“ abonnierst oder hinzufügst, kommt trotzdem auf die Box. Die Inhalte auf der Box bleiben.' } : it)),
-      })),
+      }))
+      // (fork "wishes") the spacing of the background requests, after the sync interval - saved with "Speichern"
+      const bg = {
+        title: 'Hintergrund-Abfragen',
+        help: 'Wie lange die Box zwischen zwei Anfragen an Spotify wartet, wenn sie im Hintergrund viele Seiten holt – z. B. alle Alben eines Künstlers, der „Nur in der Suche“ freigegeben ist (bei großen Künstlern über 10 Seiten). Zu viele Anfragen auf einmal: Spotify sperrt die Box für Stunden.',
+        items: [{ type: 'slider', label: 'Sekunden zwischen Spotify-Anfragen', key: 'bgSec', default: 15, min: 5, max: 120, step: 5, unit: ' s', help: 'Mehr Sekunden: Freigegebene Künstler sind später vollständig in der Suche, die Box ist aber vor Sperren sicherer.' }],
+      }
+      const at = secs.findIndex((s) => s.items.some((it) => it.key === 'syncInt'))
+      secs.splice(at >= 0 ? at + 1 : secs.length, 0, bg)
+      return secs
+    },
     byLabel: {
       async Speichern() {
         const prefix = String(state.values.get('prefix') ?? '').trim()
@@ -12164,7 +12228,7 @@ const CONTROLLERS = {
         if (!prefixOk(prefix)) return
         const r = await api(`${SYNC_API}/config`, {
           method: 'POST',
-          body: { enabled: !!state.values.get('syncOn'), playlist_prefix: prefix, polling_interval_seconds: minutes * 60 },
+          body: { enabled: !!state.values.get('syncOn'), playlist_prefix: prefix, polling_interval_seconds: minutes * 60, background_request_seconds: Number(state.values.get('bgSec')) || 15 },
         })
         toast(r.ok ? 'Gespeichert' : r.body?.error ?? 'Nicht gespeichert', r.ok ? 'ok' : 'info')
       },

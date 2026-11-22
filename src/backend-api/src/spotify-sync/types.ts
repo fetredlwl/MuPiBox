@@ -59,6 +59,9 @@ export interface SpotifySyncConfig {
   explicit_albums: ExplicitAlbum[]
   artists: ArtistSubscription[]
   polling_interval_seconds: number
+  // Seconds between the Spotify requests of background work that asks many pages (the albums of an artist allowed
+  // for the display's search): many at once got the app blocked for hours (fork "wishes")
+  background_request_seconds: number
   manual_throttle_seconds: number
   stale_lock_minutes: number
   category_mapping: Record<string, CategoryType | 'default'>
@@ -79,6 +82,7 @@ export const DEFAULT_SPOTIFY_SYNC_CONFIG: SpotifySyncConfig = {
   explicit_albums: [],
   artists: [],
   polling_interval_seconds: 900, // 15 min (Q6=B)
+  background_request_seconds: 15,
   manual_throttle_seconds: 60,
   stale_lock_minutes: 10,
   category_mapping: {
@@ -112,6 +116,9 @@ export const DEFAULT_SPOTIFY_SYNC_CONFIG: SpotifySyncConfig = {
 /** Polling-interval clamp range — exposed for use by REST handlers. */
 export const POLLING_INTERVAL_SECONDS_MIN = 300 // 5 min
 export const POLLING_INTERVAL_SECONDS_MAX = 3600 // 1 h
+/** Background request spacing clamp range (fork "wishes"). */
+export const BACKGROUND_REQUEST_SECONDS_MIN = 5
+export const BACKGROUND_REQUEST_SECONDS_MAX = 120
 
 /** Token store, persisted in mupiboxconfig.json.spotify (see §4.6). */
 export interface SpotifyTokenStore {

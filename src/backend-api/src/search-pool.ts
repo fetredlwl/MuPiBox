@@ -62,12 +62,23 @@ export interface SearchPoolDeps {
     | {
         getAllArtistAlbums(
           artistId: string,
+          albumTypes?: string,
+          opts?: { pageDelayMs?: number },
         ): Promise<{ id: string; name: string; images?: { url?: string }[]; release_date?: string }[]>
       }
     | undefined
+  /** seconds between the Spotify requests of the background work (Sync-Einstellungen, spotify_sync) - default 15 */
+  backgroundSeconds?: () => number
   session: RequestHandler
   csrf: RequestHandler
 }
+
+// a pause that does not keep the server (or a test) from ending
+const pause = (ms: number) =>
+  new Promise<void>((resolve) => {
+    const t = setTimeout(resolve, ms)
+    t.unref?.()
+  })
 
 const SPOTIFY_ID = /^[A-Za-z0-9]{22}$/
 // Playlists Spotify makes itself ("This Is …", mixes, editorial ones): Spotify does not hand them to apps like the box
@@ -152,7 +163,9 @@ export class SearchPool {
   private readonly eventsFile: string
   // (one write at a time: the parents' app and the display may write at the same moment)
   private queue: Promise<unknown> = Promise.resolve()
-  private refreshing = false
+  // (the artists' album lists: one artist after the other, in the background - see queueAlbums)
+  private albumQueue: Promise<void> = Promise.resolve()
+  private readonly queued = new Set<string>()
 
   constructor(private readonly deps: SearchPoolDeps) {
     this.poolFile = path.join(deps.configDir, 'search-pool.json')
@@ -198,7 +211,7 @@ export class SearchPool {
       return { entry: added, isNew: true }
     })
     // (only for a new one: allowed twice in a row, Spotify was asked twice)
-    if (isNew && entry.kind === 'artist') void this.refreshAlbums(entry.id).catch(() => undefined)
+    if (isNew && entry.kind === 'artist') this.queueAlbums(entry.id)
     return entry
   }
 
@@ -212,13 +225,46 @@ export class SearchPool {
     })
   }
 
+  /** the spacing of the background requests (Sync-Einstellungen) in ms */
+  private pageDelayMs(): number {
+    const s = Number(this.deps.backgroundSeconds?.() ?? 15)
+    return Number.isFinite(s) && s >= 0 ? s * 1000 : 15_000
+  }
+
+  /**
+   * The album list of a pool artist, in the background: queued, one artist after the other, every further page and the
+   * next artist only after the spacing of the Sync-Einstellungen. Ten big artists allowed in a few minutes asked 74
+   * pages at once and Spotify blocked the app for 11 hours (22.11.). Nothing during a block.
+   */
+  queueAlbums(id: string): void {
+    if (this.queued.has(id)) return
+    this.queued.add(id)
+    this.albumQueue = this.albumQueue.then(async () => {
+      try {
+        if (!spotifyBlock()) await this.refreshAlbums(id)
+      } catch (err) {
+        console.warn(
+          `${new Date().toLocaleString()}: [search-pool] albums of ${id} not fetched: ${(err as Error)?.message ?? err}`,
+        )
+      } finally {
+        this.queued.delete(id)
+      }
+      await pause(this.pageDelayMs())
+    })
+  }
+
+  /** whether an artist's albums are queued or being fetched (the app shows "Alben werden geladen") */
+  isQueued(id: string): boolean {
+    return this.queued.has(id)
+  }
+
   /** the albums of an artist of the pool from Spotify (kept by the Spotify service; not during a block) */
   async refreshAlbums(id: string): Promise<void> {
     const spotify = this.deps.spotify()
     if (!spotify || spotifyBlock()) return
     const entry = (await this.entries()).find((e) => e.id === id && e.kind === 'artist')
     if (!entry) return
-    const albums = (await spotify.getAllArtistAlbums(entry.spotifyId))
+    const albums = (await spotify.getAllArtistAlbums(entry.spotifyId, undefined, { pageDelayMs: this.pageDelayMs() }))
       .filter((a) => SPOTIFY_ID.test(a.id ?? ''))
       .map((a) => ({ id: a.id, name: text(a.name), cover: coverOf(a.images), release: text(a.release_date, 10) }))
     await this.serial(async () => {
@@ -232,20 +278,12 @@ export class SearchPool {
 
   /** the artists whose albums are older than a day: asked again one after the other, in the background */
   refreshStale(list: PoolEntry[]): void {
-    if (this.refreshing) return
-    const stale = list.filter(
-      (e) => e.kind === 'artist' && (!e.albumsAt || Date.now() - Date.parse(e.albumsAt) > ALBUMS_MAX_AGE_MS),
-    )
-    if (!stale.length) return
-    this.refreshing = true
-    void (async () => {
-      for (const e of stale) {
-        if (spotifyBlock()) break
-        await this.refreshAlbums(e.id).catch(() => undefined)
+    if (spotifyBlock()) return
+    for (const e of list) {
+      if (e.kind === 'artist' && (!e.albumsAt || Date.now() - Date.parse(e.albumsAt) > ALBUMS_MAX_AGE_MS)) {
+        this.queueAlbums(e.id)
       }
-    })().finally(() => {
-      this.refreshing = false
-    })
+    }
   }
 
   // ---------- the library: what the child put in ----------
@@ -427,7 +465,9 @@ export function registerSearchPoolRoutes(app: Express, deps: SearchPoolDeps): Se
 
   /** GET /api/app/search-pool - the pool and what the child put in */
   app.get('/api/app/search-pool', deps.session, async (_req, res) => {
-    res.json({ entries: await pool.entries(), own: await pool.own() })
+    // (loading: an artist whose albums wait in the background queue)
+    const entries = (await pool.entries()).map((e) => (pool.isQueued(e.id) ? { ...e, loading: true } : e))
+    res.json({ entries, own: await pool.own() })
   })
 
   /**

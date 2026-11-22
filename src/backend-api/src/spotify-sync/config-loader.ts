@@ -10,6 +10,8 @@
 
 import type { MupiboxConfig } from '../models/mupibox-config.model'
 import {
+  BACKGROUND_REQUEST_SECONDS_MAX,
+  BACKGROUND_REQUEST_SECONDS_MIN,
   DEFAULT_SPOTIFY_SYNC_CONFIG,
   POLLING_INTERVAL_SECONDS_MAX,
   POLLING_INTERVAL_SECONDS_MIN,
@@ -44,6 +46,11 @@ export function loadSpotifySyncConfig(mupibox: MupiboxConfig | undefined): Spoti
       Math.min(POLLING_INTERVAL_SECONDS_MAX, merged.polling_interval_seconds),
     )
   }
+  // (the spacing of background requests: a number in its range, else the default)
+  const bg = Number(merged.background_request_seconds)
+  merged.background_request_seconds = Number.isFinite(bg)
+    ? Math.max(BACKGROUND_REQUEST_SECONDS_MIN, Math.min(BACKGROUND_REQUEST_SECONDS_MAX, Math.round(bg)))
+    : DEFAULT_SPOTIFY_SYNC_CONFIG.background_request_seconds
   return merged
 }
 

@@ -22,6 +22,8 @@ import { readStateFile } from './state-file'
 import { triggerManualSync } from './scheduler'
 import type { RunSyncDeps } from './state-machine'
 import {
+  BACKGROUND_REQUEST_SECONDS_MAX,
+  BACKGROUND_REQUEST_SECONDS_MIN,
   POLLING_INTERVAL_SECONDS_MAX,
   POLLING_INTERVAL_SECONDS_MIN,
   type BoxLibraryEntry,
@@ -169,6 +171,12 @@ export function createSpotifySyncRouter(deps: RunSyncDeps): Router {
         Math.min(POLLING_INTERVAL_SECONDS_MAX, Math.floor(body.polling_interval_seconds)),
       )
       mutations.polling_interval_seconds = clamped
+    }
+    if (typeof body.background_request_seconds === 'number' && Number.isFinite(body.background_request_seconds)) {
+      mutations.background_request_seconds = Math.max(
+        BACKGROUND_REQUEST_SECONDS_MIN,
+        Math.min(BACKGROUND_REQUEST_SECONDS_MAX, Math.round(body.background_request_seconds)),
+      )
     }
     if (Array.isArray(body.playlist_explicit_ids)) {
       mutations.playlist_explicit_ids = body.playlist_explicit_ids.filter((id): id is string => typeof id === 'string')

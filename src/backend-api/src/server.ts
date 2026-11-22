@@ -33,7 +33,7 @@ import { SpotifyMediaInfo } from './services/spotify-media-info.service'
 import { fetchFullPlaylistTracks } from './services/spotify-playlist-full'
 import { getValidAccessToken } from './spotify-sync/auth'
 import { SpotifyApiException } from './spotify-sync/playlists'
-import { loadSpotifyTokenStore } from './spotify-sync/config-loader'
+import { loadSpotifySyncConfig, loadSpotifyTokenStore } from './spotify-sync/config-loader'
 import { createSpotifySyncRouter } from './spotify-sync/routes'
 import { startScheduler } from './spotify-sync/scheduler'
 import type { RunSyncDeps } from './spotify-sync/state-machine'
@@ -1211,6 +1211,9 @@ const searchPool = registerSearchPoolRoutes(app, {
   dataLock,
   writeLibrary: (data) => new Promise((resolve, reject) => writeJsonAtomic(dataFile, data, (error) => (error ? reject(error) : resolve()))),
   spotify: () => spotifyApiService,
+  // (the spacing of the background requests: Sync-Einstellungen, spotify_sync.background_request_seconds)
+  backgroundSeconds: () =>
+    loadSpotifySyncConfig(getMupiboxConfigSync() as unknown as Parameters<typeof loadSpotifySyncConfig>[0]).background_request_seconds,
   session: requireSession,
   csrf: requireCsrf,
 })
@@ -4471,6 +4474,13 @@ app.get('/api/spotify/artist/:artistId/albums', async (req, res) => {
     if (req.query.all === '1') {
       const items = await spotifyApiService.getAllArtistAlbums(artistId, albumTypes)
       res.status(200).json({ items, total: items.length, limit: items.length, offset: 0 })
+      return
+    }
+    // ?kept=1 (fork "wishes"): the whole list only when the box keeps it already - no request to Spotify; else
+    // kept: false (the app's artist page then asks for one page, and more only on a tap)
+    if (req.query.kept === '1') {
+      const items = spotifyApiService.keptArtistAlbums(artistId, albumTypes)
+      res.status(200).json(items ? { kept: true, items, total: items.length, limit: items.length, offset: 0 } : { kept: false, items: [] })
       return
     }
     const results = await spotifyApiService.getArtistAlbums(artistId, albumTypes, limit, offset)

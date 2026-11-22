@@ -5,7 +5,7 @@ import os from 'node:os'
 import path from 'node:path'
 import { SpotifyApi } from '@spotify/web-api-ts-sdk'
 import type { ServerConfig } from '../models/server.model'
-import { artistAlbums } from '../artist-albums-store'
+import { artistAlbums, keptArtistAlbums } from '../artist-albums-store'
 import { noteSpotifyBlock, spotifyBlock } from '../spotify-block'
 import type {
   CachedSpotifyData,
@@ -706,11 +706,19 @@ export class SpotifyApiService {
    * (artist-albums-store.ts) - the display asked every page of the artist (30 for a big one) each time its kept pages
    * got old. During a Spotify block (or without network) the kept list is handed out.
    */
-  async getAllArtistAlbums(artistId: string, albumTypes = 'album,single,compilation'): Promise<SpotifyApiArtistAlbumsResult[]> {
+  async getAllArtistAlbums(
+    artistId: string,
+    albumTypes = 'album,single,compilation',
+    opts: { pageDelayMs?: number } = {},
+  ): Promise<SpotifyApiArtistAlbumsResult[]> {
+    // pageDelayMs (fork "wishes"): background work waits so long before each further page - a big artist is 12 pages,
+    // ten of them in a few minutes got the app blocked for hours
+    const delay = Math.max(0, opts.pageDelayMs ?? 0)
     const albums = await artistAlbums(
       artistId,
       albumTypes,
       async (offset) => {
+        if (offset > 0 && delay) await new Promise((resolve) => setTimeout(resolve, delay))
         const result = await this.rateLimitedRequest(() =>
           this.spotifyApi.artists.albums(artistId, albumTypes as any, 'DE', 10 as any, offset),
         )
@@ -718,6 +726,20 @@ export class SpotifyApiService {
       },
       { staleOnError: true },
     )
+    return albums.map((item) => ({
+      id: item.id ?? '',
+      name: item.name ?? '',
+      artists: (item.artists ?? []) as any,
+      images: (item.images ?? []) as any,
+      release_date: item.release_date ?? '',
+      album_type: item.album_type ?? undefined,
+    }))
+  }
+
+  /** The kept whole list of an artist, without asking Spotify - null while none is kept (fork "wishes") */
+  keptArtistAlbums(artistId: string, albumTypes = 'album,single,compilation'): SpotifyApiArtistAlbumsResult[] | null {
+    const albums = keptArtistAlbums(artistId, albumTypes)
+    if (!albums) return null
     return albums.map((item) => ({
       id: item.id ?? '',
       name: item.name ?? '',
