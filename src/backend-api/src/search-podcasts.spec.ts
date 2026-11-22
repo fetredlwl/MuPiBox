@@ -53,6 +53,10 @@ beforeEach(() => {
     getMupiboxConfig: () => cfg as unknown as MupiboxConfig,
     pool,
     now: () => now,
+    tips: async (lang) => {
+      asked.push(`tips|${lang}`)
+      return [hit('Tipp Tiger', 'https://example.invalid/tiger.xml'), hit('Erwachsenentipp', 'https://example.invalid/e.xml', false)]
+    },
     search: async (term, lang) => {
       asked.push(`${lang}|${term}`)
       return [
@@ -128,5 +132,22 @@ describe('podcasts for children in the display search', () => {
     // (the child sees it under "Von dir geholt" and can take it out again)
     const own = await request(app).get('/api/search-pool/own').expect(200)
     assert.equal(own.body.entries.length, 1)
+  })
+
+  it('tips before anything is typed: children’s shows, asked again after 6 hours, addable', async () => {
+    const r = await request(app).get('/api/search-podcasts/tips').expect(200)
+    assert.deepEqual(
+      r.body.shows.map((s: { title: string }) => s.title),
+      ['Tipp Tiger'],
+    )
+    await request(app).get('/api/search-podcasts/tips').expect(200)
+    assert.deepEqual(asked, ['tips|de'])
+    now += 7 * 60 * 60 * 1000
+    await request(app).get('/api/search-podcasts/tips').expect(200)
+    assert.equal(asked.length, 2)
+    const add = await request(app).post('/api/search-podcasts/add').send({ feedUrl: 'https://example.invalid/tiger.xml', category: 'other' }).expect(200)
+    assert.equal(add.body.result, 'added')
+    ;(cfg.mupibox as Record<string, unknown>).displayPodcasts = false
+    await request(app).get('/api/search-podcasts/tips').expect(403)
   })
 })

@@ -65,6 +65,9 @@ interface OwnEntry {
   category: string
 }
 
+/** a podcast's feed as the backend compares it (search-pool.ts feedKey): without http(s):// */
+const feedKey = (feed: string) => feed.replace(/^https?:\/\//i, '')
+
 /** as the backend knows a pool entry in the library (search-pool.ts poolIdent): "album:<id>", "podcast:<feed>" … */
 function poolIdent(e: PoolEntry): string {
   return e.kind === 'podcast' ? `podcast:${(e.feedUrl ?? '').replace(/^https?:\/\//i, '')}` : `${e.kind}:${e.spotifyId}`
@@ -263,9 +266,24 @@ export class SearchPage implements AfterViewInit, OnDestroy {
   private readonly podFor = signal('')
   private readonly podHits = signal<KidsPodcast[]>([])
   protected readonly podBusy = signal(false)
+  // the tips before anything is typed ("Tipps für Kinder", the app's suggestions - asked once per visit of the search,
+  // the backend asks Apple / the ARD every 6 hours at the soonest)
+  private readonly tips = signal<KidsPodcast[]>([])
+  protected readonly tipsShown = computed(() =>
+    this.podcastsOn() ? this.tips().filter((p) => !this.onBox().has(feedKey(p.feedUrl))) : [],
+  )
+  /** the podcasts on the box already (their feeds): not offered again - the library's and the child's own */
+  private readonly onBox = computed(() => {
+    const feeds = new Set<string>()
+    for (const { media } of this.media()) if (media.type === 'rss' && media.id) feeds.add(feedKey(media.id))
+    for (const o of this.own()) if (o.ident.startsWith('podcast:')) feeds.add(o.ident.slice('podcast:'.length))
+    return feeds
+  })
   /** the podcasts found for the text as it is now (another text: the tile again) */
   protected readonly podShown = computed(() =>
-    this.podFor() && this.podFor() === normalizeForSearch(this.query()).trim() ? this.podHits() : null,
+    this.podFor() && this.podFor() === normalizeForSearch(this.query()).trim()
+      ? this.podHits().filter((p) => !this.onBox().has(feedKey(p.feedUrl)))
+      : null,
   )
 
   protected readonly nothingFound = computed(
@@ -289,6 +307,7 @@ export class SearchPage implements AfterViewInit, OnDestroy {
         const hidden = config?.mupibox?.hiddenCategories ?? []
         this.categories.set(SEARCHED.filter((c) => !hidden.includes(c)))
         this.podcastsOn.set((config?.mupibox as { displayPodcasts?: boolean } | undefined)?.displayPodcasts === true)
+        if (this.podcastsOn()) this.loadTips()
         this.flow.categories.set(this.categories())
         this.loadLibrary()
       })
@@ -446,6 +465,16 @@ export class SearchPage implements AfterViewInit, OnDestroy {
     } else if (hit.media) {
       this.openMedia(hit.media)
     }
+  }
+
+  private loadTips(): void {
+    this.http
+      .get<{ shows: KidsPodcast[] }>(`${this.api}/search-podcasts/tips`)
+      .pipe(
+        catchError(() => of({ shows: [] })),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe((r) => this.tips.set(r?.shows ?? []))
   }
 
   /** "Podcasts für Kinder": the directories asked for the typed text (the backend keeps each text a day) */

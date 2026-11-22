@@ -10,10 +10,10 @@
 // - Not to Spotify: no quota of the box is used.
 
 import type { Express } from 'express'
-import { type ArdShow, ardSearch } from './ard-sounds'
+import { type ArdShow, ardKidsShows, ardSearch } from './ard-sounds'
 import { podcastSearchOn } from './eltern/podcasts'
 import type { MupiboxConfig } from './models/mupibox-config.model'
-import { CONTENT_LANGUAGES, mergeHits, type PodcastHit, searchPodcasts } from './podcast-search'
+import { CONTENT_LANGUAGES, mergeHits, type PodcastHit, searchPodcasts, topKidsPodcasts } from './podcast-search'
 import { localOnly } from './request-guard'
 import type { SearchPool } from './search-pool'
 
@@ -30,10 +30,15 @@ export interface SearchPodcastsDeps {
   pool: SearchPool
   /** the directories (tests: invented hits) */
   search?: (term: string, lang: string) => Promise<PodcastHit[]>
+  /** the tips before anything is typed (tests: invented hits) */
+  tips?: (lang: string) => Promise<PodcastHit[]>
   now?: () => number
 }
 
 const KEEP_MS = 24 * 60 * 60 * 1000
+// the tips: asked again after 6 hours at the soonest (as the app's suggestions)
+const TIPS_MS = 6 * 60 * 60 * 1000
+const MAX_TIPS = 20
 const MAX_KEPT = 300
 const MAX_HITS = 24
 
@@ -74,10 +79,18 @@ async function directories(term: string, lang: string): Promise<PodcastHit[]> {
   )
 }
 
+/** the app's "Vorschläge für Kinder": Apple's children's charts, for German with the ARD's children's shows */
+async function kidsTips(lang: string): Promise<PodcastHit[]> {
+  const [apple, ard] = await Promise.allSettled([topKidsPodcasts(lang), lang === 'de' ? ardKidsShows() : Promise.resolve([])])
+  if (apple.status === 'rejected' && ard.status === 'rejected') throw new Error('directory_unavailable')
+  return mergeHits(apple.status === 'fulfilled' ? apple.value : [], ard.status === 'fulfilled' ? ard.value.map(ardToHit) : [])
+}
+
 const normal = (q: string) => q.toLowerCase().normalize('NFKC').replace(/\s+/g, ' ').trim()
 
 export function registerSearchPodcastsRoutes(app: Express, deps: SearchPodcastsDeps): void {
   const search = deps.search ?? directories
+  const tips = deps.tips ?? kidsTips
   const now = deps.now ?? Date.now
   // the answers of the last day: "lang|term" -> hits (a search term asked once a day)
   const kept = new Map<string, { at: number; hits: KidsPodcast[] }>()
@@ -114,6 +127,31 @@ export function registerSearchPodcastsRoutes(app: Express, deps: SearchPodcastsD
     } catch (error) {
       console.error(`${new Date().toLocaleString()}: [search-podcasts] ${error}`)
       res.status(502).json({ error: 'directory_unavailable' })
+    }
+  })
+
+  /**
+   * GET /api/search-podcasts/tips - podcasts for children before anything is typed ("Tipps für Kinder"): the app's
+   * suggestions, asked again after 6 hours at the soonest; they may be added as the search's hits
+   */
+  app.get('/api/search-podcasts/tips', localOnly, async (_req, res) => {
+    const cfg = deps.getMupiboxConfig()
+    if (!kidsPodcastsOn(cfg)) return void res.status(403).json({ error: 'off' })
+    const lang = contentLanguage(cfg)
+    const key = `tips|${lang}`
+    const have = kept.get(key)
+    if (have && now() - have.at < TIPS_MS) return void res.json({ shows: have.hits, kept: true })
+    try {
+      const hits = (await tips(lang))
+        .filter((h) => h.kids && !h.explicit && h.feedUrl && h.title)
+        .slice(0, MAX_TIPS)
+        .map((h) => ({ feedUrl: h.feedUrl, title: h.title, author: h.author, image: h.image, episodes: h.episodes }))
+      kept.set(key, { at: now(), hits })
+      res.json({ shows: hits, kept: false })
+    } catch (error) {
+      console.error(`${new Date().toLocaleString()}: [search-podcasts] tips: ${error}`)
+      // (the tips kept before, older as they are, rather than none)
+      res.json({ shows: have?.hits ?? [], kept: true })
     }
   })
 

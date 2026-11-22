@@ -84,7 +84,8 @@
         "searchCatRadio": "Radio",
         "searchPodcastsButton": "Podcasts for children",
         "searchPodcastsLoading": "Searching …",
-        "searchPodcastsNone": "No podcasts for children found."
+        "searchPodcastsNone": "No podcasts for children found.",
+        "searchTipsLabel": "Tips for children"
       }
     },
     "de": {
@@ -170,7 +171,8 @@
         "searchCatRadio": "Radio",
         "searchPodcastsButton": "Podcasts für Kinder",
         "searchPodcastsLoading": "Suche …",
-        "searchPodcastsNone": "Keine Podcasts für Kinder gefunden."
+        "searchPodcastsNone": "Keine Podcasts für Kinder gefunden.",
+        "searchTipsLabel": "Tipps für Kinder"
       }
     },
     "fr": {
@@ -256,7 +258,8 @@
         "searchCatRadio": "Radio",
         "searchPodcastsButton": "Podcasts pour enfants",
         "searchPodcastsLoading": "Recherche …",
-        "searchPodcastsNone": "Aucun podcast pour enfants trouvé."
+        "searchPodcastsNone": "Aucun podcast pour enfants trouvé.",
+        "searchTipsLabel": "Idées pour les enfants"
       }
     },
     "es": {
@@ -342,7 +345,8 @@
         "searchCatRadio": "Radio",
         "searchPodcastsButton": "Pódcasts para niños",
         "searchPodcastsLoading": "Buscando …",
-        "searchPodcastsNone": "No se encontraron pódcasts para niños."
+        "searchPodcastsNone": "No se encontraron pódcasts para niños.",
+        "searchTipsLabel": "Ideas para niños"
       }
     },
     "it": {
@@ -428,7 +432,8 @@
         "searchCatRadio": "Radio",
         "searchPodcastsButton": "Podcast per bambini",
         "searchPodcastsLoading": "Ricerca …",
-        "searchPodcastsNone": "Nessun podcast per bambini trovato."
+        "searchPodcastsNone": "Nessun podcast per bambini trovato.",
+        "searchTipsLabel": "Consigli per bambini"
       }
     },
     "nl": {
@@ -514,7 +519,8 @@
         "searchCatRadio": "Radio",
         "searchPodcastsButton": "Podcasts voor kinderen",
         "searchPodcastsLoading": "Zoeken …",
-        "searchPodcastsNone": "Geen podcasts voor kinderen gevonden."
+        "searchPodcastsNone": "Geen podcasts voor kinderen gevonden.",
+        "searchTipsLabel": "Tips voor kinderen"
       }
     },
     "sv": {
@@ -600,7 +606,8 @@
         "searchCatRadio": "Radio",
         "searchPodcastsButton": "Poddar för barn",
         "searchPodcastsLoading": "Söker …",
-        "searchPodcastsNone": "Inga poddar för barn hittades."
+        "searchPodcastsNone": "Inga poddar för barn hittades.",
+        "searchTipsLabel": "Tips för barn"
       }
     },
     "da": {
@@ -686,7 +693,8 @@
         "searchCatRadio": "Radio",
         "searchPodcastsButton": "Podcasts for børn",
         "searchPodcastsLoading": "Søger …",
-        "searchPodcastsNone": "Ingen podcasts for børn fundet."
+        "searchPodcastsNone": "Ingen podcasts for børn fundet.",
+        "searchTipsLabel": "Tips til børn"
       }
     },
     "nb": {
@@ -772,7 +780,8 @@
         "searchCatRadio": "Radio",
         "searchPodcastsButton": "Podkaster for barn",
         "searchPodcastsLoading": "Søker …",
-        "searchPodcastsNone": "Ingen podkaster for barn funnet."
+        "searchPodcastsNone": "Ingen podkaster for barn funnet.",
+        "searchTipsLabel": "Tips for barn"
       }
     },
     "fi": {
@@ -858,7 +867,8 @@
         "searchCatRadio": "Radio",
         "searchPodcastsButton": "Lasten podcastit",
         "searchPodcastsLoading": "Haetaan …",
-        "searchPodcastsNone": "Lasten podcasteja ei löytynyt."
+        "searchPodcastsNone": "Lasten podcasteja ei löytynyt.",
+        "searchTipsLabel": "Vinkkejä lapsille"
       }
     },
     "pl": {
@@ -944,7 +954,8 @@
         "searchCatRadio": "Radio",
         "searchPodcastsButton": "Podcasty dla dzieci",
         "searchPodcastsLoading": "Szukam …",
-        "searchPodcastsNone": "Nie znaleziono podcastów dla dzieci."
+        "searchPodcastsNone": "Nie znaleziono podcastów dla dzieci.",
+        "searchTipsLabel": "Propozycje dla dzieci"
       }
     },
     "pt": {
@@ -1030,7 +1041,8 @@
         "searchCatRadio": "Rádio",
         "searchPodcastsButton": "Podcasts para crianças",
         "searchPodcastsLoading": "A procurar …",
-        "searchPodcastsNone": "Nenhum podcast para crianças encontrado."
+        "searchPodcastsNone": "Nenhum podcast para crianças encontrado.",
+        "searchTipsLabel": "Sugestões para crianças"
       }
     },
     "tr": {
@@ -1116,7 +1128,8 @@
         "searchCatRadio": "Radyo",
         "searchPodcastsButton": "Çocuklar için podcast’ler",
         "searchPodcastsLoading": "Aranıyor …",
-        "searchPodcastsNone": "Çocuklar için podcast bulunamadı."
+        "searchPodcastsNone": "Çocuklar için podcast bulunamadı.",
+        "searchTipsLabel": "Çocuklar için öneriler"
       }
     },
     "uk": {
@@ -1202,7 +1215,8 @@
         "searchCatRadio": "Радіо",
         "searchPodcastsButton": "Подкасти для дітей",
         "searchPodcastsLoading": "Пошук …",
-        "searchPodcastsNone": "Подкастів для дітей не знайдено."
+        "searchPodcastsNone": "Подкастів для дітей не знайдено.",
+        "searchTipsLabel": "Поради для дітей"
       }
     },
     "ru": {
@@ -1288,7 +1302,8 @@
         "searchCatRadio": "Радио",
         "searchPodcastsButton": "Подкасты для детей",
         "searchPodcastsLoading": "Поиск …",
-        "searchPodcastsNone": "Подкасты для детей не найдены."
+        "searchPodcastsNone": "Подкасты для детей не найдены.",
+        "searchTipsLabel": "Советы для детей"
       }
     },
     "cs": {
@@ -1374,7 +1389,8 @@
         "searchCatRadio": "Rádio",
         "searchPodcastsButton": "Podcasty pro děti",
         "searchPodcastsLoading": "Hledám …",
-        "searchPodcastsNone": "Žádné podcasty pro děti nenalezeny."
+        "searchPodcastsNone": "Žádné podcasty pro děti nenalezeny.",
+        "searchTipsLabel": "Tipy pro děti"
       }
     },
     "el": {
@@ -1460,7 +1476,8 @@
         "searchCatRadio": "Ραδιόφωνο",
         "searchPodcastsButton": "Podcasts για παιδιά",
         "searchPodcastsLoading": "Αναζήτηση …",
-        "searchPodcastsNone": "Δεν βρέθηκαν podcasts για παιδιά."
+        "searchPodcastsNone": "Δεν βρέθηκαν podcasts για παιδιά.",
+        "searchTipsLabel": "Προτάσεις για παιδιά"
       }
     }
   }

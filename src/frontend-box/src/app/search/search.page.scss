@@ -276,6 +276,39 @@ app-search {
     z-index: 20;
   }
 
+  // the child's own and the tips together on the start of the search: both rows smaller, so they fit above the
+  // keyboard (1024 × 600); a smaller display shows the tips with the keyboard folded away
+  .srch-two.srch-kb-open {
+    .srch-label {
+      margin-top: 4px;
+    }
+
+    .srch-hits {
+      padding-top: 4px;
+      padding-bottom: 4px;
+    }
+
+    .srch-hit {
+      flex-basis: 84px;
+      width: 84px;
+    }
+
+    .srch-cover {
+      width: 84px;
+      height: 84px;
+    }
+
+    .srch-name {
+      font-size: 14px;
+    }
+  }
+
+  @media (max-height: 520px) {
+    .srch-two.srch-kb-open .srch-tips {
+      display: none;
+    }
+  }
+
   // podcasts for children: the tile that asks for them (a headphone on the accent colour) and "none found"
   .srch-pod-ic {
     display: grid;

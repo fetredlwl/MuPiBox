@@ -1228,7 +1228,10 @@ registerSearchPodcastsRoutes(app, {
   getMupiboxConfig: () => getMupiboxConfigSync() as unknown as MupiboxConfig | undefined,
   pool: searchPool,
   ...(!productionServe && process.env.MUPIBOX_PODCAST_FIXTURE
-    ? { search: async () => JSON.parse(fs.readFileSync(String(process.env.MUPIBOX_PODCAST_FIXTURE), 'utf8')) }
+    ? {
+        search: async () => JSON.parse(fs.readFileSync(String(process.env.MUPIBOX_PODCAST_FIXTURE), 'utf8')),
+        tips: async () => JSON.parse(fs.readFileSync(String(process.env.MUPIBOX_PODCAST_FIXTURE), 'utf8')),
+      }
     : {}),
 })
 

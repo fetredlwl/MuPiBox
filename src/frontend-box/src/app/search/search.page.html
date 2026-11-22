@@ -39,7 +39,7 @@
   </div>
 </ng-template>
 
-<ion-content class="search-content" [class.srch-kb-open]="keyboardShown()">
+<ion-content class="search-content" [class.srch-kb-open]="keyboardShown()" [class.srch-two]="own().length && tipsShown().length">
   @if (query().trim().length < 2) {
     @if (own().length) {
       <!-- what the child put on the start page itself: a tap marks it, a second tap takes it out -->
@@ -53,7 +53,22 @@
           </button>
         }
       </div>
-    } @else {
+    }
+    @if (tipsShown().length) {
+      <!-- podcasts for children to start with (the app's suggestions): the child may put them on the start page itself -->
+      <div class="srch-tips">
+        <p class="srch-label">{{ texts.text('searchTipsLabel') }}</p>
+        <div class="srch-hits">
+          @for (p of tipsShown(); track p.feedUrl) {
+            <button class="srch-hit srch-pod srch-tip" type="button" (click)="openKidsPodcast(p)">
+              <span class="srch-cover"><img [src]="coverUrl(p.image)" alt="" loading="lazy" /><span class="srch-plus" aria-hidden="true">+</span></span>
+              <span class="srch-name">{{ p.title }}</span>
+            </button>
+          }
+        </div>
+      </div>
+    }
+    @if (!own().length && !tipsShown().length) {
       <p class="srch-note">{{ texts.text('searchStart') }}</p>
     }
   } @else if (loading()) {

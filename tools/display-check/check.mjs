@@ -11,6 +11,8 @@
 //   R5  the texts come from the display's translations (English box: no German on the page)
 //   R6  podcasts for children: nothing asked while typing, only the tile asks; children's shows only; on the start
 //       page without approval (no "play" on the way), then among what the child fetched itself
+//   R7  tips for children before anything is typed: asked once, children's shows only, addable without approval; with
+//       the child's own entries both rows fit above the keyboard (1024 × 600)
 //
 // Usage: node check.mjs <www dir> [--shots <dir>]   (needs Chrome; port 8200 and 4300 free)
 // Exit code 0: all rules kept; 1: a rule broken (listed); 2: could not run.
@@ -129,6 +131,7 @@ function makeConfigDir() {
     path.join(dir, 'podcasts.json'),
     JSON.stringify([
       show('Frosch Funkhaus', 'https://example.invalid/frosch-funkhaus.xml', true),
+      show('Igel Insel', 'https://example.invalid/igel-insel.xml', true),
       show('Erwachsenenfunk', 'https://example.invalid/erwachsen.xml', false),
     ]),
   )
@@ -355,6 +358,11 @@ async function run(browser, dir, size) {
   setBlock(dir, 'none')
   await page.goto(`http://localhost:${STATIC_PORT}/search`, { waitUntil: 'networkidle2' })
   await wait(2500)
+  try {
+    await tips(page, tag, asked, size)
+  } catch (err) {
+    rule('R7', false, `${tag}: the tips checks stopped (${firstLine(err)})`)
+  }
   await type(page, ['F', 'R', 'I'])
   const hitsBefore = await visibleCount(page, '.srch-hit')
   await shot(page, `${tag}-1-treffer`)
@@ -391,6 +399,38 @@ async function run(browser, dir, size) {
   // (the next run starts without a block)
   await wait(Math.max(0, blockEnds - Date.now() + 1500))
   await page.close()
+}
+
+async function tips(page, tag, asked, size) {
+  const tipAsks = () => asked.filter((u) => u.includes('/api/search-podcasts/tips')).length
+  const names = () => page.evaluate(() => [...document.querySelectorAll('app-search .srch-tip .srch-name')].map((e) => e.textContent.trim()))
+  const shown = await names()
+  rule('R7', shown.includes('Frosch Funkhaus') && !shown.includes('Erwachsenenfunk'), `${tag}: tips for children on the empty search (${shown.join(', ')})`)
+  rule('R7', tipAsks() === 1, `${tag}: the tips asked once`)
+  await shot(page, `${tag}-0-tipps`)
+  const opened = await clickText(page, '.srch-tip', 'Frosch Funkhaus')
+  if (!opened || (await topTag(page)) !== 'app-search-album') throw new Error('no page for the tip')
+  await clickText(page, '.sa-btn', 'To the start page')
+  await clickText(page, '.sa-btn', 'Radio')
+  await wait(800)
+  const own = await page.evaluate(() => [...document.querySelectorAll('app-search .srch-own .srch-name')].map((e) => e.textContent.trim()))
+  rule('R7', (await topTag(page)) === 'app-search' && own.includes('Frosch Funkhaus'), `${tag}: a tip put on the start page without approval`)
+  const after = await names()
+  rule('R7', !after.includes('Frosch Funkhaus') && after.includes('Igel Insel'), `${tag}: a tip on the box is not offered again (${after.join(', ')})`)
+  await shot(page, `${tag}-0b-tipps-und-eigene`)
+  if (size.height >= 600) {
+    // both rows above the keyboard: nothing of them below its top, nothing to scroll
+    const fit = await page.evaluate(() => {
+      const kb = document.querySelector('app-search .simple-keyboard')?.getBoundingClientRect().top ?? innerHeight
+      const rows = [...document.querySelectorAll('app-search .srch-own, app-search .srch-tip')].filter((e) => e.getBoundingClientRect().width > 0)
+      return rows.length > 0 && rows.every((e) => e.getBoundingClientRect().bottom <= kb + 1)
+    })
+    rule('R7', fit, `${tag}: the child's own and the tips fit above the keyboard`)
+  }
+  rule('R7', tipAsks() === 1, `${tag}: no new tips asked on the way back`)
+  // (taken out again: the next part starts as before)
+  await clickText(page, '.srch-own', 'Frosch Funkhaus')
+  await clickText(page, '.srch-own', 'Remove?')
 }
 
 async function podcasts(page, tag, asked) {

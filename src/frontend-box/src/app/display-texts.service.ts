@@ -107,6 +107,7 @@ export const DEFAULT_DISPLAY_TEXTS = {
   searchPodcastsButton: 'Podcasts for children',
   searchPodcastsLoading: 'Searching …',
   searchPodcastsNone: 'No podcasts for children found.',
+  searchTipsLabel: 'Tips for children',
 }
 export type DisplayTextKey = keyof typeof DEFAULT_DISPLAY_TEXTS
 type TextSet = Partial<Record<DisplayTextKey, string>>
