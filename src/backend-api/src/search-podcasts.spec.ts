@@ -156,4 +156,25 @@ describe('podcasts for children in the display search', () => {
     ;(cfg.mupibox as Record<string, unknown>).displayPodcasts = false
     await request(app).get('/api/search-podcasts/tips').expect(403)
   })
+
+  it('does not offer what the box has: the same feed, or a podcast of the same name under another address', async () => {
+    writeFileSync(
+      dataFile,
+      JSON.stringify([
+        // (the parents' podcast under another tab, its feed with http)
+        { type: 'rss', category: 'audiobook', id: 'http://example.invalid/fuchs.xml', artist: 'Anders benannt' },
+        // (the same show added from another directory: another address, the same name)
+        { type: 'rss', category: 'other', id: 'https://feeds.example.invalid/tiger', artist: 'Tipp-Tiger!' },
+      ]),
+    )
+    const r = await request(app).get('/api/search-podcasts?q=fuchs').expect(200)
+    assert.deepEqual(r.body.shows, [])
+    const t = await request(app).get('/api/search-podcasts/tips').expect(200)
+    assert.deepEqual(t.body.shows, [])
+    // (taken off the box: offered again, nothing asked for it)
+    writeFileSync(dataFile, '[]')
+    const again = await request(app).get('/api/search-podcasts?q=fuchs').expect(200)
+    assert.equal(again.body.shows.length, 1)
+    assert.equal(asked.filter((a) => a.endsWith('|fuchs')).length, 1)
+  })
 })

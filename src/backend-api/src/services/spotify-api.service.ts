@@ -680,7 +680,7 @@ export class SpotifyApiService {
     query: string,
     offset: number,
   ): Promise<{
-    albums: { id: string; name: string; artist: string; cover: string }[]
+    albums: { id: string; name: string; artist: string; cover: string; artistId: string }[]
     artists: { id: string; name: string; cover: string }[]
     shows: { id: string; name: string; artist: string; cover: string }[]
     more: boolean
@@ -693,7 +693,14 @@ export class SpotifyApiService {
     return {
       albums: (r.albums?.items ?? [])
         .filter((a: any) => a?.id)
-        .map((a: any) => ({ id: a.id, name: a.name, artist: a.artists?.[0]?.name ?? '', cover: img(a.images) })),
+        .map((a: any) => ({
+          id: a.id,
+          name: a.name,
+          artist: a.artists?.[0]?.name ?? '',
+          cover: img(a.images),
+          // (fork "wishes": the whole artist on the box - its albums are there too)
+          artistId: a.artists?.[0]?.id ?? '',
+        })),
       artists: (r.artists?.items ?? []).filter((a: any) => a?.id).map((a: any) => ({ id: a.id, name: a.name, cover: img(a.images) })),
       shows: (r.shows?.items ?? [])
         .filter((s: any) => s?.id)

@@ -157,6 +157,33 @@ describe('wishes: few requests to Spotify', () => {
   })
 })
 
+describe('wishes: what the box has is not offered', () => {
+  it('an album there, every album of an artist there, the artist, a show there or a podcast of its name', async () => {
+    const r = await request(app).get('/api/wishes/search?q=peter').expect(200)
+    assert.equal(r.body.items.length, 3)
+    writeFileSync(
+      dataFile,
+      JSON.stringify([
+        { type: 'spotify', category: 'music', id: ALBUM, title: 'Löwenzahn Lieder' },
+        { type: 'rss', category: 'audiobook', id: 'https://example.invalid/hz.xml', artist: 'Hörspielzeit' },
+      ]),
+    )
+    const there = await request(app).get('/api/wishes/search?q=peter').expect(200)
+    assert.deepEqual(
+      there.body.items.map((i: { kind: string }) => i.kind),
+      ['artist'],
+    )
+    // the whole artist on the box: neither it nor its albums
+    writeFileSync(dataFile, JSON.stringify([{ type: 'spotify', category: 'music', artistid: ARTIST }]))
+    const artist = await request(app).get(`/api/wishes/artist?id=${ARTIST}&offset=0`).expect(200)
+    assert.equal(artist.body.items.length, 0)
+    const s = await request(app).get('/api/wishes/search?q=peter').expect(200)
+    assert.ok(!s.body.items.some((i: { kind: string }) => i.kind === 'artist'))
+    // (all of it from the pages kept: Spotify asked once for the search, once for the artist)
+    assert.equal(calls.length, 2)
+  })
+})
+
 describe('wishes: the child wishes, the parents decide', () => {
   it('only what was shown; once while open; not what is on the box', async () => {
     await request(app).post('/api/wishes').send({ kind: 'album', id: ALBUM, category: 'music' }).expect(403)

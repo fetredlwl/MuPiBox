@@ -110,6 +110,14 @@ const library = [
     artist: 'Testradio',
     index: 0,
   },
+  // (a podcast of the parents under another tab and another feed address than the directory's: R7 - not offered)
+  {
+    type: 'rss',
+    category: 'audiobook',
+    id: 'http://127.0.0.1:9/biber-bande.xml',
+    artist: 'Biber Bande',
+    index: 1,
+  },
 ]
 
 function makeConfigDir() {
@@ -196,6 +204,7 @@ function makeConfigDir() {
     JSON.stringify([
       show('Frosch Funkhaus', 'https://example.invalid/frosch-funkhaus.xml', true),
       show('Igel Insel', 'https://example.invalid/igel-insel.xml', true),
+      show('Biber Bande', 'https://example.invalid/biber-bande.xml', true),
       show('Erwachsenenfunk', 'https://example.invalid/erwachsen.xml', false),
     ]),
   )
@@ -566,6 +575,7 @@ async function tips(page, tag, asked, dir) {
     `${tag}: tips for children under "Podcasts" (${shown.join(', ')})`,
   )
   rule('R7', tipAsks() === 1, `${tag}: the tips asked once`)
+  rule('R7', !shown.includes('Biber Bande'), `${tag}: a podcast the box has (another tab, another address) is no tip`)
   rule(
     'R11',
     (await page.evaluate(() => document.querySelector('app-search .srch-mode')?.textContent?.trim() ?? '')) ===
@@ -599,6 +609,11 @@ async function tips(page, tag, asked, dir) {
   rule('R11', podAsks() === 0, `${tag}: nothing asked while typing under a tile`)
   await page.click('app-search [data-skbtn="{search}"]')
   await wait(1200)
+  rule(
+    'R7',
+    !(await names(page, '.srch-pod')).includes('Biber Bande'),
+    `${tag}: a podcast the box has is not found again`,
+  )
   rule(
     'R11',
     podAsks() === 1 &&

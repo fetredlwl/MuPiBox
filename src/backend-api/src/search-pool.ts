@@ -129,6 +129,29 @@ async function writeJson(file: string, data: unknown): Promise<void> {
   await fsp.rename(tmp, file)
 }
 
+/**
+ * (fork "wishes") A name as the searches compare it with the box's library: lower case, letters and digits only -
+ * "Die Fuchsbande!" and "die fuchsbande" are one. A podcast found again under another feed address (Apple's, the
+ * publisher's, http/https) is known by its name.
+ */
+export const nameKey = (name: unknown): string =>
+  typeof name === 'string'
+    ? name
+        .toLowerCase()
+        .normalize('NFKD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/ß/g, 'ss')
+        .replace(/[^\p{L}\p{N}]+/gu, '')
+    : ''
+
+/** what is on the box (all of its library - the parents', the sync's, the child's): see SearchPool.onBox */
+export interface OnBox {
+  /** "album:<id>", "artist:<id>", "show:<id>", "playlist:<id>", "podcast:<feed>", "radio:<stream>" */
+  idents: Set<string>
+  /** the names of its podcasts (RSS and Spotify shows) and radio stations (nameKey) */
+  names: Set<string>
+}
+
 /** a library row of the child's from the pool: which Spotify thing it is ("album:<id>", "artist:<id>", …) */
 export function identOf(row: Record<string, unknown>): string | null {
   if (row.type === 'rss' && typeof row.id === 'string' && row.id) return `podcast:${feedKey(row.id)}`
@@ -312,6 +335,24 @@ export class SearchPool {
   }
 
   // ---------- the library: what the child put in ----------
+
+  /**
+   * (fork "wishes") What is on the box: the searches of the display (podcasts, radio, Spotify) do not offer it again -
+   * read from the whole library, every tab (the display's own lists know only the tabs it shows).
+   */
+  async onBox(): Promise<OnBox> {
+    const idents = new Set<string>()
+    const names = new Set<string>()
+    for (const row of (await this.readLibrary()) ?? []) {
+      if (!row || typeof row !== 'object') continue
+      const ident = identOf(row)
+      if (ident) idents.add(ident)
+      if (row.type === 'rss' || row.type === 'radio' || (row.type === 'spotify' && row.showid)) {
+        for (const n of [row.artist, row.title].map(nameKey)) if (n.length >= 3) names.add(n)
+      }
+    }
+    return { idents, names }
+  }
 
   /** what is in the library ("album:<id>", "artist:<id>", …): a wish of something there is not made (wishes.ts) */
   async libraryIdents(): Promise<Set<string>> {

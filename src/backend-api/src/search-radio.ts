@@ -14,7 +14,7 @@ import { radioSearchOn } from './eltern/podcasts'
 import type { MupiboxConfig } from './models/mupibox-config.model'
 import { kidsRadio, type RadioHit, radioLanguageKnown, searchRadio } from './radio-search'
 import { localOnly } from './request-guard'
-import type { SearchPool } from './search-pool'
+import { nameKey, type OnBox, type SearchPool } from './search-pool'
 
 export interface KidsStation {
   url: string
@@ -54,6 +54,9 @@ function radioLanguage(cfg: MupiboxConfig | undefined): string {
 
 const normal = (q: string) => q.toLowerCase().normalize('NFKC').replace(/\s+/g, ' ').trim()
 const station = (h: RadioHit): KidsStation => ({ url: h.url, name: h.name, image: h.image, country: h.country })
+/** a station the box has already (its stream, or one of the same name): not offered */
+const notOnBox = (box: OnBox) => (s: KidsStation) =>
+  !box.idents.has(`radio:${s.url.replace(/^https?:\/\//i, '')}`) && !box.names.has(nameKey(s.name))
 
 export function registerSearchRadioRoutes(app: Express, deps: SearchRadioDeps): void {
   const search = deps.search ?? ((term: string, lang: string) => searchRadio(term, lang, true))
@@ -81,7 +84,8 @@ export function registerSearchRadioRoutes(app: Express, deps: SearchRadioDeps): 
     const lang = radioLanguage(cfg)
     const key = `${lang}|${q}`
     const have = kept.get(key)
-    if (have && fresh(have)) return void res.json({ stations: have.hits, kept: true })
+    if (have && fresh(have))
+      return void res.json({ stations: have.hits.filter(notOnBox(await deps.pool.onBox())), kept: true })
     try {
       const hits = (await search(q, lang))
         .filter((h) => h.kids && h.url && h.name)
@@ -90,7 +94,7 @@ export function registerSearchRadioRoutes(app: Express, deps: SearchRadioDeps): 
       // (the oldest out when too many terms are kept)
       for (const [k, e] of kept) if (!fresh(e) || kept.size >= MAX_KEPT) kept.delete(k)
       kept.set(key, { at: now(), hits })
-      res.json({ stations: hits, kept: false })
+      res.json({ stations: hits.filter(notOnBox(await deps.pool.onBox())), kept: false })
     } catch (error) {
       console.error(`${new Date().toLocaleString()}: [search-radio] ${error}`)
       res.status(502).json({ error: 'directory_unavailable' })
@@ -104,18 +108,19 @@ export function registerSearchRadioRoutes(app: Express, deps: SearchRadioDeps): 
     const lang = radioLanguage(cfg)
     const key = `tips|${lang}`
     const have = kept.get(key)
-    if (have && now() - have.at < TIPS_MS) return void res.json({ stations: have.hits, kept: true })
+    if (have && now() - have.at < TIPS_MS)
+      return void res.json({ stations: have.hits.filter(notOnBox(await deps.pool.onBox())), kept: true })
     try {
       const hits = (await tips(lang))
         .filter((h) => h.kids && h.url && h.name)
         .slice(0, MAX_TIPS)
         .map(station)
       kept.set(key, { at: now(), hits })
-      res.json({ stations: hits, kept: false })
+      res.json({ stations: hits.filter(notOnBox(await deps.pool.onBox())), kept: false })
     } catch (error) {
       console.error(`${new Date().toLocaleString()}: [search-radio] tips: ${error}`)
       // (the tips kept before, older as they are, rather than none)
-      res.json({ stations: have?.hits ?? [], kept: true })
+      res.json({ stations: (have?.hits ?? []).filter(notOnBox(await deps.pool.onBox())), kept: true })
     }
   })
 

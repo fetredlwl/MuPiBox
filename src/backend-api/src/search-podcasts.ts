@@ -15,7 +15,7 @@ import { podcastSearchOn } from './eltern/podcasts'
 import type { MupiboxConfig } from './models/mupibox-config.model'
 import { CONTENT_LANGUAGES, mergeHits, type PodcastHit, searchPodcasts, topKidsPodcasts } from './podcast-search'
 import { localOnly } from './request-guard'
-import type { SearchPool } from './search-pool'
+import { nameKey, type OnBox, type SearchPool } from './search-pool'
 
 export interface KidsPodcast {
   feedUrl: string
@@ -94,6 +94,10 @@ async function kidsTips(lang: string): Promise<PodcastHit[]> {
 
 const normal = (q: string) => q.toLowerCase().normalize('NFKC').replace(/\s+/g, ' ').trim()
 
+/** a show the box has already (its feed, or a podcast of the same name - another address of it): not offered */
+const notOnBox = (box: OnBox) => (h: KidsPodcast) =>
+  !box.idents.has(`podcast:${h.feedUrl.replace(/^https?:\/\//i, '')}`) && !box.names.has(nameKey(h.title))
+
 export function registerSearchPodcastsRoutes(app: Express, deps: SearchPodcastsDeps): void {
   const search = deps.search ?? directories
   const tips = deps.tips ?? kidsTips
@@ -120,7 +124,8 @@ export function registerSearchPodcastsRoutes(app: Express, deps: SearchPodcastsD
     const lang = contentLanguage(cfg)
     const key = `${lang}|${q}`
     const have = kept.get(key)
-    if (have && fresh(have)) return void res.json({ shows: have.hits, kept: true })
+    if (have && fresh(have))
+      return void res.json({ shows: have.hits.filter(notOnBox(await deps.pool.onBox())), kept: true })
     try {
       const hits = (await search(q, lang))
         .filter((h) => h.kids && !h.explicit && h.feedUrl && h.title)
@@ -129,7 +134,7 @@ export function registerSearchPodcastsRoutes(app: Express, deps: SearchPodcastsD
       // (the oldest out when too many terms are kept)
       for (const [k, e] of kept) if (!fresh(e) || kept.size >= MAX_KEPT) kept.delete(k)
       kept.set(key, { at: now(), hits })
-      res.json({ shows: hits, kept: false })
+      res.json({ shows: hits.filter(notOnBox(await deps.pool.onBox())), kept: false })
     } catch (error) {
       console.error(`${new Date().toLocaleString()}: [search-podcasts] ${error}`)
       res.status(502).json({ error: 'directory_unavailable' })
@@ -146,18 +151,19 @@ export function registerSearchPodcastsRoutes(app: Express, deps: SearchPodcastsD
     const lang = contentLanguage(cfg)
     const key = `tips|${lang}`
     const have = kept.get(key)
-    if (have && now() - have.at < TIPS_MS) return void res.json({ shows: have.hits, kept: true })
+    if (have && now() - have.at < TIPS_MS)
+      return void res.json({ shows: have.hits.filter(notOnBox(await deps.pool.onBox())), kept: true })
     try {
       const hits = (await tips(lang))
         .filter((h) => h.kids && !h.explicit && h.feedUrl && h.title)
         .slice(0, MAX_TIPS)
         .map((h) => ({ feedUrl: h.feedUrl, title: h.title, author: h.author, image: h.image, episodes: h.episodes }))
       kept.set(key, { at: now(), hits })
-      res.json({ shows: hits, kept: false })
+      res.json({ shows: hits.filter(notOnBox(await deps.pool.onBox())), kept: false })
     } catch (error) {
       console.error(`${new Date().toLocaleString()}: [search-podcasts] tips: ${error}`)
       // (the tips kept before, older as they are, rather than none)
-      res.json({ shows: have?.hits ?? [], kept: true })
+      res.json({ shows: (have?.hits ?? []).filter(notOnBox(await deps.pool.onBox())), kept: true })
     }
   })
 

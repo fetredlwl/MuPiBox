@@ -20,7 +20,7 @@ import type { Express, RequestHandler } from 'express'
 import { keptArtistAlbums } from './artist-albums-store'
 import { backupBeforeWrite } from './file-backup'
 import { localOnly } from './request-guard'
-import type { SearchPool } from './search-pool'
+import { nameKey, type OnBox, type SearchPool } from './search-pool'
 import { spotifyBlock } from './spotify-block'
 
 export type WishKind = 'album' | 'artist' | 'show'
@@ -35,6 +35,8 @@ export interface WishItem {
   name: string
   artist: string
   cover: string
+  /** an album: its artist on Spotify (the whole artist on the box: the album is there too) */
+  artistId?: string
 }
 
 export interface Wish {
@@ -69,7 +71,7 @@ export interface WishesDeps {
     query: string,
     offset: number,
   ) => Promise<{
-    albums: { id: string; name: string; artist: string; cover: string }[]
+    albums: { id: string; name: string; artist: string; cover: string; artistId?: string }[]
     artists: { id: string; name: string; cover: string }[]
     shows: { id: string; name: string; artist: string; cover: string }[]
     more: boolean
@@ -99,6 +101,15 @@ export function wishesOn(cfg: Record<string, unknown> | undefined): boolean {
 
 const normal = (q: string) => q.toLowerCase().normalize('NFKC').replace(/\s+/g, ' ').trim()
 const identOfWish = (kind: WishKind, id: string) => `${kind}:${id}`
+
+/**
+ * Something found on Spotify the box has already - not shown: an album there (or its whole artist), an artist there,
+ * a show there (or a podcast of the same name, as RSS feed).
+ */
+export const onTheBox = (box: OnBox, i: WishItem): boolean =>
+  box.idents.has(identOfWish(i.kind, i.id)) ||
+  (i.kind === 'album' && !!i.artistId && box.idents.has(`artist:${i.artistId}`)) ||
+  (i.kind === 'show' && box.names.has(nameKey(i.name)))
 
 async function readJson<T>(file: string, fallback: T): Promise<T> {
   try {
@@ -199,7 +210,7 @@ export class Wishes {
     if (whole) {
       const items = whole
         .slice(offset, offset + PAGE)
-        .map((a) => ({ kind: 'album' as const, id: a.id, name: a.name, artist, cover: a.cover }))
+        .map((a) => ({ kind: 'album' as const, id: a.id, name: a.name, artist, cover: a.cover, artistId }))
       const page = { items, more: whole.length > offset + PAGE }
       // (kept as a page too: an album of it may be wished)
       await this.keepPage(`artist|${artistId}|${offset}`, page)
@@ -213,7 +224,7 @@ export class Wishes {
       return {
         items: r.items
           .filter((a) => SPOTIFY_ID.test(a.id) && a.name)
-          .map((a) => ({ kind: 'album' as const, id: a.id, name: a.name, artist, cover: a.cover })),
+          .map((a) => ({ kind: 'album' as const, id: a.id, name: a.name, artist, cover: a.cover, artistId })),
         more: r.total > offset + PAGE,
       }
     })
@@ -383,7 +394,9 @@ export function registerWishesRoutes(app: Express, deps: WishesDeps): Wishes {
     if (normal(q).length < 2 || offset < 0) return fail(res, 400, 'invalid_query')
     try {
       const { page, kept } = await wishes.search(q, offset)
-      res.json({ ...page, kept })
+      // (what the box has already: not shown - the library as it is now, the page kept as Spotify gave it)
+      const box = await deps.pool.onBox()
+      res.json({ ...page, items: page.items.filter((i) => !onTheBox(box, i)), kept })
     } catch (err) {
       failed(res, err, 'search')
     }
@@ -397,7 +410,8 @@ export function registerWishesRoutes(app: Express, deps: WishesDeps): Wishes {
     if (!SPOTIFY_ID.test(id) || offset < 0) return fail(res, 400, 'invalid_request')
     try {
       const { page, kept } = await wishes.artistAlbums(id, offset)
-      res.json({ ...page, kept })
+      const box = await deps.pool.onBox()
+      res.json({ ...page, items: page.items.filter((i) => !onTheBox(box, i)), kept })
     } catch (err) {
       failed(res, err, 'artist albums')
     }
