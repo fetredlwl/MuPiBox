@@ -51,6 +51,10 @@ export interface SwiperData<T> {
   dim?: boolean
   // (fork "wishes") a sign in the cover's corner - the search: "+" may be fetched, "★" may be wished, "✓" on the box
   mark?: string
+  // (fork "wishes") what it is, on the cover - the search's Spotify hits: "Song · Fettes Brot", "Album · …", "Artist"
+  sub?: string
+  // (fork "wishes") this one round, the others not (an artist among albums and songs, as Spotify shows them)
+  round?: boolean
   // (set by the swiper itself: what the list keeps a slide by - its name, see entryKeys)
   trackKey?: string
 }

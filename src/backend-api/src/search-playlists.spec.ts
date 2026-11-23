@@ -24,6 +24,8 @@ const ARTIST = 'A'.repeat(22)
 const SONG = 'S'.repeat(22)
 const OTHER_SONG = 'T'.repeat(22)
 const ALLOWED_PL = 'P'.repeat(22)
+// (a playlist of the account the parents put on the start page themselves - no mark of its own)
+const ACCOUNT_PL = 'Q'.repeat(22)
 
 let dir: string
 let dataFile: string
@@ -96,6 +98,7 @@ beforeEach(() => {
     pool,
     getMupiboxConfig: () => cfg,
     api: () => api,
+    accountPlaylists: async () => new Set([ACCOUNT_PL]),
     now: () => day,
   })
   registerWishesRoutes(app, {
@@ -122,6 +125,14 @@ beforeEach(() => {
           ]
         : [],
       more: false,
+    }),
+    albumTracks: async () => ({
+      artistId: ARTIST,
+      cover: '',
+      tracks: [
+        { id: SONG, name: 'Erlaubter Song', artist: 'X' },
+        { id: 'F'.repeat(22), name: 'Grob', artist: 'X', explicit: true },
+      ],
     }),
     playlists,
     tracksOn: () => true,
@@ -214,6 +225,25 @@ describe('songs', () => {
     )
   })
 
+  it('stand in front of the first page; an album the box knows gives its songs, explicit ones never', async () => {
+    const r = await request(app).get('/api/wishes/search').query({ q: 'song', offset: 0 })
+    assert.equal((r.body.items as { kind: string }[])[0]?.kind, 'track')
+    const album = await request(app).get('/api/wishes/album').query({ id: ALBUM })
+    assert.deepEqual(
+      (album.body.items as { id: string; allowed?: boolean }[]).map((i) => [i.id, i.allowed]),
+      [[SONG, true]],
+    )
+    // (an album the box does not know: not asked)
+    assert.equal(
+      (
+        await request(app)
+          .get('/api/wishes/album')
+          .query({ id: 'C'.repeat(22) })
+      ).status,
+      403,
+    )
+  })
+
   it('one the child can play goes into its playlist at once - once', async () => {
     const id = await target()
     await request(app).get('/api/wishes/search').query({ q: 'song', offset: 0 })
@@ -238,6 +268,21 @@ describe('songs', () => {
     assert.equal(await playlists.allowed({ id: OTHER_SONG, name: '', artist: '', cover: '' }), true)
     // (nothing on the start page for a song)
     assert.equal(library().filter((x) => x.kidAdded).length, 1)
+  })
+
+  it('go into a playlist of the account the parents put on the start page, as Spotify knows it', async () => {
+    const lib = library()
+    lib.push({ type: 'spotify', category: 'music', playlistid: ACCOUNT_PL, title: 'Mixtape', index: lib.length })
+    writeFileSync(dataFile, JSON.stringify(lib))
+    const targets = (await request(app).get('/api/search-playlists')).body.targets as { id: string }[]
+    assert.ok(targets.some((t) => t.id === ACCOUNT_PL))
+    await request(app).get('/api/wishes/search').query({ q: 'song', offset: 0 })
+    assert.equal(
+      (await request(app).post('/api/wishes/track').send({ id: SONG, playlist: ACCOUNT_PL })).body.result,
+      'added',
+    )
+    // (but no songs taken out of it by the child: the parents put it there)
+    assert.equal((await request(app).get('/api/search-playlists/songs').query({ id: ACCOUNT_PL })).status, 403)
   })
 
   it('cannot go into a playlist that is not one of the child account on the start page', async () => {

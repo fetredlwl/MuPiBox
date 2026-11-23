@@ -121,7 +121,11 @@
         "trackWhich": "Which playlist?",
         "trackAdded": "{n} is now in {p}.",
         "trackAlready": "{n} is in {p} already.",
-        "trackNoPlaylist": "Put a playlist on the start page first."
+        "trackNoPlaylist": "Put a playlist on the start page first.",
+        "trackSongs": "Songs",
+        "searchKindAlbum": "Album",
+        "searchKindSong": "Song",
+        "wishSentTo": "Wish sent: {n} – for {p}"
       }
     },
     "de": {
@@ -244,7 +248,11 @@
         "trackWhich": "In welche Playlist?",
         "trackAdded": "{n} ist jetzt in {p}.",
         "trackAlready": "{n} ist schon in {p}.",
-        "trackNoPlaylist": "Hol dir zuerst eine Playlist auf die Startseite."
+        "trackNoPlaylist": "Hol dir zuerst eine Playlist auf die Startseite.",
+        "trackSongs": "Songs",
+        "searchKindAlbum": "Album",
+        "searchKindSong": "Song",
+        "wishSentTo": "Wunsch gesendet: {n} – für {p}"
       }
     },
     "fr": {
@@ -367,7 +375,11 @@
         "trackWhich": "Dans quelle playlist ?",
         "trackAdded": "{n} est maintenant dans {p}.",
         "trackAlready": "{n} est déjà dans {p}.",
-        "trackNoPlaylist": "Mets d’abord une playlist sur la page d’accueil."
+        "trackNoPlaylist": "Mets d’abord une playlist sur la page d’accueil.",
+        "trackSongs": "Titres",
+        "searchKindAlbum": "Album",
+        "searchKindSong": "Titre",
+        "wishSentTo": "Souhait envoyé : {n} – pour {p}"
       }
     },
     "es": {
@@ -490,7 +502,11 @@
         "trackWhich": "¿A qué playlist?",
         "trackAdded": "{n} ya está en {p}.",
         "trackAlready": "{n} ya estaba en {p}.",
-        "trackNoPlaylist": "Primero pon una playlist en la página de inicio."
+        "trackNoPlaylist": "Primero pon una playlist en la página de inicio.",
+        "trackSongs": "Canciones",
+        "searchKindAlbum": "Álbum",
+        "searchKindSong": "Canción",
+        "wishSentTo": "Deseo enviado: {n} – para {p}"
       }
     },
     "it": {
@@ -613,7 +629,11 @@
         "trackWhich": "In quale playlist?",
         "trackAdded": "{n} ora è in {p}.",
         "trackAlready": "{n} è già in {p}.",
-        "trackNoPlaylist": "Prima metti una playlist nella pagina iniziale."
+        "trackNoPlaylist": "Prima metti una playlist nella pagina iniziale.",
+        "trackSongs": "Brani",
+        "searchKindAlbum": "Album",
+        "searchKindSong": "Brano",
+        "wishSentTo": "Desiderio inviato: {n} – per {p}"
       }
     },
     "nl": {
@@ -736,7 +756,11 @@
         "trackWhich": "In welke playlist?",
         "trackAdded": "{n} staat nu in {p}.",
         "trackAlready": "{n} staat al in {p}.",
-        "trackNoPlaylist": "Zet eerst een playlist op de startpagina."
+        "trackNoPlaylist": "Zet eerst een playlist op de startpagina.",
+        "trackSongs": "Nummers",
+        "searchKindAlbum": "Album",
+        "searchKindSong": "Nummer",
+        "wishSentTo": "Wens verstuurd: {n} – voor {p}"
       }
     },
     "sv": {
@@ -859,7 +883,11 @@
         "trackWhich": "Till vilken spellista?",
         "trackAdded": "{n} finns nu i {p}.",
         "trackAlready": "{n} finns redan i {p}.",
-        "trackNoPlaylist": "Lägg först en spellista på startsidan."
+        "trackNoPlaylist": "Lägg först en spellista på startsidan.",
+        "trackSongs": "Låtar",
+        "searchKindAlbum": "Album",
+        "searchKindSong": "Låt",
+        "wishSentTo": "Önskan skickad: {n} – till {p}"
       }
     },
     "da": {
@@ -982,7 +1010,11 @@
         "trackWhich": "I hvilken playlist?",
         "trackAdded": "{n} er nu i {p}.",
         "trackAlready": "{n} er allerede i {p}.",
-        "trackNoPlaylist": "Læg først en playlist på startsiden."
+        "trackNoPlaylist": "Læg først en playlist på startsiden.",
+        "trackSongs": "Sange",
+        "searchKindAlbum": "Album",
+        "searchKindSong": "Sang",
+        "wishSentTo": "Ønske sendt: {n} – til {p}"
       }
     },
     "nb": {
@@ -1105,7 +1137,11 @@
         "trackWhich": "I hvilken spilleliste?",
         "trackAdded": "{n} er nå i {p}.",
         "trackAlready": "{n} er allerede i {p}.",
-        "trackNoPlaylist": "Legg først en spilleliste på startsiden."
+        "trackNoPlaylist": "Legg først en spilleliste på startsiden.",
+        "trackSongs": "Låter",
+        "searchKindAlbum": "Album",
+        "searchKindSong": "Låt",
+        "wishSentTo": "Ønske sendt: {n} – til {p}"
       }
     },
     "fi": {
@@ -1228,7 +1264,11 @@
         "trackWhich": "Mihin soittolistaan?",
         "trackAdded": "{n} on nyt listalla {p}.",
         "trackAlready": "{n} on jo listalla {p}.",
-        "trackNoPlaylist": "Lisää ensin soittolista aloitussivulle."
+        "trackNoPlaylist": "Lisää ensin soittolista aloitussivulle.",
+        "trackSongs": "Kappaleet",
+        "searchKindAlbum": "Albumi",
+        "searchKindSong": "Kappale",
+        "wishSentTo": "Toive lähetetty: {n} – listalle {p}"
       }
     },
     "pl": {
@@ -1351,7 +1391,11 @@
         "trackWhich": "Do której playlisty?",
         "trackAdded": "{n} jest teraz w {p}.",
         "trackAlready": "{n} już jest w {p}.",
-        "trackNoPlaylist": "Najpierw dodaj playlistę na stronę startową."
+        "trackNoPlaylist": "Najpierw dodaj playlistę na stronę startową.",
+        "trackSongs": "Utwory",
+        "searchKindAlbum": "Album",
+        "searchKindSong": "Utwór",
+        "wishSentTo": "Prośba wysłana: {n} – do {p}"
       }
     },
     "pt": {
@@ -1474,7 +1518,11 @@
         "trackWhich": "Para que playlist?",
         "trackAdded": "{n} está agora em {p}.",
         "trackAlready": "{n} já está em {p}.",
-        "trackNoPlaylist": "Primeiro põe uma playlist na página inicial."
+        "trackNoPlaylist": "Primeiro põe uma playlist na página inicial.",
+        "trackSongs": "Músicas",
+        "searchKindAlbum": "Álbum",
+        "searchKindSong": "Música",
+        "wishSentTo": "Pedido enviado: {n} – para {p}"
       }
     },
     "tr": {
@@ -1597,7 +1645,11 @@
         "trackWhich": "Hangi çalma listesine?",
         "trackAdded": "{n} artık {p} içinde.",
         "trackAlready": "{n} zaten {p} içinde.",
-        "trackNoPlaylist": "Önce başlangıç sayfasına bir çalma listesi ekle."
+        "trackNoPlaylist": "Önce başlangıç sayfasına bir çalma listesi ekle.",
+        "trackSongs": "Şarkılar",
+        "searchKindAlbum": "Albüm",
+        "searchKindSong": "Şarkı",
+        "wishSentTo": "Dilek gönderildi: {n} – {p} için"
       }
     },
     "uk": {
@@ -1720,7 +1772,11 @@
         "trackWhich": "До якого плейлиста?",
         "trackAdded": "{n} тепер у {p}.",
         "trackAlready": "{n} вже є в {p}.",
-        "trackNoPlaylist": "Спершу додай плейлист на стартову сторінку."
+        "trackNoPlaylist": "Спершу додай плейлист на стартову сторінку.",
+        "trackSongs": "Пісні",
+        "searchKindAlbum": "Альбом",
+        "searchKindSong": "Пісня",
+        "wishSentTo": "Бажання надіслано: {n} – для {p}"
       }
     },
     "ru": {
@@ -1843,7 +1899,11 @@
         "trackWhich": "В какой плейлист?",
         "trackAdded": "{n} теперь в {p}.",
         "trackAlready": "{n} уже есть в {p}.",
-        "trackNoPlaylist": "Сначала добавь плейлист на стартовую страницу."
+        "trackNoPlaylist": "Сначала добавь плейлист на стартовую страницу.",
+        "trackSongs": "Песни",
+        "searchKindAlbum": "Альбом",
+        "searchKindSong": "Песня",
+        "wishSentTo": "Пожелание отправлено: {n} – для {p}"
       }
     },
     "cs": {
@@ -1966,7 +2026,11 @@
         "trackWhich": "Do kterého playlistu?",
         "trackAdded": "{n} je teď v {p}.",
         "trackAlready": "{n} už je v {p}.",
-        "trackNoPlaylist": "Nejdřív si dej playlist na úvodní stránku."
+        "trackNoPlaylist": "Nejdřív si dej playlist na úvodní stránku.",
+        "trackSongs": "Skladby",
+        "searchKindAlbum": "Album",
+        "searchKindSong": "Skladba",
+        "wishSentTo": "Přání odesláno: {n} – pro {p}"
       }
     },
     "el": {
@@ -2089,7 +2153,11 @@
         "trackWhich": "Σε ποια λίστα;",
         "trackAdded": "Το {n} είναι τώρα στο {p}.",
         "trackAlready": "Το {n} είναι ήδη στο {p}.",
-        "trackNoPlaylist": "Βάλε πρώτα μια λίστα στην αρχική σελίδα."
+        "trackNoPlaylist": "Βάλε πρώτα μια λίστα στην αρχική σελίδα.",
+        "trackSongs": "Τραγούδια",
+        "searchKindAlbum": "Άλμπουμ",
+        "searchKindSong": "Τραγούδι",
+        "wishSentTo": "Η ευχή στάλθηκε: {n} – για {p}"
       }
     }
   }

@@ -393,6 +393,29 @@ spotifyMediaInfo.fullPlaylistTracks = async (playlistId, kept) => {
   }
   return fetchFullPlaylistTracks(playlistId, token.token, kept)
 }
+// (fork "wishes") a private playlist (the child's own - no embed page): name, pictures and tracks with the Spotify login
+spotifyMediaInfo.privatePlaylist = async (playlistId) => {
+  const store = loadSpotifyTokenStore(await getMupiboxConfig())
+  if (!store) return undefined
+  const token = await getValidAccessToken(store, updateMupiboxConfig)
+  if (!token.ok) return undefined
+  const head = await spotifyGet<{ name?: string; images?: { url?: string; width?: number | null; height?: number | null }[] | null }>(
+    `/playlists/${encodeURIComponent(playlistId)}?fields=name,images`,
+    token.token,
+    'display',
+  )
+  const full = await fetchFullPlaylistTracks(playlistId, token.token)
+  return {
+    playlist: {
+      name: head.name ?? '',
+      images: (head.images ?? []).map((i) => ({ url: i.url ?? '', width: i.width ?? 0, height: i.height ?? 0 })),
+      tracks: { total: full.tracks.length },
+    },
+    tracks: full.tracks,
+    fullList: true,
+    fullListSnapshot: full.snapshot,
+  }
+}
 let spotifyApiService: SpotifyApiService | undefined
 
 // We export the app so we can use it in testing.
@@ -1281,11 +1304,14 @@ const playlistsApi: PlaylistsApi = {
     }),
   add: async (id, uris) => {
     await spotifySend('POST', `/playlists/${encodeURIComponent(id)}/items`, await playlistsToken(), { uris })
+    // (the player's list of it: read anew - the song shows at once)
+    spotifyMediaInfo.forget(id)
   },
   remove: async (id, uris) => {
     await spotifySend('DELETE', `/playlists/${encodeURIComponent(id)}/items`, await playlistsToken(), {
       items: uris.map((uri) => ({ uri })),
     })
+    spotifyMediaInfo.forget(id)
   },
   items: async (id) => {
     const token = await playlistsToken()
@@ -1332,11 +1358,35 @@ const playlistsFixture: PlaylistsApi = {
     return fixtureSongs.get(id) ?? []
   },
 }
+// (the account's own playlists - and those it collaborates on: songs may go into them; kept 10 minutes)
+let accountPlaylistsKept: { at: number; ids: Set<string> } | null = null
+const accountPlaylists = async (): Promise<Set<string>> => {
+  if (spotifyFixture) return new Set()
+  if (accountPlaylistsKept && Date.now() - accountPlaylistsKept.at < 600_000) return accountPlaylistsKept.ids
+  const token = await playlistsToken()
+  const me = await spotifyGet<{ id?: string }>('/me', token, 'display')
+  const ids = new Set<string>()
+  let offset = 0
+  for (let page = 0; page < 10; page++) {
+    const d = await spotifyGet<{ items?: ({ id?: string; owner?: { id?: string }; collaborative?: boolean } | null)[]; next?: string | null }>(
+      `/me/playlists?limit=50&offset=${offset}`,
+      token,
+      'display',
+    )
+    const items = d.items ?? []
+    for (const p of items) if (p?.id && ((!!me.id && p.owner?.id === me.id) || p.collaborative === true)) ids.add(p.id)
+    offset += items.length
+    if (!d.next || !items.length) break
+  }
+  accountPlaylistsKept = { at: Date.now(), ids }
+  return ids
+}
 const searchPlaylists = registerSearchPlaylistsRoutes(app, {
   configDir: configBasePath,
   pool: searchPool,
   getMupiboxConfig: () => getMupiboxConfigSync() as unknown as Record<string, unknown> | undefined,
   api: () => (spotifyFixture ? playlistsFixture : playlistsApi),
+  accountPlaylists,
 })
 
 registerWishesRoutes(app, {
@@ -1348,6 +1398,11 @@ registerWishesRoutes(app, {
     if (spotifyFixture) return (await fixtureCall(`search ${q} ${offset}`)).search[String(offset)]
     if (!spotifyApiService) throw Object.assign(new Error('no Spotify'), { status: 503 })
     return spotifyApiService.searchWishPage(q, offset, tracks)
+  },
+  albumTracks: async (albumId) => {
+    if (spotifyFixture) return (await fixtureCall(`album ${albumId}`)).albums?.[albumId] ?? { artistId: '', cover: '', tracks: [] }
+    if (!spotifyApiService) throw Object.assign(new Error('no Spotify'), { status: 503 })
+    return spotifyApiService.albumWishTracks(albumId)
   },
   playlists: searchPlaylists,
   tracksOn: () => tracksOn(getMupiboxConfigSync() as unknown as Record<string, unknown> | undefined),

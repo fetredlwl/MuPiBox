@@ -724,6 +724,32 @@ export class SpotifyApiService {
     }
   }
 
+  /**
+   * (fork "wishes") An album's songs for the display's search (its first 50; one request): the child picks one for a
+   * playlist of its own. Its cover and artist with it.
+   */
+  async albumWishTracks(albumId: string): Promise<{
+    artistId: string
+    cover: string
+    tracks: { id: string; name: string; artist: string; explicit: boolean }[]
+  }> {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const a = (await this.rateLimitedRequest(() => this.spotifyApi.albums.get(albumId, 'DE'))) as any
+    const img = (images: { url?: string }[] | undefined) => images?.[1]?.url ?? images?.[0]?.url ?? ''
+    return {
+      artistId: a?.artists?.[0]?.id ?? '',
+      cover: img(a?.images),
+      tracks: (a?.tracks?.items ?? [])
+        .filter((t: any) => t?.id)
+        .map((t: any) => ({
+          id: t.id,
+          name: t.name,
+          artist: t.artists?.[0]?.name ?? a?.artists?.[0]?.name ?? '',
+          explicit: t.explicit === true,
+        })),
+    }
+  }
+
   async getArtistAlbums(
     artistId: string,
     albumTypes = 'album,single,compilation',

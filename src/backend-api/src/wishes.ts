@@ -100,6 +100,12 @@ export interface WishesDeps {
     }[]
     more: boolean
   }>
+  /** an album's songs (its first 50, one request) - its artist and cover with them */
+  albumTracks?: (albumId: string) => Promise<{
+    artistId: string
+    cover: string
+    tracks: { id: string; name: string; artist: string; explicit?: boolean }[]
+  }>
   /** single songs into the child's playlists (search-playlists.ts; Bedienung › Suche › "Einzelne Songs aus Spotify") */
   playlists?: SearchPlaylists
   tracksOn?: () => boolean
@@ -217,29 +223,68 @@ export class Wishes {
     const ask = this.deps.searchPage
     if (!ask) throw Object.assign(new Error('no Spotify'), { status: 503 })
     const tracks = this.deps.tracksOn?.() === true
-    // (with songs a page of its own: one kept from before without them does not do)
-    return this.page(`search|${tracks ? 't|' : ''}${normal(q)}|${offset}`, async () => {
+    // (with songs a page of its own: one kept from before without them, or with them in their old place, does not do)
+    return this.page(`search|${tracks ? 't2|' : ''}${normal(q)}|${offset}`, async () => {
       if (spotifyBlock()) throw Object.assign(new Error('spotify_blocked'), { status: 503 })
       const r = await ask(q, offset, tracks)
+      const songs = (tracks ? (r.tracks ?? []) : [])
+        // (explicit songs never: konzept-playlists.md, decision 5)
+        .filter((t) => t.explicit !== true)
+        .map((t) => ({
+          kind: 'track' as const,
+          id: t.id,
+          name: t.name,
+          artist: t.artist,
+          cover: t.cover,
+          ...(t.albumId ? { albumId: t.albumId } : {}),
+          ...(t.artistId ? { artistId: t.artistId } : {}),
+        }))
+      // (the first page: the three songs that fit best in front - a song's title typed finds it at once; the rest of
+      // the songs after the albums)
+      const front = offset === 0 ? songs.slice(0, 3) : []
       return {
         items: [
+          ...front,
           ...r.artists.map((a) => ({ kind: 'artist' as const, id: a.id, name: a.name, artist: '', cover: a.cover })),
           ...r.albums.map((a) => ({ kind: 'album' as const, ...a })),
-          ...(tracks ? (r.tracks ?? []) : [])
-            // (explicit songs never: konzept-playlists.md, decision 5)
-            .filter((t) => t.explicit !== true)
-            .map((t) => ({
-              kind: 'track' as const,
-              id: t.id,
-              name: t.name,
-              artist: t.artist,
-              cover: t.cover,
-              ...(t.albumId ? { albumId: t.albumId } : {}),
-              ...(t.artistId ? { artistId: t.artistId } : {}),
-            })),
+          ...songs.slice(front.length),
           ...r.shows.map((s) => ({ kind: 'show' as const, ...s })),
         ].filter((i) => SPOTIFY_ID.test(i.id) && i.name),
         more: r.more,
+      }
+    })
+  }
+
+  /**
+   * An album's songs (konzept-playlists.md): only of an album the box knows - handed out with a page (found on Spotify,
+   * of an artist), allowed in the search, or on the start page. Kept a day as any page; explicit songs never.
+   */
+  async albumSongs(albumId: string): Promise<{ page: WishPage; kept: boolean } | 'unknown'> {
+    const ask = this.deps.albumTracks
+    if (!ask) throw Object.assign(new Error('no Spotify'), { status: 503 })
+    const offered = await this.offered('album', albumId)
+    const pool = await this.deps.pool.entries()
+    const known =
+      !!offered ||
+      pool.some((e) => (e.kind === 'album' && e.spotifyId === albumId) || e.albums?.some((a) => a.id === albumId)) ||
+      (await this.deps.pool.onBox()).idents.has(`album:${albumId}`)
+    if (!known) return 'unknown'
+    return this.page(`album|${albumId}`, async () => {
+      if (spotifyBlock()) throw Object.assign(new Error('spotify_blocked'), { status: 503 })
+      const r = await ask(albumId)
+      return {
+        items: r.tracks
+          .filter((t) => t.explicit !== true && SPOTIFY_ID.test(t.id) && t.name)
+          .map((t) => ({
+            kind: 'track' as const,
+            id: t.id,
+            name: t.name,
+            artist: t.artist,
+            cover: offered?.cover || r.cover,
+            albumId,
+            ...(r.artistId ? { artistId: r.artistId } : {}),
+          })),
+        more: false,
       }
     })
   }
@@ -533,6 +578,20 @@ export function registerWishesRoutes(app: Express, deps: WishesDeps): Wishes {
       res.json({ ...page, items: page.items.map((i) => ({ ...i, there: onTheBox(box, i) })), kept })
     } catch (err) {
       failed(res, err, 'artist albums')
+    }
+  })
+
+  /** GET /api/wishes/album?id=… - an album's songs (with "Einzelne Songs aus Spotify" on; kept a day) */
+  app.get('/api/wishes/album', localOnly, async (req, res) => {
+    if (!on() || !deps.tracksOn?.()) return fail(res, 403, 'off')
+    const id = text(req.query.id, 40)
+    if (!SPOTIFY_ID.test(id)) return fail(res, 400, 'invalid_request')
+    try {
+      const r = await wishes.albumSongs(id)
+      if (r === 'unknown') return fail(res, 403, 'not_offered')
+      res.json({ ...r.page, items: await wishes.marked(r.page.items), kept: r.kept })
+    } catch (err) {
+      failed(res, err, 'album songs')
     }
   })
 

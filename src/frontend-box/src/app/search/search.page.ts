@@ -499,6 +499,9 @@ export class SearchPage implements AfterViewInit, OnDestroy {
         case 'wish':
           return {
             name: item.wish.name,
+            // (what it is - as Spotify shows it: "Song · Fettes Brot", "Album · …", "Artist" with a round picture)
+            sub: this.wishSub(item.wish),
+            round: item.wish.kind === 'artist',
             imgSrc: cover(item.wish.cover),
             data: item,
             // (a song the child can play already: "+", into a playlist at once)
@@ -638,6 +641,19 @@ export class SearchPage implements AfterViewInit, OnDestroy {
     this.query.set('')
     this.setLayout(false)
     this.keyboardShown.set(true)
+  }
+
+  /** what a hit of Spotify is, on its cover: "Song · Fettes Brot", "Album · Fettes Brot", "Artist", "Podcast · …" */
+  private wishSub(w: WishItem): string {
+    const kind =
+      w.kind === 'artist'
+        ? this.texts.text('searchArtist')
+        : w.kind === 'track'
+          ? this.texts.text('searchKindSong')
+          : w.kind === 'show'
+            ? this.texts.text('searchPodcast')
+            : this.texts.text('searchKindAlbum')
+    return w.kind !== 'artist' && w.artist ? `${kind} · ${w.artist}` : kind
   }
 
   /** a tile's sign as a cover: on the theme's colour (km themes: its apricot and ink), as a picture */

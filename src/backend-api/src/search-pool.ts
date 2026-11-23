@@ -384,18 +384,21 @@ export class SearchPool {
   }
 
   /**
-   * (fork "wishes") The playlists of the child's own Spotify account on the start page (marked own: put there from the
-   * pool, made by the child) - where a song may go (search-playlists.ts).
+   * (fork "wishes") The Spotify playlists on the start page - own: marked as the account's (put there from the pool,
+   * made by the child); the others are asked of Spotify (search-playlists.ts targets): where a song may go.
    */
-  async ownPlaylists(): Promise<{ id: string; name: string; cover: string; category: string; kidAdded: boolean }[]> {
+  async ownPlaylists(): Promise<
+    { id: string; name: string; cover: string; category: string; kidAdded: boolean; own: boolean }[]
+  > {
     return ((await this.readLibrary()) ?? [])
-      .filter((row) => row?.type === 'spotify' && row.own === true && typeof row.playlistid === 'string')
+      .filter((row) => row?.type === 'spotify' && typeof row.playlistid === 'string')
       .map((row) => ({
         id: String(row.playlistid),
         name: text(row.title) || text(row.artist),
         cover: text(row.cover, 500),
         category: text(row.category, 20),
         kidAdded: row.kidAdded === true,
+        own: row.own === true,
       }))
       .filter((p) => SPOTIFY_ID.test(p.id))
   }

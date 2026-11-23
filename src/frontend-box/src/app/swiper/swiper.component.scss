@@ -641,6 +641,36 @@ swiper-container.coverflow {
     z-index: 3;
 }
 
+// (fork "wishes") what it is, on the cover (the search's Spotify hits: "Song · Fettes Brot") - on the theme's name bar
+// colours, so it reads on every picture; on a round cover in the middle, where the circle is wide enough
+.mupi-sub {
+    position: absolute;
+    left: 10px;
+    top: 10px;
+    max-width: calc(100% - 20px);
+    box-sizing: border-box;
+    padding: 3px 10px;
+    border-radius: 12px;
+    background: var(--km-cream, rgba(0, 0, 0, 0.7));
+    color: var(--km-ink, #fff);
+    font-size: 15px;
+    font-weight: 700;
+    line-height: 1.2;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
+    z-index: 3;
+    pointer-events: none;
+
+    &.mupi-sub-round {
+        left: 50%;
+        top: 14%;
+        max-width: 70%;
+        transform: translateX(-50%);
+    }
+}
+
 // (fork "wishes") Spotify blocks the box and this does not play now: grey (the stage sets its own opacity inline)
 .mupi-dim {
   filter: grayscale(1) brightness(0.55);

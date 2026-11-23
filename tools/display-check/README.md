@@ -21,7 +21,7 @@ gebaute Display. Chrome klickt die Suche bei 1024×600 und 800×480 durch.
 | R10 | App-Seite „Wünsche“: der Wunsch steht dort; freigegeben liegt er unter dem Reiter des Kindes auf der Startseite |
 | R14 | Playlists in der Suche: Kachel „Playlists“, darunter „Neue Playlist“ und die freigegebenen Playlists; eine eigene Playlist kommt auf die Startseite und ist als eigene gekennzeichnet |
 | R15 | Neue Playlist: Name über die Tastatur, dann die Reiter; angelegt im Konto des Kindes, auf der Startseite; nicht mehr als erlaubt am Tag (Hinweis, keine Tastatur) |
-| R16 | Songs: in der Spotify-Suche, explizite nie; ein Song, den das Kind schon hören kann, kommt sofort in eine seiner eigenen Playlists (gefolgte stehen nicht zur Wahl); ein neuer wird für eine Playlist gewünscht; Songs lassen sich aus der eigenen Playlist herausnehmen (einmal nachgefragt) |
+| R16 | Songs: in der Spotify-Suche, explizite nie; ein Song, den das Kind schon hören kann, kommt sofort in eine seiner eigenen Playlists (gefolgte stehen nicht zur Wahl); die ersten Songs stehen vorn; jeder Treffer sagt auf dem Cover, was er ist („Song · …“, „Album · …“, „Künstler“ rund); ein Album bietet „Songs“ (ohne explizite); ein neuer wird für eine Playlist gewünscht; Songs lassen sich aus der eigenen Playlist herausnehmen (einmal nachgefragt) |
 | R0 | Vorbedingung: das Backend meldet die Test-Sperren so, wie sie gesetzt wurden |
 
 Von Hand: `node tools/display-check/check.mjs <www-Ordner> [--shots <Ordner>]` (mit `--shots` legt sie ein Bild je

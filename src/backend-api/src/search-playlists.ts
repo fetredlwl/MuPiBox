@@ -79,6 +79,11 @@ export interface SearchPlaylistsDeps {
   getMupiboxConfig: () => Record<string, unknown> | undefined
   /** Spotify for the child's account; undefined: no Spotify login on the box */
   api: () => PlaylistsApi | undefined
+  /**
+   * the ids of the playlists the account owns or collaborates on (Spotify's /me/playlists, kept a while) - a playlist the
+   * parents put on the start page themselves has no mark of its own
+   */
+  accountPlaylists?: () => Promise<Set<string>>
   now?: () => number
 }
 
@@ -182,8 +187,11 @@ export class SearchPlaylists {
   }
 
   /** the playlists of the child's account on the start page (songs may go into them) */
-  targets(): Promise<TargetPlaylist[]> {
-    return this.deps.pool.ownPlaylists()
+  async targets(): Promise<TargetPlaylist[]> {
+    const rows = await this.deps.pool.ownPlaylists()
+    // (only asked when there is one without the mark; no answer - no login, a block: the marked ones only)
+    const account = rows.some((r) => !r.own) ? await this.deps.accountPlaylists?.().catch(() => undefined) : undefined
+    return rows.filter((r) => r.own || account?.has(r.id)).map(({ own: _own, ...r }) => r)
   }
 
   /** how many playlists the child may still make today */

@@ -16,6 +16,12 @@ export class SpotifyMediaInfo {
    * no Spotify login. `kept`: the full list read before, taken again while Spotify names the same snapshot.
    */
   public fullPlaylistTracks: ((playlistId: string, kept?: FullPlaylist) => Promise<FullPlaylist | undefined>) | undefined
+  /**
+   * (fork "wishes") A private playlist has no embed page (Spotify answers 404): its name, pictures and tracks from the
+   * Web API with the Spotify login - the account's own playlists and those it collaborates on (set by the server; its
+   * answer undefined: no Spotify login or not readable).
+   */
+  public privatePlaylist: ((playlistId: string) => Promise<SpotifyPlaylistData | undefined>) | undefined
 
   private cacheDir = path.join(process.cwd(), 'cache', 'spotify')
   private cacheExpiry = 12 * 60 * 60 * 1000 // 12 hours in milliseconds
@@ -72,6 +78,17 @@ export class SpotifyMediaInfo {
       })
 
       if (!response.ok) {
+        // ((fork "wishes") a private playlist - the child's own: from the Web API instead)
+        if (response.status === 404 && this.privatePlaylist) {
+          const own = await this.privatePlaylist(playlistId).catch((err) => {
+            console.warn(`${logPrefix} Private playlist ${playlistId} not read: ${err instanceof Error ? err.message : String(err)}`)
+            return undefined
+          })
+          if (own) {
+            await this.saveToCache(playlistId, own)
+            return own
+          }
+        }
         throw new Error(`Spotify Embed API error: ${response.status}`)
       }
 
@@ -179,6 +196,15 @@ export class SpotifyMediaInfo {
   private ensureCacheDir(): void {
     if (!fs.existsSync(this.cacheDir)) {
       fs.mkdirSync(this.cacheDir, { recursive: true })
+    }
+  }
+
+  /** (fork "wishes") the kept list of a playlist forgotten - a song was put in or taken out: read anew next time */
+  public forget(playlistId: string): void {
+    try {
+      fs.rmSync(this.getCacheFilePath(playlistId, 'playlist'), { force: true })
+    } catch {
+      // (not a Spotify id: nothing kept for it)
     }
   }
 

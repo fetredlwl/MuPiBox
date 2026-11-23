@@ -20,9 +20,13 @@ Bedienung › Suche*; aus = wie bisher)
 - **Kind darf Playlists anlegen:** „Neue Playlist“ – Name über die Tastatur, Reiter wählen; die Playlist entsteht **privat** im
   Spotify-Konto der Box. Wie viele am Tag, ist in der App einstellbar (Vorgabe 5).
 - **Einzelne Songs aus Spotify:** Die Spotify-Suche findet auch Songs (explizite nie). Kann das Kind den Song schon hören (Album
-  oder ganzer Künstler auf der Box bzw. freigegeben), legt es ihn sofort in eine **eigene** Playlist auf der Startseite; sonst
+  oder ganzer Künstler auf der Box bzw. freigegeben), legt es ihn sofort in eine **eigene** Playlist auf der Startseite (auch eine, die die Eltern selbst dorthin gelegt haben – die Box fragt Spotify, wem sie gehört; die Auswahl kommt immer, auch bei nur einer Playlist); sonst
   wünscht es ihn sich für eine davon, die Eltern geben ihn unter *Bibliothek › Wünsche* frei. Songs lassen sich unter
   „Einträge verwalten“ wieder aus den eigenen Playlists herausnehmen.
+- Songs finden: Die ersten drei Songs eines Suchbegriffs stehen vorn; wie bei Spotify sagt jeder Treffer auf dem Cover, was er ist („Song · Fettes Brot“, „Album · …“), Künstler haben ein rundes Bild; jedes Album der Suche
+  (auch eines, das schon auf der Box ist) bietet „Songs“ – so kommt das Kind über Künstler und Album bis zum einzelnen Lied.
+- Private Playlists: Ihre Titelliste im Player kommt jetzt über den Spotify-Login der Box (Spotify zeigt private Playlists nicht
+  öffentlich an – bisher kam „Spotify antwortet gerade nicht“); nach einem neuen oder herausgenommenen Song sofort aktuell.
 - Für Anlegen und Songs braucht die Box das Recht, private Playlists zu ändern: Die App zeigt „Spotify neu verbinden“ (einmal).
 - Home Assistant: Ereignisse für neue Playlists (`created`) und Songs (`kind: "track"`, mit `playlist`); die Wünsche-Erweiterung
   (`search_events.py`) ist dafür aktualisiert. Backup und Wiederherstellung sichern die neue Datei `search-playlists.json` mit.

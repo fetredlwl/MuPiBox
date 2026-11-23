@@ -147,6 +147,10 @@ export const DEFAULT_DISPLAY_TEXTS = {
   trackAdded: '{n} is now in {p}.',
   trackAlready: '{n} is in {p} already.',
   trackNoPlaylist: 'Put a playlist on the start page first.',
+  trackSongs: 'Songs',
+  searchKindAlbum: 'Album',
+  searchKindSong: 'Song',
+  wishSentTo: 'Wish sent: {n} – for {p}',
 }
 export type DisplayTextKey = keyof typeof DEFAULT_DISPLAY_TEXTS
 type TextSet = Partial<Record<DisplayTextKey, string>>

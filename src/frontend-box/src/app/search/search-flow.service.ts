@@ -162,6 +162,7 @@ export class SearchFlowService {
   // the pages loaded on this display (a search by its text, an artist by its id) - kept until the display reloads
   private readonly searchPages = new Map<string, WishPages>()
   private readonly artistPages = new Map<string, WishPages>()
+  private readonly albumPages = new Map<string, WishItem[]>()
   private readonly asking = new Set<string>()
   /** what the search says when it is shown again (added, already there, failed) */
   private note = ''
@@ -278,7 +279,9 @@ export class SearchFlowService {
             ? this.texts.text('wishAllowed', { n: item.name })
             : r?.result === 'already'
               ? this.texts.text('wishAlready', { n: item.name })
-              : this.texts.text('wishSent', { n: item.name })
+              : playlist
+                ? this.texts.text('wishSentTo', { n: item.name, p: playlist.name })
+                : this.texts.text('wishSent', { n: item.name })
       if (r?.result !== 'allowed') this.wished.update((s) => new Set([...s, `${item.kind}:${item.id}`]))
     } catch {
       this.note = this.texts.text('searchFailed')
@@ -336,6 +339,23 @@ export class SearchFlowService {
       this.note = this.texts.text('searchFailed')
     }
     void this.navController.navigateBack(['/search'])
+  }
+
+  /** an album's songs (Spotify's, kept a day on the box and here until the display reloads); undefined: not read */
+  async albumSongs(albumId: string): Promise<WishItem[] | undefined> {
+    const have = this.albumPages.get(albumId)
+    if (have) return have
+    try {
+      const r = await firstValueFrom(
+        this.http.get<{ items: WishItem[] }>(`${this.api}/wishes/album`, { params: { id: albumId } }),
+      )
+      const items = r?.items ?? []
+      this.albumPages.set(albumId, items)
+      return items
+    } catch (err) {
+      if ((err as { error?: { error?: string } })?.error?.error === 'spotify_blocked') void this.spotifyBlock.refresh()
+      return undefined
+    }
   }
 
   /** the songs of a playlist the child put on the start page itself (undefined: not read) */

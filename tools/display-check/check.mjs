@@ -198,6 +198,17 @@ function makeConfigDir() {
         10: { albums: albums('wa', 3, 10), artists: [], shows: [], more: false },
       },
       artists: { [sid('wk', 1)]: albums('wk', 23).map(({ artist: _a, ...a }) => a) },
+      // (R16: the songs of the album on the box - one explicit)
+      albums: {
+        [sid('wa', 0)]: {
+          artistId: sid('wk', 9),
+          cover: '',
+          tracks: [
+            { id: sid('wt', 4), name: 'Albumsong', artist: 'Wunsch Künstler' },
+            { id: sid('wt', 5), name: 'Grober Albumsong', artist: 'Wunsch Künstler', explicit: true },
+          ],
+        },
+      },
     }),
   )
   // (the directories' answer for any term: one show for children, one for grown-ups - MUPIBOX_PODCAST_FIXTURE)
@@ -1267,8 +1278,23 @@ async function playlistsPass(browser, dir) {
     const hits = await listNames(page)
     rule(
       'R16',
-      hits.includes('Erlaubter Song') && hits.includes('Wunschsong') && !hits.includes('Grober Song'),
-      `songs: found in the Spotify search, explicit ones never (${hits.length} hits)`,
+      hits.slice(0, 2).join('|') === 'Erlaubter Song|Wunschsong' && !hits.includes('Grober Song'),
+      `songs: found in the Spotify search, the first in front, explicit ones never (${hits.slice(0, 4).join(', ')})`,
+    )
+    // what each one is, as Spotify shows it: a sign on the cover, the artist round
+    const kinds = await page.evaluate((top) => {
+      const list = eval(top)?.querySelector('mupi-swiper[data-names]')
+      const subs = [...(list?.querySelectorAll('.mupi-sub') ?? [])].map((e) => e.textContent.trim())
+      const artist = [...(list?.querySelectorAll('swiper-slide') ?? [])].find(
+        (sl) => sl.querySelector('.title-row')?.textContent.trim() === 'Wunsch Künstler',
+      )
+      const round = !!artist?.querySelector('.img-row ion-card.circle-card') || !!list?.querySelector('.km-stage-card.km-round')
+      return { subs, round }
+    }, TOP)
+    rule(
+      'R16',
+      kinds.subs.includes('Song · Wunsch Künstler') && kinds.subs.includes('Album · Wunsch Künstler') && kinds.subs.includes('Artist') && kinds.round,
+      `songs: each hit says what it is (${[...new Set(kinds.subs)].slice(0, 4).join(', ')}), the artist round`,
     )
     if (!(await tapListed(page, 'Erlaubter Song')) || (await topTag(page)) !== 'app-search-album')
       throw new Error('no page for the song')
@@ -1303,6 +1329,33 @@ async function playlistsPass(browser, dir) {
       /Wish sent/.test(await note()) && wished?.status === 'open' && wished?.target?.id === made?.playlistid,
       'songs: the wish waits for the parents, with the playlist chosen',
     )
+    // an album's songs: the album on the box -> "Songs" -> one of them into a playlist
+    const topBack = async () => {
+      await page.evaluate((top) => eval(top)?.querySelector('[data-mupi-back]')?.click(), TOP)
+      await wait(900)
+    }
+    if (!(await tapListed(page, 'Wunschalbum 1')) || (await topTag(page)) !== 'app-search-album')
+      throw new Error('no page for the album on the box')
+    const albumActs = await listNames(page)
+    rule('R16', albumActs.includes('Songs'), `songs: an album offers its songs (${albumActs.join(', ')})`)
+    await tapListed(page, 'Songs')
+    await wait(1500)
+    const albumSongs = await listNames(page)
+    rule(
+      'R16',
+      albumSongs.includes('Albumsong') && !albumSongs.includes('Grober Albumsong'),
+      `songs: the album's songs, explicit ones never (${albumSongs.join(', ')})`,
+    )
+    await tapListed(page, 'Albumsong')
+    await wait(600)
+    rule(
+      'R16',
+      (await listNames(page)).includes('Into a playlist'),
+      'songs: a song of an album on the box goes into a playlist at once',
+    )
+    await topBack()
+    await topBack()
+    await topBack()
     await back(page)
     await tapListed(page, 'Manage entries')
     await wait(400)
