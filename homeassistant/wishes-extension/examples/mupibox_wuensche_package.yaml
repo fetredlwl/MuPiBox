@@ -80,7 +80,7 @@ automation:
       #       url: "{{ trigger.event.data.url }}"        # iPhone: Tipp auf die Meldung öffnet die Freigabe
       #       clickAction: "{{ trigger.event.data.url }}" # Android: dasselbe
 
-  # 2) Das Kind holt etwas auf die Startseite oder nimmt es weg -> ins Logbuch
+  # 2) Das Kind holt etwas auf die Startseite oder nimmt es weg, legt Songs in seine Playlists, legt eine an -> ins Logbuch
   - id: mupibox_kind_holt_oder_entfernt
     alias: MuPiBox - Kind holt oder entfernt etwas
     description: Schreibt ins Logbuch, was das Kind selbst auf die Startseite geholt oder entfernt hat.
@@ -90,7 +90,7 @@ automation:
         event_type: mupibox_search_event
     conditions:
       - condition: template
-        value_template: "{{ trigger.event.data.what in ['added', 'removed'] }}"
+        value_template: "{{ trigger.event.data.what in ['added', 'removed', 'created'] }}"
     actions:
       - action: logbook.log
         data:

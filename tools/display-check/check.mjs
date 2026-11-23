@@ -103,6 +103,18 @@ const pool = [
     cover: '',
     addedAt: now,
   },
+  // (R14-R16: playlists allowed for the search - one of the child's own account, one it only follows)
+  { id: 'p_pl_own', kind: 'playlist', spotifyId: A('H'), name: 'Hüpf-Hits', artist: '', cover: '', addedAt: now, own: true },
+  {
+    id: 'p_pl_follow',
+    kind: 'playlist',
+    spotifyId: A('J'),
+    name: 'Gefolgte Liste',
+    artist: '',
+    cover: '',
+    addedAt: now,
+    own: false,
+  },
 ]
 const library = [
   {
@@ -174,6 +186,13 @@ function makeConfigDir() {
           albums: albums('wa', 10),
           artists: [{ id: sid('wk', 1), name: 'Wunsch Künstler', cover: '' }],
           shows: [{ id: sid('ws', 1), name: 'Wunsch Hörspiel', artist: 'Sender', cover: '' }],
+          // (R16: single songs - only asked with "Einzelne Songs aus Spotify" on: one of an album on the box, one new,
+          // one explicit)
+          tracks: [
+            { id: sid('wt', 1), name: 'Erlaubter Song', artist: 'Wunsch Künstler', cover: '', albumId: sid('wa', 0), artistId: sid('wk', 9) },
+            { id: sid('wt', 2), name: 'Wunschsong', artist: 'Wunsch Künstler', cover: '', albumId: sid('wx', 1), artistId: sid('wk', 9) },
+            { id: sid('wt', 3), name: 'Grober Song', artist: 'Wunsch Künstler', cover: '', explicit: true },
+          ],
           more: true,
         },
         10: { albums: albums('wa', 3, 10), artists: [], shows: [], more: false },
@@ -1146,6 +1165,173 @@ async function appWishes(browser, dir) {
 }
 
 /** R9: the wishes' switch off - no Spotify search, nothing asked, the rest as before */
+/**
+ * R14-R16 (fork "wishes"): playlists in the search, with their switches on and the right to change the child's
+ * playlists given - the tile and the playlists allowed (R14), a new playlist, at most so many a day (R15), songs of the
+ * Spotify search into a playlist of the child's own, a song wished for one, songs taken out again (R16). Spotify's
+ * answers are invented (MUPIBOX_SPOTIFY_FIXTURE: the playlists kept in the backend's memory, each call logged).
+ */
+async function playlistsPass(browser, dir) {
+  const file = path.join(dir, 'config', 'mupiboxconfig.json')
+  const switches = (on) => {
+    const box = JSON.parse(fs.readFileSync(file, 'utf8'))
+    Object.assign(box.mupibox, { displayPlaylists: on, displayPlaylistCreate: on, displayTracks: on, playlistsPerDay: 1 })
+    box.spotify = { ...(box.spotify ?? {}), tokenScopes: on ? ['playlist-read-private', 'playlist-modify-private'] : [] }
+    fs.writeFileSync(file, JSON.stringify(box, null, 2))
+  }
+  switches(true)
+  await wait(1500)
+  const page = await browser.newPage()
+  await page.setViewport({ width: 1024, height: 600, deviceScaleFactor: 1 })
+  const before = spotifyCalls(dir).length
+  const calls = () => spotifyCalls(dir).slice(before)
+  const lib = () => JSON.parse(fs.readFileSync(path.join(dir, 'config', 'data.json'), 'utf8'))
+  const note = () => page.evaluate(() => document.querySelector('app-search .srch-toast')?.textContent ?? '')
+  // (back at the search after a step: still in the playlists, else the tile again)
+  const toPlaylists = async () => {
+    if (!(await listNames(page)).includes('New playlist')) {
+      await tapListed(page, 'Playlists')
+      await wait(500)
+    }
+  }
+  try {
+    await page.goto(`http://localhost:${STATIC_PORT}/search`, { waitUntil: 'networkidle2' })
+    await wait(2500)
+    // R14: the tile, the playlists allowed
+    const ways = await listNames(page)
+    rule('R14', ways.includes('Playlists'), `playlists: the tile at the start (${ways.join(', ')})`)
+    await tapListed(page, 'Playlists')
+    await wait(600)
+    const shown = await listNames(page)
+    rule(
+      'R14',
+      shown[0] === 'New playlist' && shown.includes('Hüpf-Hits') && shown.includes('Gefolgte Liste'),
+      `playlists: "New playlist" first, then the playlists allowed (${shown.join(', ')})`,
+    )
+    await shot(page, '1024x600-9-playlists')
+    if (!(await tapListed(page, 'Hüpf-Hits')) || (await topTag(page)) !== 'app-search-album')
+      throw new Error('no page for the playlist')
+    await tapListed(page, 'To the start page')
+    await tapListed(page, 'Music')
+    await wait(800)
+    const own = lib().find((r) => r.playlistid === A('H'))
+    rule(
+      'R14',
+      (await topTag(page)) === 'app-search' && own?.kidAdded === true && own?.own === true,
+      'playlists: one of the child account goes on the start page, marked as its own',
+    )
+
+    // R15: a new playlist - its name typed, the tab chosen, made in the child's account; one a day here
+    await toPlaylists()
+    await tapListed(page, 'New playlist')
+    await wait(500)
+    const field = await page.evaluate(() => document.querySelector('app-search .srch-placeholder')?.textContent?.trim() ?? '')
+    rule(
+      'R15',
+      (await anywhereVisible(page, 'app-search .simple-keyboard')) && field === 'Name of the playlist',
+      `new playlist: the keyboard for its name (field: "${field}")`,
+    )
+    await type(page, ['L', 'I', 'E', 'D'])
+    await page.click('app-search [data-skbtn="{search}"]')
+    await wait(1200)
+    const tabs = await listNames(page)
+    rule(
+      'R15',
+      (await topTag(page)) === 'app-search-album' && tabs.includes('Music') && !(await overflow(page)).scrolls,
+      `new playlist: then the tabs (${tabs.join(', ')})`,
+    )
+    await tapListed(page, 'Music')
+    await wait(1200)
+    const made = lib().find((r) => r.title === 'LIED')
+    rule(
+      'R15',
+      calls().includes('playlist create LIED') && made?.own === true && made?.kidAdded === true && made?.category === 'music',
+      `new playlist: made in the child's account, on the start page under the tab chosen (${calls().join(' / ')})`,
+    )
+    await toPlaylists()
+    await tapListed(page, 'New playlist')
+    await wait(500)
+    rule(
+      'R15',
+      /No new playlist today/.test(await note()) && !(await anywhereVisible(page, 'app-search .simple-keyboard')),
+      'new playlist: no more than allowed a day (said in a note, no keyboard)',
+    )
+
+    // R16: songs of the Spotify search - into a playlist of the child's own, or wished for one; taken out again
+    await back(page)
+    await tapListed(page, 'Search Spotify')
+    await wait(400)
+    await type(page, ['W', 'U'])
+    await page.click('app-search [data-skbtn="{search}"]')
+    await wait(2500)
+    const hits = await listNames(page)
+    rule(
+      'R16',
+      hits.includes('Erlaubter Song') && hits.includes('Wunschsong') && !hits.includes('Grober Song'),
+      `songs: found in the Spotify search, explicit ones never (${hits.length} hits)`,
+    )
+    if (!(await tapListed(page, 'Erlaubter Song')) || (await topTag(page)) !== 'app-search-album')
+      throw new Error('no page for the song')
+    const acts = await listNames(page)
+    rule('R16', acts.includes('Into a playlist') && !acts.includes('Wish for it'), `songs: one the child can play goes into a playlist (${acts.join(', ')})`)
+    await tapListed(page, 'Into a playlist')
+    await wait(600)
+    const targets = await listNames(page)
+    rule(
+      'R16',
+      targets.includes('Hüpf-Hits') && targets.includes('LIED') && !targets.includes('Gefolgte Liste'),
+      `songs: only the child's own playlists on the start page to choose (${targets.join(', ')})`,
+    )
+    await tapListed(page, 'LIED')
+    await wait(1200)
+    rule(
+      'R16',
+      (await topTag(page)) === 'app-search' && calls().some((c) => c.startsWith(`playlist add ${made?.playlistid} spotify:track:wt001`)),
+      `songs: put into the playlist at once (${(await note()).trim()})`,
+    )
+    if (!(await tapListed(page, 'Wunschsong')) || (await topTag(page)) !== 'app-search-album')
+      throw new Error('no page for the new song')
+    const wishActs = await listNames(page)
+    rule('R16', wishActs.includes('Wish for it') && !wishActs.includes('Into a playlist'), `songs: one it cannot play yet is wished (${wishActs.join(', ')})`)
+    await tapListed(page, 'Wish for it')
+    await wait(600)
+    await tapListed(page, 'LIED')
+    await wait(1200)
+    const wished = JSON.parse(fs.readFileSync(path.join(dir, 'config', 'wishes.json'), 'utf8')).find((w) => w.kind === 'track')
+    rule(
+      'R16',
+      /Wish sent/.test(await note()) && wished?.status === 'open' && wished?.target?.id === made?.playlistid,
+      'songs: the wish waits for the parents, with the playlist chosen',
+    )
+    await back(page)
+    await tapListed(page, 'Manage entries')
+    await wait(400)
+    if (!(await tapListed(page, 'LIED')) || (await topTag(page)) !== 'app-search-album') throw new Error('no page for the own playlist')
+    const ownActs = await listNames(page)
+    rule('R16', ownActs.includes('Take songs out'), `songs: its own playlist offers "Take songs out" (${ownActs.join(', ')})`)
+    await tapListed(page, 'Take songs out')
+    await wait(1200)
+    const songs = await listNames(page)
+    if (songs.length) await tapListed(page, songs[0])
+    await wait(400)
+    rule('R16', (await listNames(page)).includes('Yes, take out'), 'songs: taking one out is asked once more')
+    await tapListed(page, 'Yes, take out')
+    await wait(1200)
+    rule(
+      'R16',
+      (await topTag(page)) === 'app-search' && calls().some((c) => c.startsWith(`playlist remove ${made?.playlistid}`)),
+      'songs: taken out of the playlist',
+    )
+  } finally {
+    switches(false)
+    // (the playlists the child put on the start page here: off again - the next part counts the tiles of the start)
+    const rest = lib().filter((r) => !(r.kidAdded === true && typeof r.playlistid === 'string'))
+    fs.writeFileSync(path.join(dir, 'config', 'data.json'), JSON.stringify(rest, null, 2))
+    await page.close()
+    await wait(1500)
+  }
+}
+
 async function wishesOff(browser, dir) {
   const file = path.join(dir, 'config', 'mupiboxconfig.json')
   const box = JSON.parse(fs.readFileSync(file, 'utf8'))
@@ -1402,6 +1588,7 @@ async function main() {
     ])
       await run(browser, dir, size)
     await appWishes(browser, dir)
+    await playlistsPass(browser, dir)
     await wishesOff(browser, dir)
   } catch (err) {
     console.error(`display check could not run: ${err?.message ?? err}`)

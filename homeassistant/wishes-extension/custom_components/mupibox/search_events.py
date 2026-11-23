@@ -3,7 +3,9 @@
 The box keeps a short list of what the child put on the display's start page
 from the search pool ("added"), took out again ("removed") or wished from
 Spotify for the parents to decide ("wish", with "url": the app's page
-"Wünsche" on the address Home Assistant reaches the box by):
+"Wünsche" on the address Home Assistant reaches the box by), and playlists it
+made itself ("created"); a single song ("kind": "track") goes into one of its
+playlists ("playlist": its name) instead of a tab:
 GET /api/ha/v1/search_events?after=<id>, scope "read", capability
 "search_events". The coordinator asks for the new ones and fires one Home
 Assistant event per entry (SEARCH_EVENT). This module has no Home Assistant
@@ -27,7 +29,9 @@ KIND_LABELS = {
     "show": "Podcast",
     "podcast": "Podcast",
     "radio": "Radiosender",
+    "track": "Song",
 }
+WHATS = ("added", "removed", "wish", "created")
 
 
 def valid_events(payload: Any) -> list[dict[str, Any]]:
@@ -41,7 +45,7 @@ def valid_events(payload: Any) -> list[dict[str, Any]]:
         if isinstance(e, dict)
         and isinstance(e.get("id"), int)
         and not isinstance(e.get("id"), bool)
-        and e.get("what") in ("added", "removed", "wish")
+        and e.get("what") in WHATS
     ]
     return sorted(found, key=lambda e: e["id"])
 
@@ -80,10 +84,22 @@ def event_data(event: dict[str, Any], box_name: str, entry_id: str) -> dict[str,
     category_label = CATEGORY_LABELS.get(category, category)
     title = f"„{name}“" + (f" ({artist})" if artist and artist != name else "")
     url = str(event.get("url") or "")
-    if what == "added":
+    playlist = str(event.get("playlist") or "").strip()
+    link = f" Freigeben: {url}" if url else ""
+    if kind == "track" and playlist:
+        # (a single song: into one of the child's playlists, not under a tab)
+        if what == "added":
+            message = f"{title} wurde in die Playlist „{playlist}“ gelegt."
+        elif what == "wish":
+            message = f"Wunsch: {title} für die Playlist „{playlist}“." + link
+        else:
+            message = f"{title} wurde aus der Playlist „{playlist}“ genommen."
+    elif what == "created":
+        message = f"Neue Playlist „{name}“ unter {category_label} angelegt."
+    elif what == "added":
         message = f"{title} wurde unter {category_label} auf die Startseite geholt."
     elif what == "wish":
-        message = f"Wunsch: {title} unter {category_label}." + (f" Freigeben: {url}" if url else "")
+        message = f"Wunsch: {title} unter {category_label}." + link
     else:
         message = f"{title} wurde von der Startseite ({category_label}) entfernt."
     return {
@@ -98,6 +114,7 @@ def event_data(event: dict[str, Any], box_name: str, entry_id: str) -> dict[str,
         "artist": artist,
         "category": category,
         "category_label": category_label,
+        "playlist": playlist,
         "message": message,
         "url": url,
     }

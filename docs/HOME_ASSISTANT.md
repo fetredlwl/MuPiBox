@@ -198,8 +198,9 @@ geben. (Eine Zeile „Search pool events unavailable“ in einer Debug-Ansicht i
 
 | Feld | Bedeutung |
 |---|---|
-| `what` | `wish` = gewünscht (wartet auf dich) · `added` = das Kind hat es auf die Startseite geholt · `removed` = das Kind hat es entfernt |
-| `kind` / `kind_label` | `album`, `artist`, `playlist`, `podcast`, `radio` / das deutsche Wort dazu |
+| `what` | `wish` = gewünscht (wartet auf dich) · `added` = das Kind hat es auf die Startseite geholt (ein Song: in eine Playlist gelegt) · `removed` = das Kind hat es entfernt (ein Song: aus der Playlist genommen) · `created` = das Kind hat eine neue Playlist angelegt |
+| `kind` / `kind_label` | `album`, `artist`, `playlist`, `podcast`, `radio`, `track` (ein einzelner Song) / das deutsche Wort dazu |
+| `playlist` | bei einem Song: der Name der Playlist, in die er soll (sonst leer) |
 | `name`, `artist` | Titel und Künstler |
 | `category` / `category_label` | der Reiter: `audiobook` = Hörspiele, `music` = Musik, `other` = Radio |
 | `message` | fertiger deutscher Satz, bei Wünschen mit Link zur Freigabe |
@@ -223,7 +224,7 @@ Du bekommst eine fertige Datei, die **Helfer** und **Automationen** auf einmal m
 | Helfer (Text) | `input_text.mupibox_letzter_wunsch` | der letzte Wunsch als Satz |
 | Helfer (Datum/Zeit) | `input_datetime.mupibox_letzter_wunsch_zeit` | wann er kam |
 | Automation | „MuPiBox – neuer Wunsch“ | zählt, merkt, meldet (Benachrichtigung in Home Assistant, optional aufs Handy) |
-| Automation | „MuPiBox – Kind holt oder entfernt etwas“ | schreibt ins **Logbuch**, was das Kind selbst geholt oder entfernt hat |
+| Automation | „MuPiBox – Kind holt oder entfernt etwas“ | schreibt ins **Logbuch**, was das Kind selbst geholt oder entfernt hat, Songs in seinen Playlists und neue Playlists |
 | Automation | „MuPiBox – Erinnerung an Wünsche“ | 18:00 Uhr, wenn noch Wünsche gezählt sind |
 
 ### Variante 1: als Paket (eine Datei, am schnellsten)

@@ -133,6 +133,53 @@ export async function spotifyGet<T>(path: string, accessToken: string, source: '
   }
 }
 
+/**
+ * (fork "wishes") A request that changes something at Spotify - a playlist the child makes, a song put in or taken out
+ * (search-playlists.ts). The same turns and the same block as spotifyGet; a 429 is the display's. Answer: Spotify's JSON
+ * (or {} when it sends none).
+ */
+export async function spotifySend<T>(method: 'POST' | 'PUT' | 'DELETE', path: string, accessToken: string, body: unknown): Promise<T> {
+  let response: Response
+  try {
+    response = await inTurn(() => {
+      const block = spotifyBlock()
+      if (block) {
+        const left = Math.max(1, Math.ceil((block.until - Date.now()) / 1000))
+        throw new SpotifyApiException({ kind: 'rate-limit', reason: `${method} ${path} not sent: Spotify blocks for ${left} s more (${block.reason})`, retryAfterSeconds: left })
+      }
+      lastRequestAt = Date.now()
+      return fetch(`${API_BASE}${path}`, {
+        method,
+        headers: { Authorization: `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+        signal: AbortSignal.timeout(HTTP_TIMEOUT_MS),
+      })
+    })
+  } catch (err) {
+    if (err instanceof SpotifyApiException) throw err
+    throw new SpotifyApiException({ kind: 'network', reason: `${method} ${path}: ${(err as Error)?.message ?? String(err)}` })
+  }
+  if (response.status === 401) throw new SpotifyApiException({ kind: 'auth', reason: `401 from ${method} ${path}` })
+  if (response.status === 429) {
+    const header = response.headers.get('retry-after')
+    const parsed = Number.parseInt(header ?? '', 10)
+    const retryAfter = Number.isFinite(parsed) && parsed > 0 ? parsed : 60
+    const quota = (await response.text().catch(() => '')).includes(QUOTA_EXCEEDED) ? `, ${QUOTA_EXCEEDED}` : ''
+    const reason = `429 from ${method} ${path} (Spotify: wait ${retryAfter} s${quota})`
+    noteSpotifyBlock(Date.now() + retryAfter * 1000, 'display', reason)
+    throw new SpotifyApiException({ kind: 'rate-limit', reason, retryAfterSeconds: retryAfter })
+  }
+  if (!response.ok) {
+    throw new SpotifyApiException({ kind: 'internal', reason: `${response.status} ${response.statusText} from ${method} ${path}` })
+  }
+  const text = await response.text().catch(() => '')
+  try {
+    return (text ? JSON.parse(text) : {}) as T
+  } catch {
+    return {} as T
+  }
+}
+
 /** Discover all sync-managed playlists for the active user. */
 // failures: what could not be read in this run (an explicit playlist, a pinned album, an artist) - the diff removes
 // nothing then, see computeSyncDiff

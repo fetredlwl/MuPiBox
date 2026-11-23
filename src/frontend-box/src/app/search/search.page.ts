@@ -48,7 +48,7 @@ import { SwiperComponent, type SwiperData } from '../swiper/swiper.component'
 import { KmThemeService } from '../theme/km-theme.service'
 import { localizeCoverUrl } from '../utils'
 import { NearEndDirective } from './near-end.directive'
-import { tilePicture } from './search-tiles'
+import { TILE_ICON, tilePicture } from './search-tiles'
 import {
   CATEGORY_LABEL,
   type KidsPodcast,
@@ -69,7 +69,8 @@ import {
 // (fork "wishes") Where the search looks - the tiles of its start: the child's own entries ("Einträge verwalten"),
 // Spotify (wishes), podcasts and radio for children. Typed without a tile: the box's library and the pool, the tiles
 // after the hits (each asks for the typed text when tapped).
-type SearchMode = 'own' | 'spotify' | 'podcasts' | 'radio'
+// ((fork "wishes") playlists: the ones allowed for the search, "Neue Playlist" - backend search-playlists.ts)
+type SearchMode = 'own' | 'spotify' | 'podcasts' | 'radio' | 'playlists'
 // (the word in the search field: where it looks)
 // (the tiles' names at the start)
 const WAY_LABEL: Record<SearchMode, DisplayTextKey> = {
@@ -77,6 +78,7 @@ const WAY_LABEL: Record<SearchMode, DisplayTextKey> = {
   spotify: 'wishSearchTile',
   podcasts: 'searchPodcastsButton',
   radio: 'searchRadioButton',
+  playlists: 'searchPlaylistsTile',
 }
 // the tiles' signs (drawn as the icons of the keyboard's row, see search.page.html #wayIcon) - for the covers of the
 // start page's list a picture: the sign on the theme's colour
@@ -87,6 +89,7 @@ const WAY_ICON: Record<SearchMode, string> = {
   podcasts: '<path d="M4 15v-3a8 8 0 0 1 16 0v3"/><path d="M4 15h3v6H5a1 1 0 0 1-1-1zM20 15h-3v6h2a1 1 0 0 0 1-1z"/>',
   radio:
     '<rect x="3" y="9" width="18" height="12" rx="2"/><path d="M7 9 17 4"/><circle cx="15.5" cy="15" r="2.5"/><path d="M6.5 13.5h3M6.5 16.5h3"/>',
+  playlists: '<path d="M4 6h11M4 11h11M4 16h7"/><circle cx="16.5" cy="17.5" r="2.5"/><path d="M19 17.5V8l2-1"/>',
 }
 
 // (fork "wishes") What the search lists with the keyboard folded away - in the album list of the start page and of
@@ -99,12 +102,16 @@ type ListItem =
   | { t: 'radio'; station: KidsStation }
   | { t: 'wish'; wish: WishItem }
   | { t: 'own'; own: OwnEntry }
+  // (fork "wishes") "Neue Playlist", and a playlist allowed for the search (there: on the start page already)
+  | { t: 'newpl' }
+  | { t: 'pl'; entry: PoolEntry; there: boolean }
 
 const MODE_LABEL: Record<SearchMode, DisplayTextKey> = {
   own: 'searchMine',
   spotify: 'searchSpotify',
   podcasts: 'searchPodcastsButton',
   radio: 'searchRadioButton',
+  playlists: 'searchPlaylistsTile',
 }
 
 /** a podcast's feed as the backend compares it (search-pool.ts feedKey): without http(s):// */
@@ -373,9 +380,31 @@ export class SearchPage implements AfterViewInit, OnDestroy {
       : null,
   )
 
+  // ---------- (fork "wishes") playlists (backend search-playlists.ts; switched on in the app, Bedienung › Suche) ----------
+  protected readonly playlistsOn = computed(() => this.flow.playlists().on)
+  /** "Neue Playlist" tapped: the keyboard types its name, its key "Anlegen" goes on to the tabs */
+  protected readonly naming = signal(false)
+  /** the playlists allowed for the search: first those not on the start page yet, then the others (marked) */
+  private readonly playlistItems = computed<ListItem[]>(() => {
+    const onStart = new Set<string>()
+    for (const { media } of this.media()) if (media.playlistid) onStart.add(media.playlistid)
+    for (const o of this.own()) if (o.ident.startsWith('playlist:')) onStart.add(o.ident.slice('playlist:'.length))
+    const q = this.query().trim()
+    const lists = this.pool().filter(
+      (e) =>
+        e.kind === 'playlist' &&
+        !/^37i9dQZF/.test(e.spotifyId) &&
+        (!this.typed() || searchRank(e.name, q) !== null),
+    )
+    return [
+      ...lists.filter((e) => !onStart.has(e.spotifyId)).map((entry): ListItem => ({ t: 'pl', entry, there: false })),
+      ...lists.filter((e) => onStart.has(e.spotifyId)).map((entry): ListItem => ({ t: 'pl', entry, there: true })),
+    ]
+  })
+
   /** the tiles of the start: at least one to show */
   protected readonly waysShown = computed(
-    () => this.own().length > 0 || this.wishesOn() || this.podcastsOn() || this.radioOn(),
+    () => this.own().length > 0 || this.wishesOn() || this.podcastsOn() || this.radioOn() || this.playlistsOn(),
   )
 
   // ---------- wishes from Spotify (backend wishes.ts; switched on in the app, Bedienung › Suche) ----------
@@ -417,11 +446,15 @@ export class SearchPage implements AfterViewInit, OnDestroy {
         return typed ? stations() : this.radioTipsShown().map((station) => ({ t: 'radio', station }))
       case 'spotify':
         return typed ? wishes() : []
+      case 'playlists':
+        if (this.naming()) return []
+        return [...(this.flow.playlists().create && !typed ? [{ t: 'newpl' } as ListItem] : []), ...this.playlistItems()]
     }
     if (!typed) {
       const ways: ListItem[] = []
       if (this.own().length) ways.push({ t: 'way', m: 'own' })
       if (this.wishesOn()) ways.push({ t: 'way', m: 'spotify' })
+      if (this.playlistsOn()) ways.push({ t: 'way', m: 'playlists' })
       if (this.podcastsOn()) ways.push({ t: 'way', m: 'podcasts' })
       if (this.radioOn()) ways.push({ t: 'way', m: 'radio' })
       return ways
@@ -468,10 +501,21 @@ export class SearchPage implements AfterViewInit, OnDestroy {
             name: item.wish.name,
             imgSrc: cover(item.wish.cover),
             data: item,
-            mark: item.wish.there ? '✓' : '★',
+            // (a song the child can play already: "+", into a playlist at once)
+            mark: item.wish.there ? '✓' : item.wish.kind === 'track' && item.wish.allowed ? '+' : '★',
           }
         case 'own':
           return { name: item.own.name, imgSrc: cover(item.own.cover), data: item }
+        case 'newpl':
+          return {
+            name: this.texts.text('plNew'),
+            imgSrc: of(tilePicture(this.host.nativeElement, TILE_ICON.plus)),
+            data: item,
+            // (none left today: grey - a tap says it)
+            dim: this.flow.playlists().left < 1,
+          }
+        case 'pl':
+          return { name: item.entry.name, imgSrc: cover(item.entry.cover), data: item, mark: item.there ? '✓' : '+' }
       }
     })
   })
@@ -494,6 +538,7 @@ export class SearchPage implements AfterViewInit, OnDestroy {
       else if (this.nothingFound()) notes.push('searchNothing')
     }
     if (m === 'own' && !this.ownShown().length) notes.push('searchNothing')
+    if (m === 'playlists' && !this.naming() && !this.items().length) notes.push('searchNothing')
     if (m === 'spotify' && !typed) notes.push('searchStart')
     if ((!m || m === 'podcasts') && typed && this.podcastsOn() && this.podShown()?.length === 0)
       notes.push('searchPodcastsNone')
@@ -577,7 +622,22 @@ export class SearchPage implements AfterViewInit, OnDestroy {
         return this.openWish(item.wish)
       case 'own':
         return this.openOwn(item.own)
+      case 'newpl':
+        return this.startNaming()
+      case 'pl':
+        // (on the start page already: nothing to do here - it is played from there)
+        return item.there ? this.showNote(this.texts.text('wishOnBox')) : this.openPoolItem(item.entry)
     }
+  }
+
+  /** "Neue Playlist": the keyboard for its name (none left today: said) */
+  private startNaming(): void {
+    if (this.flow.playlists().left < 1) return this.showNote(this.texts.text('plLimit'))
+    this.naming.set(true)
+    this.keyboard?.clearInput()
+    this.query.set('')
+    this.setLayout(false)
+    this.keyboardShown.set(true)
   }
 
   /** a tile's sign as a cover: on the theme's colour (km themes: its apricot and ink), as a picture */
@@ -593,6 +653,8 @@ export class SearchPage implements AfterViewInit, OnDestroy {
   ionViewWillEnter(): void {
     this.swiper()?.ionViewWillEnter()
     this.loadPool()
+    // (fork "wishes": playlists - the tile, how many new ones today, the child's playlists songs may go into)
+    this.flow.loadPlaylists()
     // (Spotify does not play now: said once in a popup - the page keeps its room)
     this.spotifyBlock.tellIfBlocked()
     // back from the artist or album page: what happened there ("… ist jetzt bei Musik")
@@ -714,15 +776,32 @@ export class SearchPage implements AfterViewInit, OnDestroy {
 
   /** the keyboard's keys: with "Suchen" where a directory or Spotify is asked */
   private setLayout(digits: boolean): void {
-    const go = this.mode() === 'spotify' || this.mode() === 'podcasts' || this.mode() === 'radio'
+    const go = this.mode() === 'spotify' || this.mode() === 'podcasts' || this.mode() === 'radio' || this.naming()
     this.keyboard?.setOptions({
       layoutName: go ? (digits ? 'goDigits' : 'go') : digits ? 'digits' : 'default',
-      display: { ...(this.keyboard?.options.display ?? {}), '{search}': this.texts.text('searchKey') },
+      // (a new playlist's name: the key makes it - "Anlegen")
+      display: {
+        ...(this.keyboard?.options.display ?? {}),
+        '{search}': this.texts.text(this.naming() ? 'plCreateKey' : 'searchKey'),
+      },
     })
   }
 
   /** "Suchen" on the keyboard: the chosen tile asked for the typed text, the keyboard folded away for the hits */
   private searchHere(): void {
+    // ("Anlegen": the new playlist's name - on to the tabs, on the search's album page)
+    if (this.naming()) {
+      const name = this.query().replace(/\s+/g, ' ').trim().slice(0, 40)
+      if (!name) return
+      this.naming.set(false)
+      this.keyboardShown.set(false)
+      this.keyboard?.clearInput()
+      this.query.set('')
+      this.setLayout(false)
+      this.flow.openedOwnPage()
+      void this.navController.navigateForward(['/search-album'], { state: { newPlaylist: name } })
+      return
+    }
     if (!this.typed()) return
     const m = this.mode()
     if (m === 'spotify') void this.searchWishes()
@@ -752,6 +831,7 @@ export class SearchPage implements AfterViewInit, OnDestroy {
 
   /** a tile of the start: the search looks only there (Spotify: the keyboard at once - nothing to show before) */
   protected enterMode(m: SearchMode): void {
+    this.naming.set(false)
     this.mode.set(m)
     this.keyboard?.clearInput()
     this.query.set('')
@@ -785,6 +865,15 @@ export class SearchPage implements AfterViewInit, OnDestroy {
 
   /** back: from a tile to the start of the search, from there to the start page */
   protected goBack(): void {
+    // (typing a new playlist's name: back to the playlists)
+    if (this.naming()) {
+      this.naming.set(false)
+      this.keyboard?.clearInput()
+      this.query.set('')
+      this.setLayout(false)
+      this.keyboardShown.set(false)
+      return
+    }
     if (this.mode()) {
       this.mode.set(null)
       this.keyboard?.clearInput()
@@ -937,7 +1026,7 @@ export class SearchPage implements AfterViewInit, OnDestroy {
   /** a hit of Spotify: an artist its albums, an album / a show its page with "Wünschen" */
   protected openWish(w: WishItem): void {
     // (allowed already - an approved wish: the pool's page, the child fetches it itself; on the box: its page says so)
-    const allowed = w.there ? undefined : this.flow.poolFor(w)
+    const allowed = w.there || w.kind === 'track' ? undefined : this.flow.poolFor(w)
     if (allowed) {
       if (allowed.entry.kind === 'artist' && !allowed.album) this.openPoolArtist(allowed.entry)
       else this.openPoolItem(allowed.entry, allowed.album)
@@ -945,6 +1034,8 @@ export class SearchPage implements AfterViewInit, OnDestroy {
     }
     this.flow.openedOwnPage()
     if (w.kind === 'artist') void this.navController.navigateForward(['/search-artist'], { state: { wishArtist: w } })
+    // (a song: its page puts it into a playlist of the child's own, or wishes it for one)
+    else if (w.kind === 'track') void this.navController.navigateForward(['/search-album'], { state: { track: w } })
     else void this.navController.navigateForward(['/search-album'], { state: { wish: w } })
   }
 

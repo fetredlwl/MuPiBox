@@ -26,6 +26,19 @@ export const REQUESTED_SCOPES = [
   'playlist-read-collaborative',
 ] as const
 
+/**
+ * (fork "wishes") The scopes asked at the login: with "Kind darf Playlists anlegen" or "Einzelne Songs aus Spotify" on,
+ * the right to change the child's private playlists too (search-playlists.ts) - else the same as before.
+ */
+export const PLAYLIST_WRITE_SCOPE = 'playlist-modify-private'
+export function playlistWritesOn(cfg: MupiboxConfig | undefined): boolean {
+  const mb = ((cfg as Record<string, unknown> | undefined)?.mupibox ?? {}) as Record<string, unknown>
+  return mb.displaySearch === true && (mb.displayPlaylistCreate === true || mb.displayTracks === true)
+}
+export function requestedScopes(cfg: MupiboxConfig | undefined): string[] {
+  return playlistWritesOn(cfg) ? [...REQUESTED_SCOPES, PLAYLIST_WRITE_SCOPE] : [...REQUESTED_SCOPES]
+}
+
 const STATE_TTL_MS = 10 * 60 * 1000
 
 /** In-memory OAuth-state store; single process per box, no need for tmpfs. */
@@ -69,7 +82,7 @@ export function buildAuthorizeUrl(deps: {
     response_type: 'code',
     client_id: clientId,
     redirect_uri: redirectUri,
-    scope: REQUESTED_SCOPES.join(' '),
+    scope: requestedScopes(cfg).join(' '),
     state,
     // Force re-consent so newly-added playlist scopes prompt the user
     // even if they previously authorised an older scope set.

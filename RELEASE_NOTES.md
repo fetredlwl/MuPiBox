@@ -11,8 +11,24 @@ die Box ein Backup an.
 
 ---
 
-## Seit dem letzten Tag (nur Anleitungen, noch ohne Tag)
+## Seit dem letzten Tag (noch ohne Tag)
 
+**Neu: Playlists und einzelne Songs in der Suche** (alles hinter drei neuen Schaltern unter *Einstellungen › Display &
+Bedienung › Suche*; aus = wie bisher)
+- **Playlists in der Suche:** Kachel „Playlists“ mit den Playlists, die die Eltern in „Meine Playlists“ für die Suche
+  freigeben; das Kind hört sie an und holt sie auf die Startseite. Die Box merkt sich, ob eine Playlist dem eigenen Konto gehört.
+- **Kind darf Playlists anlegen:** „Neue Playlist“ – Name über die Tastatur, Reiter wählen; die Playlist entsteht **privat** im
+  Spotify-Konto der Box. Wie viele am Tag, ist in der App einstellbar (Vorgabe 5).
+- **Einzelne Songs aus Spotify:** Die Spotify-Suche findet auch Songs (explizite nie). Kann das Kind den Song schon hören (Album
+  oder ganzer Künstler auf der Box bzw. freigegeben), legt es ihn sofort in eine **eigene** Playlist auf der Startseite; sonst
+  wünscht es ihn sich für eine davon, die Eltern geben ihn unter *Bibliothek › Wünsche* frei. Songs lassen sich unter
+  „Einträge verwalten“ wieder aus den eigenen Playlists herausnehmen.
+- Für Anlegen und Songs braucht die Box das Recht, private Playlists zu ändern: Die App zeigt „Spotify neu verbinden“ (einmal).
+- Home Assistant: Ereignisse für neue Playlists (`created`) und Songs (`kind: "track"`, mit `playlist`); die Wünsche-Erweiterung
+  (`search_events.py`) ist dafür aktualisiert. Backup und Wiederherstellung sichern die neue Datei `search-playlists.json` mit.
+- Display-Prüfung: Regeln R14–R16; alle neuen Texte in allen Sprachen.
+
+**Anleitungen**
 - [docs/INSTALLATION.md](docs/INSTALLATION.md): Erstinstallation des Forks auf einer laufenden Standard-MuPiBox per SSH, Prüfen,
   Einrichten, weitere Boxen, Updates, Fehlersuche.
 - [docs/HOME_ASSISTANT.md](docs/HOME_ASSISTANT.md): Home Assistant mit dem Fork – Integration von splitti, Koppeln, die

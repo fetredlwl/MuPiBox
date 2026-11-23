@@ -111,6 +111,13 @@ export function registerDisplayRoutes(router: Router, deps: DisplayDeps): void {
       displayRadio: mb.displayRadio === true,
       // (wishes from Spotify in the display's search, approved by the parents - wishes.ts)
       displayWishes: mb.displayWishes === true,
+      // (fork "wishes": playlists in the display's search, the child's own new ones, single songs into them -
+      // search-playlists.ts; the last two need the right to change the child's private playlists: playlistScope)
+      displayPlaylists: mb.displayPlaylists === true,
+      displayPlaylistCreate: mb.displayPlaylistCreate === true,
+      displayTracks: mb.displayTracks === true,
+      playlistsPerDay: num(mb.playlistsPerDay, 1, 20) ?? 5,
+      playlistScope: Array.isArray(cfg?.spotify?.tokenScopes) && (cfg.spotify.tokenScopes as unknown[]).includes('playlist-modify-private'),
       resume: num(mb.resume, 1, 99) ?? 9,
       listviewTimer: num(mb.listviewTimer, 0.5, 5, 0.5) ?? 2.5,
       settingsAccessTimer: num(mb.settingsAccessTimer, 1, 10, 0.5) ?? 3,
@@ -143,7 +150,7 @@ export function registerDisplayRoutes(router: Router, deps: DisplayDeps): void {
     const mb: Record<string, unknown> = {}
     const chromium: Record<string, unknown> = {}
     const bad = (what: string) => res.status(400).json({ error: `invalid ${what}` })
-    for (const key of ['coverflowShowNames', 'hideScrollbar', 'episodeResume', 'newEpisodes', 'episodeProgress', 'outputPicker', 'displaySearch', 'appSearchPool', 'displayPodcasts', 'displayRadio', 'displayWishes']) {
+    for (const key of ['coverflowShowNames', 'hideScrollbar', 'episodeResume', 'newEpisodes', 'episodeProgress', 'outputPicker', 'displaySearch', 'appSearchPool', 'displayPodcasts', 'displayRadio', 'displayWishes', 'displayPlaylists', 'displayPlaylistCreate', 'displayTracks']) {
       if (body[key] === undefined) continue
       if (typeof body[key] !== 'boolean') return bad(key)
       mb[key] = body[key]
@@ -170,6 +177,7 @@ export function registerDisplayRoutes(router: Router, deps: DisplayDeps): void {
       ['settingsAccessTimer', 1, 10, 0.5, mb],
       ['episodeResumeDays', 0, 3650, 1, mb],
       ['newEpisodeDays', 3, 14, 1, mb],
+      ['playlistsPerDay', 1, 20, 1, mb],
       ['resX', 200, 7680, 1, chromium],
       ['resY', 200, 4320, 1, chromium],
     ]

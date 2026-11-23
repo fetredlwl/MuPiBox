@@ -31,7 +31,8 @@
     @if (query()) {
       <span class="srch-text">{{ query() }}</span>
     } @else {
-      <span class="srch-placeholder">{{ texts.text('searchPlaceholder') }}</span>
+      <!-- (a new playlist: its name is typed) -->
+      <span class="srch-placeholder">{{ texts.text(naming() ? 'plNameField' : 'searchPlaceholder') }}</span>
     }
     <span class="srch-caret" [class.srch-caret-on]="keyboardShown()"></span>
     @if (query()) {
@@ -56,6 +57,9 @@
     }
     @case ('radio') {
       <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="9" width="18" height="12" rx="2" /><path d="M7 9 17 4" /><circle cx="15.5" cy="15" r="2.5" /><path d="M6.5 13.5h3M6.5 16.5h3" /></svg>
+    }
+    @case ('playlists') {
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h11M4 11h11M4 16h7" /><circle cx="16.5" cy="17.5" r="2.5" /><path d="M19 17.5V8l2-1" /></svg>
     }
   }
 </ng-template>
@@ -212,6 +216,9 @@
         </div>
       }
     }
+    @case ('playlists') {
+      <!-- (fork "wishes") with the keyboard open: a new playlist's name is typed (or the playlists are narrowed) -->
+    }
     @case ('spotify') {
       @if (typed()) {
         <div class="srch-hits">
@@ -238,6 +245,9 @@
             }
             @if (wishesOn()) {
               <ng-container *ngTemplateOutlet="way; context: { $implicit: 'spotify' }"></ng-container>
+            }
+            @if (playlistsOn()) {
+              <ng-container *ngTemplateOutlet="way; context: { $implicit: 'playlists' }"></ng-container>
             }
             @if (podcastsOn()) {
               <ng-container *ngTemplateOutlet="way; context: { $implicit: 'podcasts' }"></ng-container>

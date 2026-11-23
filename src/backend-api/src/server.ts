@@ -32,7 +32,8 @@ import { SpotifyApiService } from './services/spotify-api.service'
 import { SpotifyMediaInfo } from './services/spotify-media-info.service'
 import { fetchFullPlaylistTracks } from './services/spotify-playlist-full'
 import { getValidAccessToken } from './spotify-sync/auth'
-import { SpotifyApiException } from './spotify-sync/playlists'
+import { SpotifyApiException, spotifyGet, spotifySend } from './spotify-sync/playlists'
+import { type PlaylistSong, type PlaylistsApi, registerSearchPlaylistsRoutes, tracksOn } from './search-playlists'
 import { loadSpotifySyncConfig, loadSpotifyTokenStore } from './spotify-sync/config-loader'
 import { playerUntilOf, spotifyBlock, useQuotaSplit } from './spotify-block'
 import { createSpotifySyncRouter } from './spotify-sync/routes'
@@ -1261,16 +1262,95 @@ const fixtureCall = async (what: string) => {
   if (delay > 0) await new Promise((resolve) => setTimeout(resolve, delay))
   return JSON.parse(fs.readFileSync(spotifyFixture, 'utf8'))
 }
+// (fork "wishes") playlists in the display's search: the child's own, new ones, single songs into them
+// (search-playlists.ts) - with the child's Spotify login; MUPIBOX_SPOTIFY_FIXTURE: kept in memory, each call logged
+const playlistsToken = async (): Promise<string> => {
+  const store = loadSpotifyTokenStore(await getMupiboxConfig())
+  if (!store) throw Object.assign(new Error('no Spotify login'), { status: 503 })
+  const t = await getValidAccessToken(store, updateMupiboxConfig)
+  if (!t.ok) throw Object.assign(new Error(`token: ${t.failure.reason}`), { status: 503 })
+  return t.token
+}
+const playlistsApi: PlaylistsApi = {
+  create: async (name) =>
+    spotifySend<{ id: string }>('POST', '/me/playlists', await playlistsToken(), {
+      name,
+      // (Spotify makes a playlist public unless told: the child's are private)
+      public: false,
+      description: 'MuPiBox',
+    }),
+  add: async (id, uris) => {
+    await spotifySend('POST', `/playlists/${encodeURIComponent(id)}/items`, await playlistsToken(), { uris })
+  },
+  remove: async (id, uris) => {
+    await spotifySend('DELETE', `/playlists/${encodeURIComponent(id)}/items`, await playlistsToken(), {
+      items: uris.map((uri) => ({ uri })),
+    })
+  },
+  items: async (id) => {
+    const token = await playlistsToken()
+    const fields = encodeURIComponent('items(item(id,name,artists(name),album(images))),next')
+    const songs: PlaylistSong[] = []
+    for (let offset = 0; offset < 200; offset += 50) {
+      const page = await spotifyGet<{
+        items?: { item?: { id?: string; name?: string; artists?: { name?: string }[]; album?: { images?: { url?: string }[] } } | null }[]
+        next?: string | null
+      }>(`/playlists/${encodeURIComponent(id)}/items?fields=${fields}&limit=50&offset=${offset}`, token, 'display')
+      for (const e of page.items ?? []) {
+        const t = e?.item
+        if (t?.id && t.name)
+          songs.push({ id: t.id, name: t.name, artist: t.artists?.[0]?.name ?? '', cover: t.album?.images?.[1]?.url ?? t.album?.images?.[0]?.url ?? '' })
+      }
+      if (!page.next) break
+    }
+    return songs
+  },
+}
+const fixtureSongs = new Map<string, PlaylistSong[]>()
+const fixtureLog = (what: string) => {
+  if (process.env.MUPIBOX_SPOTIFY_FIXTURE_LOG) fs.appendFileSync(String(process.env.MUPIBOX_SPOTIFY_FIXTURE_LOG), `${what}\n`)
+}
+const playlistsFixture: PlaylistsApi = {
+  create: async (name) => {
+    fixtureLog(`playlist create ${name}`)
+    const id = `pl${Date.now().toString(36)}`.padEnd(22, '0').slice(0, 22)
+    fixtureSongs.set(id, [])
+    return { id }
+  },
+  add: async (id, uris) => {
+    fixtureLog(`playlist add ${id} ${uris.join(',')}`)
+    const list = fixtureSongs.get(id) ?? []
+    for (const uri of uris) list.push({ id: uri.split(':').pop() ?? '', name: uri, artist: '', cover: '' })
+    fixtureSongs.set(id, list)
+  },
+  remove: async (id, uris) => {
+    fixtureLog(`playlist remove ${id} ${uris.join(',')}`)
+    fixtureSongs.set(id, (fixtureSongs.get(id) ?? []).filter((s) => !uris.includes(`spotify:track:${s.id}`)))
+  },
+  items: async (id) => {
+    fixtureLog(`playlist items ${id}`)
+    return fixtureSongs.get(id) ?? []
+  },
+}
+const searchPlaylists = registerSearchPlaylistsRoutes(app, {
+  configDir: configBasePath,
+  pool: searchPool,
+  getMupiboxConfig: () => getMupiboxConfigSync() as unknown as Record<string, unknown> | undefined,
+  api: () => (spotifyFixture ? playlistsFixture : playlistsApi),
+})
+
 registerWishesRoutes(app, {
   configDir: configBasePath,
   cacheDir: path.join(process.cwd(), 'cache'),
   pool: searchPool,
   getMupiboxConfig: () => getMupiboxConfigSync() as unknown as Record<string, unknown> | undefined,
-  searchPage: async (q, offset) => {
+  searchPage: async (q, offset, tracks) => {
     if (spotifyFixture) return (await fixtureCall(`search ${q} ${offset}`)).search[String(offset)]
     if (!spotifyApiService) throw Object.assign(new Error('no Spotify'), { status: 503 })
-    return spotifyApiService.searchWishPage(q, offset)
+    return spotifyApiService.searchWishPage(q, offset, tracks)
   },
+  playlists: searchPlaylists,
+  tracksOn: () => tracksOn(getMupiboxConfigSync() as unknown as Record<string, unknown> | undefined),
   artistPage: async (artistId, offset) => {
     const pick = (images?: { url?: string }[]) => images?.[1]?.url ?? images?.[0]?.url ?? ''
     if (spotifyFixture) {

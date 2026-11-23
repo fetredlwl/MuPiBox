@@ -21,10 +21,12 @@ import { keptArtistAlbums } from './artist-albums-store'
 import { backupBeforeWrite } from './file-backup'
 import { localOnly } from './request-guard'
 import { nameKey, type OnBox, type SearchPool } from './search-pool'
+import { type SearchPlaylists, trackAllowed } from './search-playlists'
 import { spotifyBlock } from './spotify-block'
 
-export type WishKind = 'album' | 'artist' | 'show'
-const WISH_KINDS: WishKind[] = ['album', 'artist', 'show']
+// (track: a single song - it goes into a playlist of the child's own, not on the start page; search-playlists.ts)
+export type WishKind = 'album' | 'artist' | 'show' | 'track'
+const WISH_KINDS: WishKind[] = ['album', 'artist', 'show', 'track']
 const CATEGORIES = ['audiobook', 'music', 'other'] as const
 type Category = (typeof CATEGORIES)[number]
 
@@ -37,8 +39,12 @@ export interface WishItem {
   cover: string
   /** an album: its artist on Spotify (the whole artist on the box: the album is there too) */
   artistId?: string
+  /** a song: its album (the album on the box or allowed: the child may put the song into a playlist at once) */
+  albumId?: string
   /** on the box already (the library as it is when handed out): shown, but not to wish */
   there?: boolean
+  /** a song the child can play already: into a playlist at once, no wish (search-playlists.ts trackAllowed) */
+  allowed?: boolean
 }
 
 export interface Wish {
@@ -56,6 +62,11 @@ export interface Wish {
   decidedAt?: string
   /** approved: it is in the search pool too - the child may take it out and put it back itself, as any approval */
   pooled?: boolean
+  /** a song: the playlist of the child's own it goes into (on the start page when wished) */
+  target?: { id: string; name: string }
+  /** a song: its album and artist (the child may have it at once later, when one of them is allowed) */
+  albumId?: string
+  artistId?: string
 }
 
 export interface WishPage {
@@ -72,12 +83,26 @@ export interface WishesDeps {
   searchPage?: (
     query: string,
     offset: number,
+    tracks: boolean,
   ) => Promise<{
     albums: { id: string; name: string; artist: string; cover: string; artistId?: string }[]
     artists: { id: string; name: string; cover: string }[]
     shows: { id: string; name: string; artist: string; cover: string }[]
+    /** (only when asked: single songs - explicit ones never come) */
+    tracks?: {
+      id: string
+      name: string
+      artist: string
+      cover: string
+      albumId?: string
+      artistId?: string
+      explicit?: boolean
+    }[]
     more: boolean
   }>
+  /** single songs into the child's playlists (search-playlists.ts; Bedienung › Suche › "Einzelne Songs aus Spotify") */
+  playlists?: SearchPlaylists
+  tracksOn?: () => boolean
   /** one page of an artist's albums (10) */
   artistPage?: (
     artistId: string,
@@ -187,22 +212,54 @@ export class Wishes {
     return undefined
   }
 
-  /** one page of a search: albums, artists, shows (10 of each kind at most) */
+  /** one page of a search: albums, artists, shows (10 of each kind at most) - songs too with them on */
   async search(q: string, offset: number): Promise<{ page: WishPage; kept: boolean }> {
     const ask = this.deps.searchPage
     if (!ask) throw Object.assign(new Error('no Spotify'), { status: 503 })
-    return this.page(`search|${normal(q)}|${offset}`, async () => {
+    const tracks = this.deps.tracksOn?.() === true
+    // (with songs a page of its own: one kept from before without them does not do)
+    return this.page(`search|${tracks ? 't|' : ''}${normal(q)}|${offset}`, async () => {
       if (spotifyBlock()) throw Object.assign(new Error('spotify_blocked'), { status: 503 })
-      const r = await ask(q, offset)
+      const r = await ask(q, offset, tracks)
       return {
         items: [
           ...r.artists.map((a) => ({ kind: 'artist' as const, id: a.id, name: a.name, artist: '', cover: a.cover })),
           ...r.albums.map((a) => ({ kind: 'album' as const, ...a })),
+          ...(tracks ? (r.tracks ?? []) : [])
+            // (explicit songs never: konzept-playlists.md, decision 5)
+            .filter((t) => t.explicit !== true)
+            .map((t) => ({
+              kind: 'track' as const,
+              id: t.id,
+              name: t.name,
+              artist: t.artist,
+              cover: t.cover,
+              ...(t.albumId ? { albumId: t.albumId } : {}),
+              ...(t.artistId ? { artistId: t.artistId } : {}),
+            })),
           ...r.shows.map((s) => ({ kind: 'show' as const, ...s })),
         ].filter((i) => SPOTIFY_ID.test(i.id) && i.name),
         more: r.more,
       }
     })
+  }
+
+  /** a song handed out with a page of the last day (only those may go into a playlist or be wished) */
+  offeredTrack(id: string): Promise<WishItem | undefined> {
+    return this.offered('track', id)
+  }
+
+  /** the items of a page as the display gets them: what the box has marked, songs it may have at once marked */
+  async marked(items: WishItem[]): Promise<WishItem[]> {
+    const box = await this.deps.pool.onBox()
+    const songs = this.deps.playlists && items.some((i) => i.kind === 'track')
+    const pool = songs ? await this.deps.pool.entries() : []
+    const approved = songs ? await this.deps.playlists?.approved() : undefined
+    return items.map((i) =>
+      i.kind === 'track'
+        ? { ...i, there: false, allowed: trackAllowed(i, box, pool, approved ?? new Set()) }
+        : { ...i, there: onTheBox(box, i) },
+    )
   }
 
   /** one page of an artist's albums (10): from its list kept on the SD card when there is one, else Spotify's */
@@ -247,16 +304,28 @@ export class Wishes {
     await writeJson(this.file, list)
   }
 
-  /** the child wishes something it was shown, for a tab (allowed: approved before - it may fetch it itself) */
+  /**
+   * the child wishes something it was shown, for a tab (allowed: approved before - it may fetch it itself); a song for a
+   * playlist of its own on the start page (target)
+   */
   async wish(
     kind: WishKind,
     id: string,
     category: Category,
-  ): Promise<'wished' | 'already' | 'there' | 'allowed' | 'unknown'> {
+    target?: string,
+  ): Promise<'wished' | 'already' | 'there' | 'allowed' | 'unknown' | 'no_target'> {
     const item = await this.offered(kind, id)
     if (!item) return 'unknown'
-    if (onTheBox(await this.deps.pool.onBox(), item)) return 'there'
-    if ((await this.deps.pool.entries()).some((e) => e.kind === kind && e.spotifyId === id)) return 'allowed'
+    let playlist: { id: string; name: string } | undefined
+    if (kind === 'track') {
+      const t = (await this.deps.playlists?.targets())?.find((p) => p.id === target)
+      if (!t || !this.deps.playlists) return 'no_target'
+      playlist = { id: t.id, name: t.name }
+      if (await this.deps.playlists.allowed(item)) return 'allowed'
+    } else {
+      if (onTheBox(await this.deps.pool.onBox(), item)) return 'there'
+      if ((await this.deps.pool.entries()).some((e) => e.kind === kind && e.spotifyId === id)) return 'allowed'
+    }
     const result = await this.serial(async () => {
       const list = await this.list()
       if (list.some((w) => w.status === 'open' && w.kind === kind && w.spotifyId === id)) return 'already' as const
@@ -270,12 +339,22 @@ export class Wishes {
         cover: item.cover,
         category,
         status: 'open',
+        ...(playlist ? { target: playlist } : {}),
+        ...(item.albumId ? { albumId: item.albumId } : {}),
+        ...(item.artistId ? { artistId: item.artistId } : {}),
       }
       await this.save([...list, wish])
       return 'wished' as const
     })
     if (result === 'wished')
-      await this.deps.pool.announce({ what: 'wish', kind, name: item.name, artist: item.artist, category })
+      await this.deps.pool.announce({
+        what: 'wish',
+        kind,
+        name: item.name,
+        artist: item.artist,
+        category,
+        ...(playlist ? { playlist: playlist.name } : {}),
+      })
     return result
   }
 
@@ -283,10 +362,25 @@ export class Wishes {
    * The parents decide: approved, it goes on the start page under the child's tab - and into the search pool: the child
    * may take it out and put it back itself, as anything the parents allowed in the search ("Nur in der Suche").
    */
-  async decide(id: string, approve: boolean): Promise<'approved' | 'rejected' | 'unknown' | 'locked'> {
+  async decide(id: string, approve: boolean): Promise<'approved' | 'rejected' | 'unknown' | 'locked' | 'no_target'> {
     const wish = (await this.list()).find((w) => w.id === id && w.status === 'open')
     if (!wish) return 'unknown'
-    if (approve) {
+    if (approve && wish.kind === 'track') {
+      // (a song: into the playlist the child chose - still one of its own on the start page - and remembered)
+      if (!wish.target || !this.deps.playlists) return 'no_target'
+      const r = await this.deps.playlists.approve(
+        {
+          id: wish.spotifyId,
+          name: wish.name,
+          artist: wish.artist,
+          cover: wish.cover,
+          albumId: wish.albumId,
+          artistId: wish.artistId,
+        },
+        wish.target.id,
+      )
+      if (r === 'no_target') return 'no_target'
+    } else if (approve && wish.kind !== 'track') {
       const r = await this.deps.pool.addWished(
         { kind: wish.kind, spotifyId: wish.spotifyId, name: wish.name, artist: wish.artist, cover: wish.cover },
         wish.category,
@@ -298,7 +392,7 @@ export class Wishes {
     await this.change(id, {
       status: approve ? 'approved' : 'rejected',
       decidedAt: new Date(this.now()).toISOString(),
-      ...(approve ? { pooled: true } : {}),
+      ...(approve && wish.kind !== 'track' ? { pooled: true } : {}),
     })
     // (the same thing wished more than once while open: decided with it)
     for (const twin of (await this.list()).filter(
@@ -318,6 +412,15 @@ export class Wishes {
   async revoke(id: string): Promise<'revoked' | 'unknown' | 'locked'> {
     const wish = (await this.list()).find((w) => w.id === id && w.status === 'approved')
     if (!wish) return 'unknown'
+    if (wish.kind === 'track') {
+      // (a song: not at once any more - it stays in the playlist it went into)
+      await this.deps.playlists?.forget(wish.spotifyId)
+      for (const w of (await this.list()).filter(
+        (x) => x.status === 'approved' && x.kind === 'track' && x.spotifyId === wish.spotifyId,
+      ))
+        await this.change(w.id, { status: 'revoked', decidedAt: new Date(this.now()).toISOString() })
+      return 'revoked'
+    }
     const ident = identOfWish(wish.kind, wish.spotifyId)
     // (Home Assistant is not told: the parents did it themselves)
     if ((await this.deps.pool.removeOwn(ident, false)) === 'locked') return 'locked'
@@ -348,13 +451,14 @@ export class Wishes {
    * out of the pool in the app later, they are not put back).
    */
   async rememberApproved(): Promise<void> {
-    for (const w of (await this.list()).filter((x) => x.status === 'approved' && !x.pooled)) {
+    for (const w of (await this.list()).filter((x) => x.status === 'approved' && !x.pooled && x.kind !== 'track')) {
       await this.toPool(w)
       await this.change(w.id, { pooled: true })
     }
   }
 
   private async toPool(wish: Wish): Promise<void> {
+    if (wish.kind === 'track') return
     await this.deps.pool.add({
       kind: wish.kind,
       spotifyId: wish.spotifyId,
@@ -409,9 +513,9 @@ export function registerWishesRoutes(app: Express, deps: WishesDeps): Wishes {
     if (normal(q).length < 2 || offset < 0) return fail(res, 400, 'invalid_query')
     try {
       const { page, kept } = await wishes.search(q, offset)
-      // (what the box has already: marked - the library as it is now, the page kept as Spotify gave it)
-      const box = await deps.pool.onBox()
-      res.json({ ...page, items: page.items.map((i) => ({ ...i, there: onTheBox(box, i) })), kept })
+      // (what the box has already: marked - the library as it is now, the page kept as Spotify gave it; songs the child
+      // may have at once: marked allowed)
+      res.json({ ...page, items: await wishes.marked(page.items), kept })
     } catch (err) {
       failed(res, err, 'search')
     }
@@ -446,12 +550,41 @@ export function registerWishesRoutes(app: Express, deps: WishesDeps): Wishes {
     const b = (req.body ?? {}) as Record<string, unknown>
     const kind = b.kind as WishKind
     const id = text(b.id, 40)
-    const category = b.category as Category
+    // (a song: no tab - it goes into the playlist given)
+    const category = (kind === 'track' ? 'music' : b.category) as Category
+    const playlist = text(b.playlist, 40)
     if (!WISH_KINDS.includes(kind) || !SPOTIFY_ID.test(id) || !CATEGORIES.includes(category))
       return fail(res, 400, 'invalid_request')
-    const result = await wishes.wish(kind, id, category)
-    if (result === 'unknown') return fail(res, 403, 'not_offered')
-    res.json({ ok: true, result })
+    if (kind === 'track' && (!deps.tracksOn?.() || !SPOTIFY_ID.test(playlist))) return fail(res, 403, 'off')
+    try {
+      const result = await wishes.wish(kind, id, category, playlist || undefined)
+      if (result === 'unknown') return fail(res, 403, 'not_offered')
+      if (result === 'no_target') return fail(res, 409, 'no_target')
+      res.json({ ok: true, result })
+    } catch (err) {
+      failed(res, err, 'wish')
+    }
+  })
+
+  /**
+   * POST /api/wishes/track {id, playlist} - a song the child can play already into a playlist of its own on the start
+   * page, at once (no wish)
+   */
+  app.post('/api/wishes/track', localOnly, async (req, res) => {
+    if (!on() || !deps.tracksOn?.() || !deps.playlists) return fail(res, 403, 'off')
+    const id = text(req.body?.id, 40)
+    const playlist = text(req.body?.playlist, 40)
+    if (!SPOTIFY_ID.test(id) || !SPOTIFY_ID.test(playlist)) return fail(res, 400, 'invalid_request')
+    const item = await wishes.offeredTrack(id)
+    if (!item) return fail(res, 403, 'not_offered')
+    try {
+      if (!(await deps.playlists.allowed(item))) return fail(res, 403, 'not_allowed')
+      const result = await deps.playlists.put(item, playlist)
+      if (result === 'no_target') return fail(res, 409, 'no_target')
+      res.json({ ok: true, result })
+    } catch (err) {
+      failed(res, err, 'song into a playlist')
+    }
   })
 
   // ---------- the parents' app ----------
@@ -474,6 +607,8 @@ export function registerWishesRoutes(app: Express, deps: WishesDeps): Wishes {
       const result = await wishes.decide(id, req.body.approve)
       if (result === 'unknown') return fail(res, 404, 'not_open')
       if (result === 'locked') return fail(res, 409, 'library_busy')
+      // (a song: its playlist is not on the start page any more - nothing changed, the wish stays open)
+      if (result === 'no_target') return fail(res, 409, 'no_target')
       res.json({ ok: true, result })
     } catch (err) {
       console.error(`${new Date().toLocaleString()}: [wishes] decide:`, err)

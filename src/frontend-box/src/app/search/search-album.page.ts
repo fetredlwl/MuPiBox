@@ -23,12 +23,37 @@ import { SwiperComponent, type SwiperData } from '../swiper/swiper.component'
 import { SwiperIonicEventsHelper } from '../swiper/swiper-ionic-events-helper'
 import { KmThemeService } from '../theme/km-theme.service'
 import { localizeCoverUrl } from '../utils'
-import { type OwnEntry, type PoolAlbum, type PoolEntry, SearchFlowService, type WishItem } from './search-flow.service'
+import {
+  type OwnEntry,
+  type PlaylistSong,
+  type PoolAlbum,
+  type PoolEntry,
+  SearchFlowService,
+  type TargetPlaylist,
+  type WishItem,
+} from './search-flow.service'
 import { CATEGORY_TILE, TILE_ICON, tilePicture } from './search-tiles'
 
 // what the page lists: the thing itself (its cover), what can be done with it, the tabs it may go to
-type Act = 'play' | 'start' | 'wish' | 'wished' | 'onbox' | 'move' | 'remove' | 'removeYes'
-type Tile = { t: 'item' } | { t: 'act'; a: Act } | { t: 'cat'; c: CategoryType }
+// ((fork "wishes") a song into a playlist of the child's own, its songs taken out of one)
+type Act =
+  | 'play'
+  | 'start'
+  | 'wish'
+  | 'wished'
+  | 'onbox'
+  | 'move'
+  | 'remove'
+  | 'removeYes'
+  | 'toPlaylist'
+  | 'songs'
+  | 'takeOutYes'
+type Tile =
+  | { t: 'item' }
+  | { t: 'act'; a: Act }
+  | { t: 'cat'; c: CategoryType }
+  | { t: 'target'; p: TargetPlaylist }
+  | { t: 'song'; s: PlaylistSong }
 
 const ACT_TEXT = {
   play: 'searchPlay',
@@ -39,6 +64,9 @@ const ACT_TEXT = {
   move: 'searchMove',
   remove: 'searchRemove',
   removeYes: 'searchRemoveYes',
+  toPlaylist: 'trackToPlaylist',
+  songs: 'plSongs',
+  takeOutYes: 'plTakeOutYes',
 } as const
 const ACT_ICON: Record<Act, string> = {
   play: TILE_ICON.play,
@@ -49,6 +77,9 @@ const ACT_ICON: Record<Act, string> = {
   move: TILE_ICON.move,
   remove: TILE_ICON.cross,
   removeYes: TILE_ICON.cross,
+  toPlaylist: TILE_ICON.plus,
+  songs: TILE_ICON.music,
+  takeOutYes: TILE_ICON.cross,
 }
 // (the star's yellow for wishing, the tick's green on the box, red for the last word on removing)
 const ACT_COLOURS: Partial<Record<Act, { bg: string; ink: string }>> = {
@@ -56,6 +87,7 @@ const ACT_COLOURS: Partial<Record<Act, { bg: string; ink: string }>> = {
   wished: { bg: '#f5b301', ink: '#2a1d00' },
   onbox: { bg: '#2fb36b', ink: '#ffffff' },
   removeYes: { bg: '#d94848', ink: '#ffffff' },
+  takeOutYes: { bg: '#d94848', ink: '#ffffff' },
 }
 
 // (fork "wishes") One thing of the search pool - an album (of a pool artist), a playlist, a podcast, or a whole artist
@@ -67,7 +99,12 @@ const ACT_COLOURS: Partial<Record<Act, { bg: string; ink: string }>> = {
 // Wish mode (something found on Spotify, backend wishes.ts): "Wünschen" instead - the tab, and the parents decide; not
 // played before that. Already wished: "Gewünscht", nothing to tap.
 // Own mode ("Einträge verwalten"): something the child put on the start page itself - "Woanders hin" (another tab) or
-// "Entfernen" (asked once more in the same place).
+// "Entfernen" (asked once more in the same place); a playlist of its own account also "Songs herausnehmen" (its songs as
+// covers, one tapped is asked once more: "Ja, herausnehmen").
+// New playlist ("Neue Playlist", its name typed in the search): the tabs at once - made in the child's account and put
+// on the start page there (backend search-playlists.ts).
+// Song (a single song of the Spotify search): "In eine Playlist" when the child can play it already, else "Wünschen" -
+// then the playlists of its own on the start page instead of the tabs ("In welche Playlist?").
 @Component({
   selector: 'app-search-album',
   templateUrl: 'search-album.page.html',
@@ -117,21 +154,48 @@ export class SearchAlbumPage extends SwiperIonicEventsHelper {
   /** "Auf die Startseite" tapped: the tabs are asked */
   protected readonly choosing = signal(false)
   protected readonly busy = signal(false)
+  /** (fork "wishes") a new playlist's name (typed in the search) */
+  protected readonly newPlaylist = signal<string | null>(null)
+  /** a single song of the Spotify search */
+  protected readonly track = signal<WishItem | null>(null)
+  protected readonly trackWished = computed(() => {
+    const t = this.track()
+    return !!t && this.flow.wished().has(`track:${t.id}`)
+  })
+  /** "Songs herausnehmen": the songs of the child's playlist (null: not shown), the one tapped (asked once more) */
+  protected readonly songs = signal<PlaylistSong[] | null>(null)
+  protected readonly songPick = signal<PlaylistSong | null>(null)
 
   protected readonly title = computed(
-    () => this.own()?.name ?? this.wish()?.name ?? this.album()?.name ?? this.entry()?.name ?? '',
+    () =>
+      this.newPlaylist() ??
+      this.track()?.name ??
+      this.own()?.name ??
+      this.wish()?.name ??
+      this.album()?.name ??
+      this.entry()?.name ??
+      '',
   )
   /** the header: the name - or the question while the tabs (or the last word on removing) are listed */
   protected readonly heading = computed(() =>
     this.choosing()
-      ? this.texts.text('searchWhere')
+      ? this.texts.text(this.track() ? 'trackWhich' : 'searchWhere')
       : this.removing()
         ? this.texts.text('searchRemoveQ')
-        : this.title(),
+        : this.songPick()
+          ? this.texts.text('plTakeOutQ')
+          : this.songs()
+            ? this.texts.text('plSongs')
+            : this.title(),
   )
   protected readonly cover = computed(() =>
     localizeCoverUrl(
-      this.own()?.cover || this.wish()?.cover || this.album()?.cover || this.entry()?.cover || undefined,
+      this.track()?.cover ||
+        this.own()?.cover ||
+        this.wish()?.cover ||
+        this.album()?.cover ||
+        this.entry()?.cover ||
+        undefined,
     ),
   )
   protected readonly round = computed(
@@ -150,10 +214,29 @@ export class SearchAlbumPage extends SwiperIonicEventsHelper {
   private readonly tiles = computed<Tile[]>(() => {
     const cats = (list: CategoryType[]): Tile[] => list.map((c): Tile => ({ t: 'cat', c }))
     const act = (a: Act): Tile => ({ t: 'act', a })
-    if (this.own()) {
+    if (this.newPlaylist() !== null)
+      return this.choosing() ? cats(this.flow.categories()) : [{ t: 'item' }, act('start')]
+    const t = this.track()
+    if (t) {
+      if (this.choosing()) return this.flow.playlists().targets.map((p): Tile => ({ t: 'target', p }))
+      return [{ t: 'item' }, act(t.allowed ? 'toPlaylist' : this.trackWished() ? 'wished' : 'wish')]
+    }
+    const o = this.own()
+    if (o) {
+      const song = this.songPick()
+      if (song) return [{ t: 'song', s: song }, act('takeOutYes')]
+      const songs = this.songs()
+      if (songs) return songs.map((x): Tile => ({ t: 'song', s: x }))
       if (this.choosing()) return cats(this.elsewhere())
       if (this.removing()) return [{ t: 'item' }, act('removeYes')]
-      return [{ t: 'item' }, ...(this.elsewhere().length ? [act('move')] : []), act('remove')]
+      // (a playlist of its own account: its songs too)
+      const ownList = o.kind === 'playlist' && o.own === true && this.flow.playlists().tracks
+      return [
+        { t: 'item' },
+        ...(this.elsewhere().length ? [act('move')] : []),
+        ...(ownList ? [act('songs')] : []),
+        act('remove'),
+      ]
     }
     if (this.choosing()) return cats(this.flow.categories())
     const out: Tile[] = [{ t: 'item' }]
@@ -176,6 +259,20 @@ export class SearchAlbumPage extends SwiperIonicEventsHelper {
           dim: this.busy(),
         }
       }
+      if (tile.t === 'target')
+        return {
+          name: tile.p.name,
+          imgSrc: of(localizeCoverUrl(tile.p.cover || undefined)),
+          data: tile,
+          dim: this.busy(),
+        }
+      if (tile.t === 'song')
+        return {
+          name: tile.s.name,
+          imgSrc: of(localizeCoverUrl(tile.s.cover || undefined)),
+          data: tile,
+          kind: 'album' as const,
+        }
       return {
         name: this.texts.text(ACT_TEXT[tile.a]),
         imgSrc: of(tilePicture(this.host.nativeElement, ACT_ICON[tile.a], ACT_COLOURS[tile.a])),
@@ -192,16 +289,31 @@ export class SearchAlbumPage extends SwiperIonicEventsHelper {
   )
   /** the list's position kept per step: the tabs start at their first, back to the buttons where they were */
   protected readonly listKey = computed(
-    () => `search-album|${this.choosing() ? 'tabs' : this.removing() ? 'remove' : 'acts'}|${this.title()}`,
+    () =>
+      `search-album|${this.choosing() ? 'tabs' : this.removing() ? 'remove' : this.songPick() ? 'song' : this.songs() ? 'songs' : 'acts'}|${this.title()}`,
   )
 
   constructor() {
     super()
     addIcons({ arrowBackOutline })
     const state = this.router.currentNavigation()?.extras.state as
-      | { entry?: PoolEntry; album?: PoolAlbum; whole?: boolean; wish?: WishItem; own?: OwnEntry }
+      | {
+          entry?: PoolEntry
+          album?: PoolAlbum
+          whole?: boolean
+          wish?: WishItem
+          own?: OwnEntry
+          newPlaylist?: string
+          track?: WishItem
+        }
       | undefined
     this.entry.set(state?.entry ?? null)
+    this.track.set(state?.track ?? null)
+    // (a new playlist: the tabs at once - its name was typed already)
+    if (typeof state?.newPlaylist === 'string' && state.newPlaylist) {
+      this.newPlaylist.set(state.newPlaylist)
+      this.choosing.set(this.flow.categories().length > 1)
+    }
     this.own.set(state?.own ?? null)
     this.wish.set(state?.wish ?? null)
     this.album.set(state?.album)
@@ -210,7 +322,8 @@ export class SearchAlbumPage extends SwiperIonicEventsHelper {
 
   override ionViewWillEnter(): void {
     // (opened afresh without the search behind it - a reload of the display: nothing to show)
-    if (!this.entry() && !this.wish() && !this.own()) void this.navController.navigateRoot(['/search'])
+    if (!this.entry() && !this.wish() && !this.own() && !this.track() && this.newPlaylist() === null)
+      void this.navController.navigateRoot(['/search'])
     super.ionViewWillEnter()
   }
 
@@ -218,6 +331,15 @@ export class SearchAlbumPage extends SwiperIonicEventsHelper {
     if (this.busy()) return
     if (tile.t === 'cat') {
       void this.addTo(tile.c)
+      return
+    }
+    if (tile.t === 'target') {
+      void this.intoPlaylist(tile.p)
+      return
+    }
+    if (tile.t === 'song') {
+      // (a song of the list: asked once more - the one asked about: nothing)
+      if (!this.songPick()) this.songPick.set(tile.s)
       return
     }
     // (the thing's own cover: plays it where it can be played)
@@ -237,16 +359,78 @@ export class SearchAlbumPage extends SwiperIonicEventsHelper {
       case 'removeYes':
         void this.removeOwn()
         return
+      case 'toPlaylist':
+        this.choosePlaylist()
+        return
+      case 'songs':
+        void this.showSongs()
+        return
+      case 'takeOutYes':
+        void this.takeOut()
+        return
     }
   }
 
   protected goBack(): void {
-    if (this.choosing() || this.removing()) {
+    if (this.songPick()) {
+      this.songPick.set(null)
+      return
+    }
+    if (this.songs()) {
+      this.songs.set(null)
+      return
+    }
+    // (a new playlist: its tabs came first - back is back to the search)
+    if ((this.choosing() || this.removing()) && !(this.newPlaylist() !== null && this.flow.categories().length > 1)) {
       this.choosing.set(false)
       this.removing.set(false)
       return
     }
     void this.navController.pop()
+  }
+
+  /** a song: the playlists of the child's own on the start page (with one only, straight there; none: said) */
+  private choosePlaylist(): void {
+    const targets = this.flow.playlists().targets
+    if (!targets.length) {
+      this.flow.noteBack(this.texts.text('trackNoPlaylist'))
+      return
+    }
+    if (targets.length === 1) {
+      void this.intoPlaylist(targets[0])
+      return
+    }
+    this.choosing.set(true)
+  }
+
+  /** the song into the playlist chosen - at once when the child can play it already, else wished for it */
+  private async intoPlaylist(p: TargetPlaylist): Promise<void> {
+    const t = this.track()
+    if (!t || this.busy()) return
+    this.busy.set(true)
+    if (t.allowed) await this.flow.putTrack(t, p)
+    else await this.flow.wish(t, 'music', p)
+  }
+
+  /** "Songs herausnehmen": the songs of the playlist (read from Spotify) */
+  private async showSongs(): Promise<void> {
+    const o = this.own()
+    if (!o || this.busy()) return
+    this.busy.set(true)
+    const songs = await this.flow.songs(o.ident.slice('playlist:'.length))
+    this.busy.set(false)
+    if (!songs) return this.flow.noteBack(this.texts.text('searchFailed'))
+    if (!songs.length) return this.flow.noteBack(this.texts.text('plSongsNone'))
+    this.songs.set(songs)
+  }
+
+  /** "Ja, herausnehmen": the song out of the playlist */
+  private async takeOut(): Promise<void> {
+    const o = this.own()
+    const song = this.songPick()
+    if (!o || !song || this.busy()) return
+    this.busy.set(true)
+    await this.flow.takeOut(o, song)
   }
 
   protected play(): void {
@@ -256,6 +440,11 @@ export class SearchAlbumPage extends SwiperIonicEventsHelper {
 
   /** "Auf die Startseite": the tabs - with one tab only, straight there */
   protected toStart(): void {
+    // (a song: wished for a playlist of the child's own, not for a tab)
+    if (this.track()) {
+      this.choosePlaylist()
+      return
+    }
     const cats = this.flow.categories()
     if (cats.length === 1) {
       void this.addTo(cats[0])
@@ -266,6 +455,12 @@ export class SearchAlbumPage extends SwiperIonicEventsHelper {
 
   protected async addTo(category: CategoryType): Promise<void> {
     if (this.busy()) return
+    const name = this.newPlaylist()
+    if (name !== null) {
+      this.busy.set(true)
+      await this.flow.createPlaylist(name, category)
+      return
+    }
     const o = this.own()
     if (o) {
       this.busy.set(true)

@@ -58,6 +58,8 @@ const BOOT_CUSTOM = ['splash.png', 'goodbye.png', 'battery.png', 'color'].map((f
 const SEARCH_POOL = '/home/dietpi/.mupibox/Sonos-Kids-Controller-master/server/config/search-pool.json'
 // ... and the child's wishes from Spotify (wishes.ts)
 const WISHES = '/home/dietpi/.mupibox/Sonos-Kids-Controller-master/server/config/wishes.json'
+// ... and the playlists the child made today and the songs approved for it (search-playlists.ts)
+const PLAYLISTS = '/home/dietpi/.mupibox/Sonos-Kids-Controller-master/server/config/search-playlists.json'
 const BACKUP_FILES = ['/etc/mupibox/mupiboxconfig.json', `${SERVER_CONFIG}/data.json`]
 // Kept free on the SD card by a restore (the box itself needs room to run)
 const RESERVE_BYTES = 512 * 1024 * 1024
@@ -66,7 +68,7 @@ const freeBytes = async (dir: string) => {
   return st ? Math.max(0, st.bavail * st.bsize - RESERVE_BYTES) : 0
 }
 
-const RESTORE_FILES = ['etc/mupibox/mupiboxconfig.json', 'home/dietpi/.mupibox/Sonos-Kids-Controller-master/server/config/data.json', BACKGROUND.slice(1), ...BOOT_CUSTOM.map((f) => f.slice(1)), SEARCH_POOL.slice(1), WISHES.slice(1)]
+const RESTORE_FILES = ['etc/mupibox/mupiboxconfig.json', 'home/dietpi/.mupibox/Sonos-Kids-Controller-master/server/config/data.json', BACKGROUND.slice(1), ...BOOT_CUSTOM.map((f) => f.slice(1)), SEARCH_POOL.slice(1), WISHES.slice(1), PLAYLISTS.slice(1)]
 const RESTORE_DIRS = [
   'etc/',
   'etc/mupibox/',
@@ -407,7 +409,7 @@ export function registerAdminRoutes(router: Router, deps: AdminDeps): void {
     const full = req.query.kind === 'full'
     const zip = `/var/tmp/mupibox-backup-${process.pid}-${Date.now()}.zip`
     const present = (f: string) => fsp.access(f).then(() => true, () => false)
-    const extras = (await Promise.all([BACKGROUND, ...BOOT_CUSTOM, SEARCH_POOL, WISHES].map(async (f) => ((await present(f)) ? f : '')))).filter(Boolean)
+    const extras = (await Promise.all([BACKGROUND, ...BOOT_CUSTOM, SEARCH_POOL, WISHES, PLAYLISTS].map(async (f) => ((await present(f)) ? f : '')))).filter(Boolean)
     const sources = [full ? '/home/dietpi/MuPiBox/media' : '/home/dietpi/MuPiBox/media/cover', ...BACKUP_FILES, ...extras]
     const r = await run('sudo', ['sh', '-c', `zip -q -r '${zip}' ${sources.map((s) => `'${s}'`).join(' ')}; chmod 644 '${zip}'`], full ? 3600000 : 120000)
     const exists = await fsp.stat(zip).then(() => true, () => false)

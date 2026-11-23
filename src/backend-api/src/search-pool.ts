@@ -43,14 +43,21 @@ export interface PoolEntry {
   // artists: their albums, asked once when allowed and again once a day at most (the display's search asks nobody)
   albums?: PoolAlbum[]
   albumsAt?: string
+  /** (fork "wishes") a playlist of the child's own Spotify account (not one it only follows): songs may go into it */
+  own?: boolean
 }
 
 export interface PoolEvent {
   id: number
   at: string
-  /** (fork "wishes": 'wish' - the child wished it from Spotify, the parents decide in the app, see wishes.ts) */
-  what: 'added' | 'removed' | 'wish'
-  kind: LibraryKind
+  /**
+   * (fork "wishes": 'wish' - the child wished it from Spotify, the parents decide in the app, see wishes.ts; 'created' -
+   * the child made a playlist, see search-playlists.ts)
+   */
+  what: 'added' | 'removed' | 'wish' | 'created'
+  kind: LibraryKind | 'track'
+  /** (a song: the playlist it goes into) */
+  playlist?: string
   name: string
   artist: string
   category: LibraryCategory
@@ -166,7 +173,15 @@ export function identOf(row: Record<string, unknown>): string | null {
 
 /** the library row for an album, a whole artist, a playlist or a podcast, put in by the child */
 export function libraryRow(
-  what: { kind: LibraryKind; spotifyId: string; feedUrl?: string; name: string; artist: string; cover: string },
+  what: {
+    kind: LibraryKind
+    spotifyId: string
+    feedUrl?: string
+    name: string
+    artist: string
+    cover: string
+    own?: boolean
+  },
   category: LibraryCategory,
   poolId: string,
   now = new Date(),
@@ -185,7 +200,8 @@ export function libraryRow(
     case 'artist':
       return { ...base, artistid: what.spotifyId, artist: what.name, artistcover: what.cover }
     case 'playlist':
-      return { ...base, playlistid: what.spotifyId, title: what.name, cover: what.cover }
+      // ((fork "wishes") own: of the child's account - songs may go into it, search-playlists.ts)
+      return { ...base, playlistid: what.spotifyId, title: what.name, cover: what.cover, ...(what.own ? { own: true } : {}) }
     case 'show':
       return { ...base, showid: what.spotifyId, artist: what.name, artistcover: what.cover }
   }
@@ -236,10 +252,18 @@ export class SearchPool {
     name: string
     artist: string
     cover: string
+    own?: boolean
   }): Promise<PoolEntry> {
     const { entry, isNew } = await this.serial(async () => {
       const list = await this.entries()
-      const known = list.find((e) => poolIdent(e) === poolIdent(input))
+      const at = list.findIndex((e) => poolIdent(e) === poolIdent(input))
+      const known = at >= 0 ? list[at] : undefined
+      // ((fork "wishes") a playlist allowed again from "Meine Playlists": whether it is the account's own, as it is now)
+      if (known && input.kind === 'playlist' && input.own !== undefined && !!known.own !== input.own) {
+        list[at] = { ...known, own: input.own }
+        await this.writePool(list)
+        return { entry: list[at], isNew: false }
+      }
       if (known) return { entry: known, isNew: false }
       const added: PoolEntry = {
         id: `p_${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`,
@@ -359,9 +383,35 @@ export class SearchPool {
     return Array.isArray(data) ? (data as Record<string, unknown>[]) : null
   }
 
+  /**
+   * (fork "wishes") The playlists of the child's own Spotify account on the start page (marked own: put there from the
+   * pool, made by the child) - where a song may go (search-playlists.ts).
+   */
+  async ownPlaylists(): Promise<{ id: string; name: string; cover: string; category: string; kidAdded: boolean }[]> {
+    return ((await this.readLibrary()) ?? [])
+      .filter((row) => row?.type === 'spotify' && row.own === true && typeof row.playlistid === 'string')
+      .map((row) => ({
+        id: String(row.playlistid),
+        name: text(row.title) || text(row.artist),
+        cover: text(row.cover, 500),
+        category: text(row.category, 20),
+        kidAdded: row.kidAdded === true,
+      }))
+      .filter((p) => SPOTIFY_ID.test(p.id))
+  }
+
   /** the rows the child put in (newest first) */
   async own(): Promise<
-    { ident: string; kind: string; name: string; artist: string; cover: string; category: string; addedAt: string }[]
+    {
+      ident: string
+      kind: string
+      name: string
+      artist: string
+      cover: string
+      category: string
+      addedAt: string
+      own?: boolean
+    }[]
   > {
     const data = (await this.readLibrary()) ?? []
     return data
@@ -378,6 +428,8 @@ export class SearchPool {
           cover: text(row.cover, 500) || text(row.artistcover, 500),
           category: text(row.category, 20),
           addedAt: text(row.addedAt, 40),
+          // (a playlist of the child's own account: it may take songs out of it)
+          ...(row.own === true ? { own: true } : {}),
         }
       })
       .filter((r) => r.ident)
@@ -462,13 +514,35 @@ export class SearchPool {
     })
   }
 
+  /**
+   * (fork "wishes") A playlist the child made itself (search-playlists.ts, in its own Spotify account): into the pool as
+   * one of its own and on the start page under the tab it chose. Home Assistant hears "created", not "added".
+   */
+  async addCreatedPlaylist(
+    playlist: { spotifyId: string; name: string; cover: string },
+    category: LibraryCategory,
+  ): Promise<'added' | 'already' | 'locked'> {
+    const entry = await this.add({ kind: 'playlist', ...playlist, artist: '', own: true })
+    const result = await this.putInLibrary({ ...entry, own: true }, category, entry.id, false)
+    if (result === 'added') await this.note({ what: 'created', kind: 'playlist', name: playlist.name, artist: '', category })
+    return result
+  }
+
   /** an event for Home Assistant (/search_events) - the child's wish (wishes.ts) */
   announce(event: Omit<PoolEvent, 'id' | 'at'>): Promise<void> {
     return this.note(event)
   }
 
   private async putInLibrary(
-    what: { kind: LibraryKind; spotifyId: string; feedUrl?: string; name: string; artist: string; cover: string },
+    what: {
+      kind: LibraryKind
+      spotifyId: string
+      feedUrl?: string
+      name: string
+      artist: string
+      cover: string
+      own?: boolean
+    },
     category: LibraryCategory,
     poolId: string,
     told = true,
@@ -683,6 +757,8 @@ export function registerSearchPoolRoutes(app: Express, deps: SearchPoolDeps): Se
       name,
       artist: text(b.artist, 200),
       cover,
+      // ((fork "wishes") a playlist from "Meine Playlists": whether it is the account's own - songs may go into it)
+      ...(kind === 'playlist' && typeof b.own === 'boolean' ? { own: b.own } : {}),
     })
     res.json({ ok: true, entry })
   })

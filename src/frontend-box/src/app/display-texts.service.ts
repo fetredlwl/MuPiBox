@@ -131,6 +131,22 @@ export const DEFAULT_DISPLAY_TEXTS = {
   searchMove: 'Somewhere else',
   searchRemove: 'Remove',
   searchRemoveYes: 'Yes, remove',
+  // (fork "wishes") playlists in the search, the child's new ones, single songs into them: {n} = a name, {p} = a playlist
+  searchPlaylistsTile: 'Playlists',
+  plNew: 'New playlist',
+  plNameField: 'Name of the playlist',
+  plCreateKey: 'Create',
+  plLimit: 'No new playlist today.',
+  plSongs: 'Take songs out',
+  plSongsNone: 'No songs in it.',
+  plTakeOutQ: 'Take it out?',
+  plTakeOutYes: 'Yes, take out',
+  plTakenOut: '{n} is out of {p}.',
+  trackToPlaylist: 'Into a playlist',
+  trackWhich: 'Which playlist?',
+  trackAdded: '{n} is now in {p}.',
+  trackAlready: '{n} is in {p} already.',
+  trackNoPlaylist: 'Put a playlist on the start page first.',
 }
 export type DisplayTextKey = keyof typeof DEFAULT_DISPLAY_TEXTS
 type TextSet = Partial<Record<DisplayTextKey, string>>

@@ -106,7 +106,22 @@
         "searchRemove": "Remove",
         "searchRemoveYes": "Yes, remove",
         "wishAllowed": "You may fetch {n} yourself.",
-        "wishOnBox": "Already on the box"
+        "wishOnBox": "Already on the box",
+        "searchPlaylistsTile": "Playlists",
+        "plNew": "New playlist",
+        "plNameField": "Name of the playlist",
+        "plCreateKey": "Create",
+        "plLimit": "No new playlist today.",
+        "plSongs": "Take songs out",
+        "plSongsNone": "No songs in it.",
+        "plTakeOutQ": "Take it out?",
+        "plTakeOutYes": "Yes, take out",
+        "plTakenOut": "{n} is out of {p}.",
+        "trackToPlaylist": "Into a playlist",
+        "trackWhich": "Which playlist?",
+        "trackAdded": "{n} is now in {p}.",
+        "trackAlready": "{n} is in {p} already.",
+        "trackNoPlaylist": "Put a playlist on the start page first."
       }
     },
     "de": {
@@ -214,7 +229,22 @@
         "searchRemove": "Entfernen",
         "searchRemoveYes": "Ja, entfernen",
         "wishAllowed": "{n} darfst du dir selbst holen.",
-        "wishOnBox": "Schon auf der Box"
+        "wishOnBox": "Schon auf der Box",
+        "searchPlaylistsTile": "Playlists",
+        "plNew": "Neue Playlist",
+        "plNameField": "Name der Playlist",
+        "plCreateKey": "Anlegen",
+        "plLimit": "Heute keine neue Playlist mehr.",
+        "plSongs": "Songs herausnehmen",
+        "plSongsNone": "Keine Songs drin.",
+        "plTakeOutQ": "Herausnehmen?",
+        "plTakeOutYes": "Ja, herausnehmen",
+        "plTakenOut": "{n} ist nicht mehr in {p}.",
+        "trackToPlaylist": "In eine Playlist",
+        "trackWhich": "In welche Playlist?",
+        "trackAdded": "{n} ist jetzt in {p}.",
+        "trackAlready": "{n} ist schon in {p}.",
+        "trackNoPlaylist": "Hol dir zuerst eine Playlist auf die Startseite."
       }
     },
     "fr": {
@@ -322,7 +352,22 @@
         "searchRemove": "Retirer",
         "searchRemoveYes": "Oui, retirer",
         "wishAllowed": "Tu peux prendre {n} toi-même.",
-        "wishOnBox": "Déjà sur la box"
+        "wishOnBox": "Déjà sur la box",
+        "searchPlaylistsTile": "Playlists",
+        "plNew": "Nouvelle playlist",
+        "plNameField": "Nom de la playlist",
+        "plCreateKey": "Créer",
+        "plLimit": "Plus de nouvelle playlist aujourd’hui.",
+        "plSongs": "Retirer des titres",
+        "plSongsNone": "Aucun titre dedans.",
+        "plTakeOutQ": "Le retirer ?",
+        "plTakeOutYes": "Oui, retirer",
+        "plTakenOut": "{n} n’est plus dans {p}.",
+        "trackToPlaylist": "Dans une playlist",
+        "trackWhich": "Dans quelle playlist ?",
+        "trackAdded": "{n} est maintenant dans {p}.",
+        "trackAlready": "{n} est déjà dans {p}.",
+        "trackNoPlaylist": "Mets d’abord une playlist sur la page d’accueil."
       }
     },
     "es": {
@@ -430,7 +475,22 @@
         "searchRemove": "Quitar",
         "searchRemoveYes": "Sí, quitar",
         "wishAllowed": "Puedes coger {n} tú mismo.",
-        "wishOnBox": "Ya está en la caja"
+        "wishOnBox": "Ya está en la caja",
+        "searchPlaylistsTile": "Playlists",
+        "plNew": "Nueva playlist",
+        "plNameField": "Nombre de la playlist",
+        "plCreateKey": "Crear",
+        "plLimit": "Hoy no hay más playlists nuevas.",
+        "plSongs": "Quitar canciones",
+        "plSongsNone": "No hay canciones.",
+        "plTakeOutQ": "¿Quitarla?",
+        "plTakeOutYes": "Sí, quitar",
+        "plTakenOut": "{n} ya no está en {p}.",
+        "trackToPlaylist": "A una playlist",
+        "trackWhich": "¿A qué playlist?",
+        "trackAdded": "{n} ya está en {p}.",
+        "trackAlready": "{n} ya estaba en {p}.",
+        "trackNoPlaylist": "Primero pon una playlist en la página de inicio."
       }
     },
     "it": {
@@ -538,7 +598,22 @@
         "searchRemove": "Rimuovi",
         "searchRemoveYes": "Sì, rimuovi",
         "wishAllowed": "Puoi prendere {n} da solo.",
-        "wishOnBox": "Già sul box"
+        "wishOnBox": "Già sul box",
+        "searchPlaylistsTile": "Playlist",
+        "plNew": "Nuova playlist",
+        "plNameField": "Nome della playlist",
+        "plCreateKey": "Crea",
+        "plLimit": "Oggi niente più nuove playlist.",
+        "plSongs": "Togliere brani",
+        "plSongsNone": "Nessun brano dentro.",
+        "plTakeOutQ": "Toglierlo?",
+        "plTakeOutYes": "Sì, togli",
+        "plTakenOut": "{n} non è più in {p}.",
+        "trackToPlaylist": "In una playlist",
+        "trackWhich": "In quale playlist?",
+        "trackAdded": "{n} ora è in {p}.",
+        "trackAlready": "{n} è già in {p}.",
+        "trackNoPlaylist": "Prima metti una playlist nella pagina iniziale."
       }
     },
     "nl": {
@@ -646,7 +721,22 @@
         "searchRemove": "Verwijderen",
         "searchRemoveYes": "Ja, verwijderen",
         "wishAllowed": "{n} mag je zelf pakken.",
-        "wishOnBox": "Al op de box"
+        "wishOnBox": "Al op de box",
+        "searchPlaylistsTile": "Playlists",
+        "plNew": "Nieuwe playlist",
+        "plNameField": "Naam van de playlist",
+        "plCreateKey": "Maken",
+        "plLimit": "Vandaag geen nieuwe playlist meer.",
+        "plSongs": "Nummers eruit halen",
+        "plSongsNone": "Er staan geen nummers in.",
+        "plTakeOutQ": "Eruit halen?",
+        "plTakeOutYes": "Ja, eruit halen",
+        "plTakenOut": "{n} staat niet meer in {p}.",
+        "trackToPlaylist": "In een playlist",
+        "trackWhich": "In welke playlist?",
+        "trackAdded": "{n} staat nu in {p}.",
+        "trackAlready": "{n} staat al in {p}.",
+        "trackNoPlaylist": "Zet eerst een playlist op de startpagina."
       }
     },
     "sv": {
@@ -754,7 +844,22 @@
         "searchRemove": "Ta bort",
         "searchRemoveYes": "Ja, ta bort",
         "wishAllowed": "{n} får du hämta själv.",
-        "wishOnBox": "Finns redan på boxen"
+        "wishOnBox": "Finns redan på boxen",
+        "searchPlaylistsTile": "Spellistor",
+        "plNew": "Ny spellista",
+        "plNameField": "Spellistans namn",
+        "plCreateKey": "Skapa",
+        "plLimit": "Ingen ny spellista mer i dag.",
+        "plSongs": "Ta bort låtar",
+        "plSongsNone": "Inga låtar i den.",
+        "plTakeOutQ": "Ta bort?",
+        "plTakeOutYes": "Ja, ta bort",
+        "plTakenOut": "{n} finns inte längre i {p}.",
+        "trackToPlaylist": "Till en spellista",
+        "trackWhich": "Till vilken spellista?",
+        "trackAdded": "{n} finns nu i {p}.",
+        "trackAlready": "{n} finns redan i {p}.",
+        "trackNoPlaylist": "Lägg först en spellista på startsidan."
       }
     },
     "da": {
@@ -862,7 +967,22 @@
         "searchRemove": "Fjern",
         "searchRemoveYes": "Ja, fjern",
         "wishAllowed": "{n} må du selv hente.",
-        "wishOnBox": "Allerede på boksen"
+        "wishOnBox": "Allerede på boksen",
+        "searchPlaylistsTile": "Playlister",
+        "plNew": "Ny playlist",
+        "plNameField": "Navn på playlisten",
+        "plCreateKey": "Opret",
+        "plLimit": "Ikke flere nye playlister i dag.",
+        "plSongs": "Fjern sange",
+        "plSongsNone": "Ingen sange i den.",
+        "plTakeOutQ": "Fjerne?",
+        "plTakeOutYes": "Ja, fjern",
+        "plTakenOut": "{n} er ikke længere i {p}.",
+        "trackToPlaylist": "I en playlist",
+        "trackWhich": "I hvilken playlist?",
+        "trackAdded": "{n} er nu i {p}.",
+        "trackAlready": "{n} er allerede i {p}.",
+        "trackNoPlaylist": "Læg først en playlist på startsiden."
       }
     },
     "nb": {
@@ -970,7 +1090,22 @@
         "searchRemove": "Fjern",
         "searchRemoveYes": "Ja, fjern",
         "wishAllowed": "{n} kan du hente selv.",
-        "wishOnBox": "Allerede på boksen"
+        "wishOnBox": "Allerede på boksen",
+        "searchPlaylistsTile": "Spillelister",
+        "plNew": "Ny spilleliste",
+        "plNameField": "Navn på spillelisten",
+        "plCreateKey": "Lag",
+        "plLimit": "Ikke flere nye spillelister i dag.",
+        "plSongs": "Fjern låter",
+        "plSongsNone": "Ingen låter i den.",
+        "plTakeOutQ": "Fjerne?",
+        "plTakeOutYes": "Ja, fjern",
+        "plTakenOut": "{n} er ikke lenger i {p}.",
+        "trackToPlaylist": "I en spilleliste",
+        "trackWhich": "I hvilken spilleliste?",
+        "trackAdded": "{n} er nå i {p}.",
+        "trackAlready": "{n} er allerede i {p}.",
+        "trackNoPlaylist": "Legg først en spilleliste på startsiden."
       }
     },
     "fi": {
@@ -1078,7 +1213,22 @@
         "searchRemove": "Poista",
         "searchRemoveYes": "Kyllä, poista",
         "wishAllowed": "Saat ottaa {n} itse.",
-        "wishOnBox": "Jo laitteessa"
+        "wishOnBox": "Jo laitteessa",
+        "searchPlaylistsTile": "Soittolistat",
+        "plNew": "Uusi soittolista",
+        "plNameField": "Soittolistan nimi",
+        "plCreateKey": "Luo",
+        "plLimit": "Ei enää uusia soittolistoja tänään.",
+        "plSongs": "Poista kappaleita",
+        "plSongsNone": "Ei kappaleita.",
+        "plTakeOutQ": "Poistetaanko?",
+        "plTakeOutYes": "Kyllä, poista",
+        "plTakenOut": "{n} ei ole enää listalla {p}.",
+        "trackToPlaylist": "Soittolistaan",
+        "trackWhich": "Mihin soittolistaan?",
+        "trackAdded": "{n} on nyt listalla {p}.",
+        "trackAlready": "{n} on jo listalla {p}.",
+        "trackNoPlaylist": "Lisää ensin soittolista aloitussivulle."
       }
     },
     "pl": {
@@ -1186,7 +1336,22 @@
         "searchRemove": "Usuń",
         "searchRemoveYes": "Tak, usuń",
         "wishAllowed": "{n} możesz wziąć sam.",
-        "wishOnBox": "Już na boxie"
+        "wishOnBox": "Już na boxie",
+        "searchPlaylistsTile": "Playlisty",
+        "plNew": "Nowa playlista",
+        "plNameField": "Nazwa playlisty",
+        "plCreateKey": "Utwórz",
+        "plLimit": "Dziś już żadnej nowej playlisty.",
+        "plSongs": "Usuń utwory",
+        "plSongsNone": "Brak utworów.",
+        "plTakeOutQ": "Usunąć?",
+        "plTakeOutYes": "Tak, usuń",
+        "plTakenOut": "{n} nie ma już w {p}.",
+        "trackToPlaylist": "Do playlisty",
+        "trackWhich": "Do której playlisty?",
+        "trackAdded": "{n} jest teraz w {p}.",
+        "trackAlready": "{n} już jest w {p}.",
+        "trackNoPlaylist": "Najpierw dodaj playlistę na stronę startową."
       }
     },
     "pt": {
@@ -1294,7 +1459,22 @@
         "searchRemove": "Remover",
         "searchRemoveYes": "Sim, remover",
         "wishAllowed": "Podes buscar {n} sozinho.",
-        "wishOnBox": "Já está na caixa"
+        "wishOnBox": "Já está na caixa",
+        "searchPlaylistsTile": "Playlists",
+        "plNew": "Nova playlist",
+        "plNameField": "Nome da playlist",
+        "plCreateKey": "Criar",
+        "plLimit": "Hoje já não há novas playlists.",
+        "plSongs": "Tirar músicas",
+        "plSongsNone": "Não tem músicas.",
+        "plTakeOutQ": "Tirar?",
+        "plTakeOutYes": "Sim, tirar",
+        "plTakenOut": "{n} já não está em {p}.",
+        "trackToPlaylist": "Para uma playlist",
+        "trackWhich": "Para que playlist?",
+        "trackAdded": "{n} está agora em {p}.",
+        "trackAlready": "{n} já está em {p}.",
+        "trackNoPlaylist": "Primeiro põe uma playlist na página inicial."
       }
     },
     "tr": {
@@ -1402,7 +1582,22 @@
         "searchRemove": "Kaldır",
         "searchRemoveYes": "Evet, kaldır",
         "wishAllowed": "{n} kendin alabilirsin.",
-        "wishOnBox": "Zaten kutuda"
+        "wishOnBox": "Zaten kutuda",
+        "searchPlaylistsTile": "Çalma listeleri",
+        "plNew": "Yeni çalma listesi",
+        "plNameField": "Çalma listesinin adı",
+        "plCreateKey": "Oluştur",
+        "plLimit": "Bugün başka yeni çalma listesi yok.",
+        "plSongs": "Şarkı çıkar",
+        "plSongsNone": "İçinde şarkı yok.",
+        "plTakeOutQ": "Çıkarılsın mı?",
+        "plTakeOutYes": "Evet, çıkar",
+        "plTakenOut": "{n} artık {p} içinde değil.",
+        "trackToPlaylist": "Bir çalma listesine",
+        "trackWhich": "Hangi çalma listesine?",
+        "trackAdded": "{n} artık {p} içinde.",
+        "trackAlready": "{n} zaten {p} içinde.",
+        "trackNoPlaylist": "Önce başlangıç sayfasına bir çalma listesi ekle."
       }
     },
     "uk": {
@@ -1510,7 +1705,22 @@
         "searchRemove": "Прибрати",
         "searchRemoveYes": "Так, прибрати",
         "wishAllowed": "{n} можеш узяти сам.",
-        "wishOnBox": "Вже на боксі"
+        "wishOnBox": "Вже на боксі",
+        "searchPlaylistsTile": "Плейлисти",
+        "plNew": "Новий плейлист",
+        "plNameField": "Назва плейлиста",
+        "plCreateKey": "Створити",
+        "plLimit": "Сьогодні більше нових плейлистів не буде.",
+        "plSongs": "Прибрати пісні",
+        "plSongsNone": "Пісень немає.",
+        "plTakeOutQ": "Прибрати?",
+        "plTakeOutYes": "Так, прибрати",
+        "plTakenOut": "{n} більше немає в {p}.",
+        "trackToPlaylist": "До плейлиста",
+        "trackWhich": "До якого плейлиста?",
+        "trackAdded": "{n} тепер у {p}.",
+        "trackAlready": "{n} вже є в {p}.",
+        "trackNoPlaylist": "Спершу додай плейлист на стартову сторінку."
       }
     },
     "ru": {
@@ -1618,7 +1828,22 @@
         "searchRemove": "Убрать",
         "searchRemoveYes": "Да, убрать",
         "wishAllowed": "{n} можешь взять сам.",
-        "wishOnBox": "Уже на боксе"
+        "wishOnBox": "Уже на боксе",
+        "searchPlaylistsTile": "Плейлисты",
+        "plNew": "Новый плейлист",
+        "plNameField": "Название плейлиста",
+        "plCreateKey": "Создать",
+        "plLimit": "Сегодня больше новых плейлистов не будет.",
+        "plSongs": "Убрать песни",
+        "plSongsNone": "Песен нет.",
+        "plTakeOutQ": "Убрать?",
+        "plTakeOutYes": "Да, убрать",
+        "plTakenOut": "{n} больше нет в {p}.",
+        "trackToPlaylist": "В плейлист",
+        "trackWhich": "В какой плейлист?",
+        "trackAdded": "{n} теперь в {p}.",
+        "trackAlready": "{n} уже есть в {p}.",
+        "trackNoPlaylist": "Сначала добавь плейлист на стартовую страницу."
       }
     },
     "cs": {
@@ -1726,7 +1951,22 @@
         "searchRemove": "Odebrat",
         "searchRemoveYes": "Ano, odebrat",
         "wishAllowed": "{n} si můžeš vzít sám.",
-        "wishOnBox": "Už je na boxu"
+        "wishOnBox": "Už je na boxu",
+        "searchPlaylistsTile": "Playlisty",
+        "plNew": "Nový playlist",
+        "plNameField": "Název playlistu",
+        "plCreateKey": "Vytvořit",
+        "plLimit": "Dnes už žádný nový playlist.",
+        "plSongs": "Odebrat skladby",
+        "plSongsNone": "Žádné skladby.",
+        "plTakeOutQ": "Odebrat?",
+        "plTakeOutYes": "Ano, odebrat",
+        "plTakenOut": "{n} už není v {p}.",
+        "trackToPlaylist": "Do playlistu",
+        "trackWhich": "Do kterého playlistu?",
+        "trackAdded": "{n} je teď v {p}.",
+        "trackAlready": "{n} už je v {p}.",
+        "trackNoPlaylist": "Nejdřív si dej playlist na úvodní stránku."
       }
     },
     "el": {
@@ -1834,7 +2074,22 @@
         "searchRemove": "Αφαίρεση",
         "searchRemoveYes": "Ναι, αφαίρεση",
         "wishAllowed": "Μπορείς να πάρεις μόνος σου το {n}.",
-        "wishOnBox": "Ήδη στο κουτί"
+        "wishOnBox": "Ήδη στο κουτί",
+        "searchPlaylistsTile": "Λίστες",
+        "plNew": "Νέα λίστα",
+        "plNameField": "Όνομα της λίστας",
+        "plCreateKey": "Δημιουργία",
+        "plLimit": "Σήμερα όχι άλλη νέα λίστα.",
+        "plSongs": "Αφαίρεση τραγουδιών",
+        "plSongsNone": "Δεν έχει τραγούδια.",
+        "plTakeOutQ": "Αφαίρεση;",
+        "plTakeOutYes": "Ναι, αφαίρεση",
+        "plTakenOut": "Το {n} δεν είναι πια στο {p}.",
+        "trackToPlaylist": "Σε λίστα",
+        "trackWhich": "Σε ποια λίστα;",
+        "trackAdded": "Το {n} είναι τώρα στο {p}.",
+        "trackAlready": "Το {n} είναι ήδη στο {p}.",
+        "trackNoPlaylist": "Βάλε πρώτα μια λίστα στην αρχική σελίδα."
       }
     }
   }

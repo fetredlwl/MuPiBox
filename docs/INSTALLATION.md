@@ -165,6 +165,11 @@ Alles Neue hat **Schalter in der App**; solange ein Schalter aus ist, verhält s
    - **Wünsche aus Spotify** – die Kachel „Bei Spotify suchen“ am Display; Wünsche gibst du in der App frei.
    - **Podcasts für Kinder in der Suche** – Kachel „Podcasts“ (Apple-Verzeichnis, bei Deutsch auch ARD Audiothek).
    - **Radio für Kinder in der Suche** – Kachel „Radio“ (radio-browser.info, nur als Kinderradio markierte Sender).
+   - **Playlists in der Suche** – Kachel „Playlists“ mit den Playlists, die du unter *Bibliothek › Spotify › Auf Spotify suchen ›
+     Meine Playlists* mit „Nur in der Suche“ freigibst.
+   - **Kind darf Playlists anlegen** (mit „Neue Playlists pro Tag“) und **Einzelne Songs aus Spotify** – das Kind legt private
+     Playlists in seinem Spotify-Konto an und legt Songs hinein. Dafür braucht die Box ein zusätzliches Recht bei Spotify: Die App
+     zeigt dann „Spotify neu verbinden“ – einmal antippen und mit dem Spotify-Konto der Box anmelden.
 3. **Wünsche freigeben:** *Bibliothek › Wünsche*. Dort erscheinen die Wünsche des Kindes zum Freigeben oder Ablehnen; was du
    freigibst, merkt sich die Box (*Bibliothek › Für die Suche freigegeben*), das Kind kann es dann selbst holen und wieder entfernen.
 4. **Testen:** Am Display auf die **Lupe** oben links auf der Startseite tippen. Du siehst runde Kacheln: „Bei Spotify suchen“, „Podcasts“, „Radio“ und

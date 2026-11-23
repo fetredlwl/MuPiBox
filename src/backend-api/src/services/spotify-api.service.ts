@@ -679,15 +679,19 @@ export class SpotifyApiService {
   async searchWishPage(
     query: string,
     offset: number,
+    // (fork "wishes": single songs too - "Einzelne Songs aus Spotify")
+    tracks = false,
   ): Promise<{
     albums: { id: string; name: string; artist: string; cover: string; artistId: string }[]
     artists: { id: string; name: string; cover: string }[]
     shows: { id: string; name: string; artist: string; cover: string }[]
+    tracks: { id: string; name: string; artist: string; cover: string; albumId: string; artistId: string; explicit: boolean }[]
     more: boolean
   }> {
     const o = Math.max(0, Math.min(Math.floor(offset) || 0, 990))
+    const types = tracks ? ['album', 'artist', 'track', 'show'] : ['album', 'artist', 'show']
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const r = (await this.rateLimitedRequest(() => this.spotifyApi.search(query, ['album', 'artist', 'show'] as any, 'DE', 10 as any, o))) as any
+    const r = (await this.rateLimitedRequest(() => this.spotifyApi.search(query, types as any, 'DE', 10 as any, o))) as any
     const img = (images: { url?: string }[] | undefined) => images?.[1]?.url ?? images?.[0]?.url ?? ''
     const more = (page: { total?: number } | undefined) => (page?.total ?? 0) > o + 10
     return {
@@ -705,7 +709,18 @@ export class SpotifyApiService {
       shows: (r.shows?.items ?? [])
         .filter((s: any) => s?.id)
         .map((s: any) => ({ id: s.id, name: s.name, artist: s.publisher ?? '', cover: img(s.images) })),
-      more: more(r.albums) || more(r.artists) || more(r.shows),
+      tracks: (r.tracks?.items ?? [])
+        .filter((t: any) => t?.id)
+        .map((t: any) => ({
+          id: t.id,
+          name: t.name,
+          artist: t.artists?.[0]?.name ?? '',
+          cover: img(t.album?.images),
+          albumId: t.album?.id ?? '',
+          artistId: t.artists?.[0]?.id ?? '',
+          explicit: t.explicit === true,
+        })),
+      more: more(r.albums) || more(r.artists) || more(r.shows) || more(r.tracks),
     }
   }
 

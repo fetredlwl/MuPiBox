@@ -4424,7 +4424,11 @@ async function openSpotifyPlaylist(r) {
     ? undefined
     : {
         inPool: search.pool.has(`playlist:${r.id}`),
-        onPool: () => addToPool({ kind: 'playlist', spotifyId: r.id, name: r.name, cover: r.img ?? '' }),
+        // ((fork "wishes") whether it is the account's own - "Meine Playlists" knows it; songs go only into those)
+        onPool: () => {
+          const mine = (search.mine ?? []).find((p) => p.id === r.id)
+          return addToPool({ kind: 'playlist', spotifyId: r.id, name: r.name, cover: r.img ?? '', ...(mine ? { own: mine.own === true } : {}) })
+        },
         onRemove: () => removeFromPool(`playlist:${r.id}`, r.name),
       }
   addSheet({ title: r.name, sub: r.s, img: r.img, text: r.note, have: search.have.has(`playlist:${r.id}`), cat: search.cat === 'audiobook' ? 'music' : search.cat, place: true, pool }, async (category, folder) => {
@@ -8236,6 +8240,12 @@ async function loadControls() {
   state.values.set('dispRadio', o.displayRadio === true)
   // (wishes from Spotify in the display's search, approved by the parents - wishes.ts)
   state.values.set('dispWishes', o.displayWishes === true)
+  // (fork "wishes": playlists in the display's search, new ones by the child, single songs - search-playlists.ts)
+  state.values.set('dispPlaylists', o.displayPlaylists === true)
+  state.values.set('dispPlCreate', o.displayPlaylistCreate === true)
+  state.values.set('plPerDay', o.playlistsPerDay ?? 5)
+  state.values.set('dispTracks', o.displayTracks === true)
+  state.values.set('plScope', o.playlistScope === true)
   state.values.set('resume', o.resume)
   state.values.set('listTimer', o.listviewTimer)
   state.values.set('setTimer', o.settingsAccessTimer)
@@ -8250,7 +8260,7 @@ async function loadControls() {
 // (fork "wishes") Wünsche: what the child wished from Spotify on the display (backend wishes.ts) - approved, it goes on
 // the start page under the tab the child chose; Home Assistant links here (#/wuensche)
 const wishesState = { on: false, open: [], decided: [] }
-const WISH_KIND = { album: 'Album', artist: 'Künstler', show: 'Podcast' }
+const WISH_KIND = { album: 'Album', artist: 'Künstler', show: 'Podcast', track: 'Song' }
 const WISH_CAT = { audiobook: 'Hörspiele', music: 'Musik', other: 'Radio & Podcasts' }
 
 async function loadWishes() {
@@ -8263,7 +8273,7 @@ function wishesTop() {
   const thumb = (img) => `<span class="lib-thumb">${img ? `<img src="${esc(img)}" alt="" loading="lazy">` : ''}${icon('music', 18)}</span>`
   const when = (iso) => (iso ? new Date(iso).toLocaleString(LOCALE, { dateStyle: 'short', timeStyle: 'short' }) : '')
   const row = (w, buttons) =>
-    `<div class="entry lib-row">${thumb(w.cover)}<span class="lbl"><b translate="no">${esc(w.name)}</b><small><span translate="no">${esc(w.artist || '')}</span>${w.artist ? ' · ' : ''}${esc(WISH_KIND[w.kind] ?? w.kind)} · ${esc(WISH_CAT[w.category] ?? w.category)} · ${esc(when(w.at))}</small></span>${buttons}</div>`
+    `<div class="entry lib-row">${thumb(w.cover)}<span class="lbl"><b translate="no">${esc(w.name)}</b><small><span translate="no">${esc(w.artist || '')}</span>${w.artist ? ' · ' : ''}${esc(WISH_KIND[w.kind] ?? w.kind)} · ${esc(w.target ? `in Playlist „${w.target.name}“` : (WISH_CAT[w.category] ?? w.category))} · ${esc(when(w.at))}</small></span>${buttons}</div>`
   const open = wishesState.open
   const decided = wishesState.decided.slice(0, 20)
   return [
@@ -8304,9 +8314,17 @@ function mountWishes(root, page) {
     const r = await api(`${API}/wishes/decide`, { method: 'POST', body: { id: w.id, approve } })
     if (!r.ok) {
       b.disabled = false
+      // ((fork "wishes") a song: its playlist is no longer on the start page - nothing changed)
+      if (r.body?.error === 'no_target') return toast(`Die Playlist „${w.target?.name ?? ''}“ ist nicht mehr auf der Startseite – erst wieder dorthin holen oder ablehnen`, 'info')
       return toast('Das hat nicht geklappt', 'info')
     }
-    toast(approve ? `Freigegeben: ${w.name} – steht unter ${WISH_CAT[w.category] ?? w.category}` : `Abgelehnt: ${w.name}`)
+    toast(
+      approve
+        ? w.kind === 'track'
+          ? `Freigegeben: ${w.name} – ist jetzt in „${w.target?.name ?? ''}“`
+          : `Freigegeben: ${w.name} – steht unter ${WISH_CAT[w.category] ?? w.category}`
+        : `Abgelehnt: ${w.name}`,
+    )
     if (approve) libChanged()
     lib.items = null
     await loadWishes()
@@ -12672,6 +12690,36 @@ const CONTROLLERS = {
             },
             {
               type: 'toggle',
+              key: 'dispTracks',
+              label: 'Einzelne Songs aus Spotify',
+              help: 'Die Spotify-Suche am Display findet auch einzelne Songs (Songs mit anstößigem Text nie). Kann das Kind den Song schon hören – sein Album oder der ganze Künstler ist auf der Box oder freigegeben –, legt es ihn gleich in eine seiner Playlists auf der Startseite; sonst wünscht es ihn sich für eine davon, und du gibst ihn unter Bibliothek › Wünsche frei. Braucht „Wünsche aus Spotify“.',
+              disabled: !state.values.get('dispWishes'),
+            },
+            {
+              type: 'toggle',
+              key: 'dispPlaylists',
+              label: 'Playlists in der Suche',
+              help: 'In der Suche am Display zeigt eine Kachel „Playlists“ die Playlists, die du für die Suche freigegeben hast (Bibliothek › Spotify › Auf Spotify suchen › Meine Playlists › „Nur in der Suche“). Das Kind hört sie an und holt sie selbst auf die Startseite. Songs kommen nur in Playlists, die dem Konto der Box selbst gehören.',
+            },
+            {
+              type: 'toggle',
+              key: 'dispPlCreate',
+              label: 'Kind darf Playlists anlegen',
+              help: 'Hinter der Kachel „Playlists“ legt das Kind mit „Neue Playlist“ eine eigene, private Playlist im Spotify-Konto der Box an und holt sie unter einen Reiter seiner Wahl. Löschen kannst du sie in der Spotify-App.',
+              disabled: !state.values.get('dispPlaylists'),
+            },
+            ...(state.values.get('dispPlaylists') && state.values.get('dispPlCreate')
+              ? [{ type: 'stepper', key: 'plPerDay', label: 'Neue Playlists pro Tag', help: 'So viele Playlists darf das Kind am Tag anlegen.', min: 1, max: 20 }]
+              : []),
+            // (making and changing playlists needs one more right from Spotify: a new login once)
+            ...((state.values.get('dispTracks') || (state.values.get('dispPlaylists') && state.values.get('dispPlCreate'))) && !state.values.get('plScope')
+              ? [
+                  { type: 'warn', text: 'Spotify einmal neu verbinden: Für neue Playlists und Songs braucht die Box das Recht, private Playlists zu ändern. Bis dahin bleiben „Neue Playlist“ und die Songs am Display aus.' },
+                  { type: 'html', html: `<div class="navlist">${navRow('wizard', 'Spotify neu verbinden', 'Bibliothek › Spotify einrichten', 'sync')}</div>` },
+                ]
+              : []),
+            {
+              type: 'toggle',
               key: 'dispPodcasts',
               label: 'Podcasts für Kinder in der Suche',
               help: 'In der Suche am Display sucht eine Kachel „Podcasts“ in Apples Podcast-Verzeichnis (bei Deutsch auch in der ARD Audiothek) – nur Sendungen der Kinder-Kategorien. Das Kind kann sie ohne Freigabe auf die Startseite holen und selbst wieder entfernen. Gesucht wird erst beim Tippen auf die Kachel; der Suchbegriff geht dabei an Apple bzw. die ARD.',
@@ -12756,7 +12804,21 @@ const CONTROLLERS = {
       if (key === 'setTimer') return saveDisplayOptions({ settingsAccessTimer: v }, `Einstellungen nach ${fmtSec(v)}`)
       if (key === 'outPick') return saveDisplayOptions({ outputPicker: !!v }, v ? 'Kinder können am Display umschalten' : 'Umschalten nur in der App')
       if (key === 'dispSearch') return saveDisplayOptions({ displaySearch: !!v }, v ? 'Suche auf dem Display an' : 'Suche auf dem Display aus')
-      if (key === 'dispWishes') return saveDisplayOptions({ displayWishes: !!v }, v ? 'Wünsche aus Spotify an' : 'Wünsche aus Spotify aus')
+      if (key === 'dispWishes') {
+        const r = await saveDisplayOptions({ displayWishes: !!v }, v ? 'Wünsche aus Spotify an' : 'Wünsche aus Spotify aus')
+        // ((fork "wishes") "Einzelne Songs aus Spotify" depends on it)
+        renderPage(page, false)
+        return r
+      }
+      // ((fork "wishes") the playlists' switches: the page again - what depends on them shows or goes)
+      const again = async (r) => {
+        renderPage(page, false)
+        return r
+      }
+      if (key === 'dispPlaylists') return again(await saveDisplayOptions({ displayPlaylists: !!v }, v ? 'Playlists in der Suche an' : 'Playlists in der Suche aus'))
+      if (key === 'dispPlCreate') return again(await saveDisplayOptions({ displayPlaylistCreate: !!v }, v ? 'Kind darf Playlists anlegen' : 'Keine neuen Playlists am Display'))
+      if (key === 'plPerDay') return saveDisplayOptions({ playlistsPerDay: v }, `${v} neue Playlists pro Tag`)
+      if (key === 'dispTracks') return again(await saveDisplayOptions({ displayTracks: !!v }, v ? 'Einzelne Songs aus Spotify an' : 'Einzelne Songs aus Spotify aus'))
       if (key === 'dispRadio') return saveDisplayOptions({ displayRadio: !!v }, v ? 'Radio für Kinder in der Suche an' : 'Radio für Kinder in der Suche aus')
       if (key === 'dispPodcasts') return saveDisplayOptions({ displayPodcasts: !!v }, v ? 'Podcasts für Kinder in der Suche an' : 'Podcasts für Kinder in der Suche aus')
       if (key === 'appPool') return saveDisplayOptions({ appSearchPool: !!v }, v ? '„Nur in der Suche“ in der App an' : '„Nur in der Suche“ in der App ausgeblendet')

@@ -84,10 +84,12 @@ export interface OwnEntry {
   artist: string
   cover: string
   category: string
+  /** (fork "wishes") a playlist of its own account: it may take songs out of it */
+  own?: boolean
 }
 
-/** (fork "wishes") something on Spotify the child may wish (backend wishes.ts) */
-export type WishKind = 'album' | 'artist' | 'show'
+/** (fork "wishes") something on Spotify the child may wish (backend wishes.ts) - track: a single song */
+export type WishKind = 'album' | 'artist' | 'show' | 'track'
 export interface WishItem {
   kind: WishKind
   id: string
@@ -96,6 +98,35 @@ export interface WishItem {
   cover: string
   /** on the box already: shown (marked), not to wish or fetch again */
   there?: boolean
+  /** a song the child can play already: into one of its playlists at once (backend search-playlists.ts) */
+  allowed?: boolean
+}
+
+/** (fork "wishes") a playlist of the child's own account on the start page: where a song may go */
+export interface TargetPlaylist {
+  id: string
+  name: string
+  cover: string
+  category: string
+  /** put there by the child itself: it may take songs out of it */
+  kidAdded: boolean
+}
+
+/** a song of a playlist (backend search-playlists.ts) */
+export interface PlaylistSong {
+  id: string
+  name: string
+  artist: string
+  cover: string
+}
+
+/** what the box says about playlists in the search (backend GET /api/search-playlists) */
+export interface PlaylistsInfo {
+  on: boolean
+  create: boolean
+  tracks: boolean
+  left: number
+  targets: TargetPlaylist[]
 }
 /** the pages of a search or of an artist's albums loaded so far (kept on the display: back and again ask nothing) */
 export interface WishPages {
@@ -126,6 +157,8 @@ export class SearchFlowService {
   readonly pool = signal<PoolEntry[]>([])
   /** the open wishes ("kind:id"): marked "gewünscht", not wished again */
   readonly wished = signal<Set<string>>(new Set())
+  /** (fork "wishes") playlists in the search: the tile, new ones, the child's own playlists on the start page */
+  readonly playlists = signal<PlaylistsInfo>({ on: false, create: false, tracks: false, left: 0, targets: [] })
   // the pages loaded on this display (a search by its text, an artist by its id) - kept until the display reloads
   private readonly searchPages = new Map<string, WishPages>()
   private readonly artistPages = new Map<string, WishPages>()
@@ -224,14 +257,18 @@ export class SearchFlowService {
     }
   }
 
-  /** the child wishes it for a tab: the box tells the parents; back to the search, which says it was sent */
-  async wish(item: WishItem, category: CategoryType): Promise<void> {
+  /**
+   * the child wishes it for a tab (a song: for one of its playlists): the box tells the parents; back to the search,
+   * which says it was sent
+   */
+  async wish(item: WishItem, category: CategoryType, playlist?: TargetPlaylist): Promise<void> {
     try {
       const r = await firstValueFrom(
         this.http.post<{ ok: boolean; result: 'wished' | 'already' | 'there' | 'allowed' }>(`${this.api}/wishes`, {
           kind: item.kind,
           id: item.id,
           category,
+          ...(playlist ? { playlist: playlist.id } : {}),
         }),
       )
       this.note =
@@ -246,6 +283,90 @@ export class SearchFlowService {
     } catch {
       this.note = this.texts.text('searchFailed')
     }
+    void this.navController.navigateBack(['/search'])
+  }
+
+  // ---------- (fork "wishes") playlists: the child's own, new ones, single songs into them ----------
+
+  /** what the box says about playlists in the search (asked when the search shows) */
+  loadPlaylists(): void {
+    this.http.get<PlaylistsInfo>(`${this.api}/search-playlists`).subscribe({
+      next: (r) =>
+        this.playlists.set({
+          on: r?.on === true,
+          create: r?.create === true,
+          tracks: r?.tracks === true,
+          left: Number(r?.left) || 0,
+          targets: Array.isArray(r?.targets) ? r.targets : [],
+        }),
+      error: () => {},
+    })
+  }
+
+  /** "Neue Playlist": made in the child's account, on the start page under the tab; back to the search, which says it */
+  async createPlaylist(name: string, category: CategoryType): Promise<void> {
+    try {
+      await firstValueFrom(this.http.post(`${this.api}/search-playlists/create`, { name, category }))
+      this.note = this.texts.text('searchAdded', { n: name, c: this.catLabel(category) })
+      this.changed = true
+    } catch (err) {
+      this.note =
+        (err as { error?: { error?: string } })?.error?.error === 'limit'
+          ? this.texts.text('plLimit')
+          : this.texts.text('searchFailed')
+    }
+    this.loadPlaylists()
+    void this.navController.navigateBack(['/search'])
+  }
+
+  /** a song the child can play already into one of its playlists; back to the search, which says it */
+  async putTrack(item: WishItem, playlist: TargetPlaylist): Promise<void> {
+    try {
+      const r = await firstValueFrom(
+        this.http.post<{ ok: boolean; result: 'added' | 'already' }>(`${this.api}/wishes/track`, {
+          id: item.id,
+          playlist: playlist.id,
+        }),
+      )
+      this.note = this.texts.text(r?.result === 'already' ? 'trackAlready' : 'trackAdded', {
+        n: item.name,
+        p: playlist.name,
+      })
+    } catch {
+      this.note = this.texts.text('searchFailed')
+    }
+    void this.navController.navigateBack(['/search'])
+  }
+
+  /** the songs of a playlist the child put on the start page itself (undefined: not read) */
+  async songs(playlistId: string): Promise<PlaylistSong[] | undefined> {
+    try {
+      const r = await firstValueFrom(
+        this.http.get<{ songs: PlaylistSong[] }>(`${this.api}/search-playlists/songs`, { params: { id: playlistId } }),
+      )
+      return r?.songs ?? []
+    } catch {
+      return undefined
+    }
+  }
+
+  /** a song out of one of the child's own playlists; back to the search, which says it */
+  async takeOut(own: OwnEntry, song: PlaylistSong): Promise<void> {
+    const playlistId = own.ident.slice('playlist:'.length)
+    try {
+      await firstValueFrom(
+        this.http.post(`${this.api}/search-playlists/take-out`, { playlistId, id: song.id, name: song.name }),
+      )
+      this.note = this.texts.text('plTakenOut', { n: song.name, p: own.name })
+    } catch {
+      this.note = this.texts.text('searchFailed')
+    }
+    void this.navController.navigateBack(['/search'])
+  }
+
+  /** back to the search, which says this */
+  noteBack(text: string): void {
+    this.note = text
     void this.navController.navigateBack(['/search'])
   }
 

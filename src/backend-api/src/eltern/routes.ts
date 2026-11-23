@@ -87,7 +87,7 @@ import { spotifyLoginAge } from './spotify-auth-age'
 import { btBattery, headphonesPlaying } from '../audio-output'
 import { playbackSnapshot } from '../playback-snapshot'
 import {
-  REQUESTED_SCOPES,
+  requestedScopes,
   buildAuthorizeUrl,
   buildRedirectUri,
   redirectModeOf,
@@ -834,7 +834,7 @@ export function createElternApiRouter(deps: ElternRouterDeps): Router {
     res.json({
       authorize_url: result.url,
       redirect_uri: result.redirectUri,
-      scopes: REQUESTED_SCOPES,
+      scopes: requestedScopes(deps.getMupiboxConfig()),
     })
   })
 
