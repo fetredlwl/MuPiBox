@@ -173,6 +173,8 @@ export class SearchAlbumPage extends SwiperIonicEventsHelper {
   protected readonly inPlaylists = signal<Set<string>>(new Set())
   /** "Songs" of an album: its songs as covers (null: not shown) - one tapped opens its page */
   protected readonly albumTracks = signal<WishItem[] | null>(null)
+  /** a song of that list shown here: the list to go back to */
+  private readonly trackFromList = signal<WishItem[] | null>(null)
   /** the album of Spotify this page shows (a hit, an album of an allowed artist, an allowed one) - its songs */
   protected readonly albumId = computed(() => {
     const w = this.wish()
@@ -376,13 +378,12 @@ export class SearchAlbumPage extends SwiperIonicEventsHelper {
       return
     }
     if (tile.t === 'track') {
-      // (one of the album's songs: its own page - into a playlist, or wished for one; an address of its own: the router
-      // does not go to the same address again)
-      this.flow.openedOwnPage()
-      void this.navController.navigateForward(['/search-album'], {
-        queryParams: { song: tile.w.id },
-        state: { track: tile.w },
-      })
+      // (one of the album's songs: shown on this page - into a playlist, or wished for one; back: the list again. The
+      // router would not open this page a second time on top of itself)
+      this.trackFromList.set(this.albumTracks())
+      this.albumTracks.set(null)
+      this.inPlaylists.set(new Set())
+      this.track.set(tile.w)
       return
     }
     if (tile.t === 'song') {
@@ -439,6 +440,14 @@ export class SearchAlbumPage extends SwiperIonicEventsHelper {
     if ((this.choosing() || this.removing()) && !(this.newPlaylist() !== null && this.flow.categories().length > 1)) {
       this.choosing.set(false)
       this.removing.set(false)
+      return
+    }
+    // (a song of the album's list: the list again)
+    const list = this.trackFromList()
+    if (list) {
+      this.track.set(null)
+      this.trackFromList.set(null)
+      this.albumTracks.set(list)
       return
     }
     void this.navController.pop()
