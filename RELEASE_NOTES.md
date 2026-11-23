@@ -13,6 +13,8 @@ die Box ein Backup an.
 
 ## Seit dem letzten Tag (noch ohne Tag)
 
+**Basis jetzt splitti/MuPiBox 5.0.18** (NAS: `.wma` spielt wieder; Neuinstallation mit DietPi ab 10.8).
+
 **Neu: Playlists und einzelne Songs in der Suche** (alles hinter drei neuen Schaltern unter *Einstellungen › Display &
 Bedienung › Suche*; aus = wie bisher)
 - **Playlists in der Suche:** Kachel „Playlists“ mit den Playlists, die die Eltern in „Meine Playlists“ für die Suche

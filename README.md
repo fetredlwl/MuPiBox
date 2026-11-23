@@ -44,7 +44,7 @@ splitti weiter übernehmen lassen.
 - Benannte Stände sind **Tags** der Form `fork-<Datum>-<Name>`, zum Beispiel `fork-2026-11-23-spotify-live-suche`.
 - Was sich je Tag geändert hat: [RELEASE_NOTES.md](RELEASE_NOTES.md).
 - Der Zweig `wishes` ist der laufende Entwicklungsstand und kann sich jederzeit ändern.
-- Die Basis ist `splitti/MuPiBox` (Stand 5.0.17); die Versionsnummer in der App zeigt diese Basis („FORK 5.0.17 …“).
+- Die Basis ist `splitti/MuPiBox` (Stand 5.0.18); die Versionsnummer in der App zeigt diese Basis („FORK 5.0.18 …“).
 
 ## Installation und Update
 
