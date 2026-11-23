@@ -263,6 +263,68 @@ export async function forkRelease(fresh = false): Promise<ForkRelease | null> {
   return forkCache?.info ?? null
 }
 
+// The fork's last tag: the named state to go back to while the branch ("wishes") goes on. The tags carry their day in the
+// name (fork-2026-11-23-spotify-live-suche) - the newest day is the last one (the tag list of GitHub has no order by
+// date). The same cache as the branch: asked every 10 minutes at most.
+export interface ForkTag {
+  repo: string
+  tag: string
+  sha: string
+  date: string
+  base: string | null
+  label: string
+}
+let forkTagCache: { at: number; info: ForkTag } | null = null
+
+/** the newest of the tag names that carry a day (yyyy-mm-dd), none when no tag does */
+export function lastForkTag(names: string[]): string | null {
+  const dated = names
+    .filter((n) => /^[A-Za-z0-9._-]{1,60}$/.test(n))
+    .map((n) => ({ n, day: /\d{4}-\d{2}-\d{2}/.exec(n)?.[0] ?? '' }))
+    .filter((o) => o.day)
+  dated.sort((a, b) => (a.day === b.day ? a.n.localeCompare(b.n) : a.day.localeCompare(b.day)))
+  return dated.length ? dated[dated.length - 1].n : null
+}
+
+export async function forkLastTag(fresh = false): Promise<ForkTag | null> {
+  if (fresh || !forkTagCache || Date.now() - forkTagCache.at > 600_000) {
+    try {
+      const r = await fetch(`https://api.github.com/repos/${FORK.repo}/tags?per_page=100`, {
+        signal: AbortSignal.timeout(8000),
+        headers: { Accept: 'application/vnd.github+json' },
+      })
+      if (r.ok) {
+        const list = (await r.json()) as { name?: string; commit?: { sha?: string } }[]
+        const tag = lastForkTag(list.map((t) => String(t.name ?? '')))
+        const full = String(list.find((t) => t.name === tag)?.commit?.sha ?? '')
+        if (tag && /^[0-9a-f]{40}$/.test(full)) {
+          let base: string | null = null
+          try {
+            const v = await fetch(`https://raw.githubusercontent.com/${FORK.repo}/${full}/version.json`, {
+              signal: AbortSignal.timeout(8000),
+            })
+            if (v.ok) {
+              const stable =
+                ((await v.json()) as { release?: { stable?: { version?: string }[] } }).release?.stable ?? []
+              const last = String(stable[stable.length - 1]?.version ?? '')
+              if (/^\d+(?:\.\d+)+$/.test(last)) base = last
+            }
+          } catch {
+            // without the base the label has no number
+          }
+          const sha = full.slice(0, 7)
+          const date = /\d{4}-\d{2}-\d{2}/.exec(tag)?.[0] ?? ''
+          const label = ['FORK', base, tag, sha].filter(Boolean).join(' ')
+          forkTagCache = { at: Date.now(), info: { repo: FORK.repo, tag, sha, date, base, label } }
+        }
+      }
+    } catch {
+      // no internet: the last answer, if any
+    }
+  }
+  return forkTagCache?.info ?? null
+}
+
 /** "4.2.4 stable", "3.2.5 BETA", "DEV 5.0.2 2026-09-01", "FORK 5.0.17 wishes 1a2b3c4 2026-11-22" -> its number and channel */
 export function parseInstalled(v: string): { number: string | null; channel: InstalledChannel } {
   const number = /\d+(?:\.\d+)+/.exec(v)?.[0] ?? null
@@ -327,7 +389,7 @@ export function registerUpdateRoutes(router: Router, deps: UpdatesDeps): void {
   /** GET /api/app/updates - the installed version, the official ones, whether there is a newer one, the last job */
   router.get('/updates', requireSession, async (_req, res) => {
     const installed = String((deps.getMupiboxConfig()?.mupibox as Record<string, unknown> | undefined)?.version ?? '')
-    const [latest, date, job, fork] = await Promise.all([officialVersions(), devDate(), jobState(), forkRelease()])
+    const [latest, date, job, fork, forkTag] = await Promise.all([officialVersions(), devDate(), jobState(), forkRelease(), forkLastTag()])
     const mine = parseInstalled(installed)
     // (a fork has no newer official version of its own channel: going back is the stable channel's button)
     const newer = mine.channel === 'fork' ? null : latest?.[mine.channel]
@@ -338,6 +400,9 @@ export function registerUpdateRoutes(router: Router, deps: UpdatesDeps): void {
       devDate: date,
       update: newer && mine.number && compareVersions(newer.version, mine.number) > 0 ? { channel: mine.channel, version: newer.version } : null,
       fork: fork ? { ...fork, installed: mine.channel === 'fork' && installed.includes(` ${fork.sha} `) } : null,
+      forkTag: forkTag
+        ? { ...forkTag, installed: mine.channel === 'fork' && installed.includes(` ${forkTag.tag} `) }
+        : null,
       job,
     })
   })
@@ -350,13 +415,15 @@ export function registerUpdateRoutes(router: Router, deps: UpdatesDeps): void {
   /** POST /api/app/updates/start {kind: stable|beta|dev|os|fork} */
   router.post('/updates/start', requireSession, requireCsrf, async (req, res) => {
     const kind = String((req.body ?? {}).kind ?? '')
-    if (![...CHANNELS, 'os', 'fork'].includes(kind)) {
+    if (![...CHANNELS, 'os', 'fork', 'fork-tag'].includes(kind)) {
       res.status(400).json({ error: 'invalid kind' })
       return
     }
     // (the fork: its branch asked again now - the label names the commit that is installed; repository and branch are
-    // the fixed ones above, never from the request)
+    // the fixed ones above, never from the request. The fork's last tag goes the same way: the update script takes a
+    // tag where it takes a branch, the unit's kind is "fork" for both)
     let forkArgs: string[] = []
+    let unitKind = kind
     if (kind === 'fork') {
       const f = await forkRelease(true)
       if (!f || !/^[A-Za-z0-9 ._-]{1,80}$/.test(f.label)) {
@@ -364,6 +431,14 @@ export function registerUpdateRoutes(router: Router, deps: UpdatesDeps): void {
         return
       }
       forkArgs = [f.repo, f.branch, f.label]
+    } else if (kind === 'fork-tag') {
+      const f = await forkLastTag(true)
+      if (!f || !/^[A-Za-z0-9 ._-]{1,80}$/.test(f.label)) {
+        res.status(503).json({ error: 'the fork could not be reached' })
+        return
+      }
+      forkArgs = [f.repo, f.tag, f.label]
+      unitKind = 'fork'
     }
     const active = (await run('systemctl', ['is-active', UNIT], 5000)).stdout.trim()
     if (active === 'active' || active === 'activating') {
@@ -386,7 +461,7 @@ export function registerUpdateRoutes(router: Router, deps: UpdatesDeps): void {
     } finally {
       await fsp.rm(tmp, { recursive: true, force: true })
     }
-    const r = await run('sudo', ['systemd-run', `--unit=${UNIT}`, '--collect', '--quiet', '--working-directory=/home/dietpi', '/bin/bash', `${STATE_DIR}/run.sh`, kind, ...forkArgs], 15000)
+    const r = await run('sudo', ['systemd-run', `--unit=${UNIT}`, '--collect', '--quiet', '--working-directory=/home/dietpi', '/bin/bash', `${STATE_DIR}/run.sh`, unitKind, ...forkArgs], 15000)
     if (!r.ok) {
       res.status(500).json({ error: `could not start the update ${r.stderr.slice(0, 200)}` })
       return

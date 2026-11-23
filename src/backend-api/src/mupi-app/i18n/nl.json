@@ -3268,5 +3268,9 @@
  "Liste leeren": "Lijst leegmaken",
  "Liste leeren?": "Lijst leegmaken?",
  "Liste geleert": "Lijst leeggemaakt",
- "Die entschiedenen Wünsche verschwinden aus der Liste. Offene Wünsche und Freigaben bleiben.": "De besliste wensen verdwijnen uit de lijst. Openstaande wensen en vrijgaven blijven."
+ "Die entschiedenen Wünsche verschwinden aus der Liste. Offene Wünsche und Freigaben bleiben.": "De besliste wensen verdwijnen uit de lijst. Openstaande wensen en vrijgaven blijven.",
+ "Tag „{}“ aus {} (Stand {}) – der letzte benannte Stand des Forks, nicht vom MuPiBox-Team. Die Box zeigt 10–30 Minuten eine Wartungsanzeige und startet danach von selbst neu. Am besten am Netzteil. Zurück zur offiziellen Version geht es mit „Stabil“.": "Tag „{}” uit {} (stand van {}) – de laatste benoemde stand van de fork, niet van het MuPiBox-team. De box toont 10–30 minuten een onderhoudsscherm en start daarna vanzelf opnieuw. Het liefst aan de netvoeding. Terug naar de officiële versie met „Stable”.",
+ "Fork · Entwicklungsstand · {} · Stand {}": "Fork · Ontwikkelstand · {} · stand van {}",
+ "Fork · Letzter Tag · {}": "Fork · Laatste tag · {}",
+ "Letzten Fork-Tag installieren?": "De laatste tag van de fork installeren?"
 }

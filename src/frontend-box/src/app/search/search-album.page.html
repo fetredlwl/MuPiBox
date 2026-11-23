@@ -5,7 +5,7 @@
       <button class="km-hbtn" type="button" data-mupi-back (click)="goBack()">
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5M11 6l-6 6 6 6" /></svg>
       </button>
-      <div class="km-htitle"><span class="km-ht1">{{ title() }}</span></div>
+      <div class="km-htitle"><span class="km-ht1">{{ heading() }}</span></div>
       <mupi-km-status-group></mupi-km-status-group>
     </div>
   } @else {
@@ -15,66 +15,21 @@
           <ion-icon slot="icon-only" name="arrow-back-outline"></ion-icon>
         </ion-button>
       </ion-buttons>
-      <ion-title>{{ title() }}</ion-title>
+      <ion-title>{{ heading() }}</ion-title>
       <span slot="end" class="mupihat-icon-container"><mupi-status></mupi-status></span>
     </ion-toolbar>
   }
 </ion-header>
 
-<ion-content class="medialist-content" [scrollY]="false">
-  <div class="sa-page" data-mupi-page>
-    <div class="sa-cover" [class.sa-round]="round()"><img [src]="cover()" alt="" /></div>
-    <div class="sa-side">
-      <div class="sa-name">
-        <b>{{ title() }}</b>
-        @if (sub()) {
-          <small>{{ sub() }}</small>
-        }
-      </div>
-      @if (own()) {
-        <!-- one of the child's own: another tab, or off the start page (asked once more) -->
-        @if (choosing()) {
-          <p class="sa-q">{{ texts.text('searchWhere') }}</p>
-          @for (c of elsewhere(); track c) {
-            <button class="sa-btn" type="button" [disabled]="busy()" (click)="addTo(c)">
-              <ion-icon [name]="categoryLabel[c].icon"></ion-icon>{{ flow.catLabel(c) }}
-            </button>
-          }
-        } @else if (removing()) {
-          <p class="sa-q">{{ texts.text('searchRemoveQ') }}</p>
-          <button class="sa-btn sa-main sa-remove-yes" type="button" [disabled]="busy()" (click)="removeOwn()"><span class="sa-ic">✕</span>{{ texts.text('searchRemoveYes') }}</button>
-        } @else {
-          @if (elsewhere().length) {
-            <button class="sa-btn sa-main sa-move" type="button" (click)="moveOwn()"><ion-icon name="swap-horizontal-outline"></ion-icon>{{ texts.text('searchMove') }}</button>
-          }
-          <button class="sa-btn sa-remove" type="button" (click)="removeOwn()"><span class="sa-ic">✕</span>{{ texts.text('searchRemove') }}</button>
-        }
-      } @else if (choosing()) {
-        <p class="sa-q">{{ texts.text('searchWhere') }}</p>
-        @for (c of flow.categories(); track c) {
-          <button class="sa-btn" type="button" [disabled]="busy()" (click)="addTo(c)">
-            <ion-icon [name]="categoryLabel[c].icon"></ion-icon>{{ flow.catLabel(c) }}
-          </button>
-        }
-      } @else {
-        <!-- (podcasts, shows and a whole artist: on the start page only - their episodes / albums come with them there) -->
-        @if (playable()) {
-          <button class="sa-btn" type="button" [class.sa-off]="spotifyBlock.player()" (click)="play()"><span class="sa-ic">▶</span>{{ texts.text('searchPlay') }}</button>
-        }
-        @if (wish()) {
-          <!-- (wished: the parents decide in the app; nothing played before) -->
-          @if (wish()?.there) {
-            <!-- (on the box already: nothing to wish or fetch) -->
-            <button class="sa-btn sa-wished sa-onbox" type="button" disabled><span class="sa-ic">✓</span>{{ texts.text('wishOnBox') }}</button>
-          } @else if (wished()) {
-            <button class="sa-btn sa-wished" type="button" disabled><span class="sa-ic">★</span>{{ texts.text('wishWished') }}</button>
-          } @else {
-            <button class="sa-btn sa-main sa-wish" type="button" (click)="toStart()"><span class="sa-ic">★</span>{{ texts.text('wishButton') }}</button>
-          }
-        } @else {
-          <button class="sa-btn sa-main" type="button" (click)="toStart()"><span class="sa-ic">+</span>{{ texts.text('searchToStart') }}</button>
-        }
-      }
-    </div>
-  </div>
+<!-- (the album list of the start page and of "Weiterhören": its cover, then what can be done with it as covers - the
+     names on the theme's bars, read aloud on a tap) -->
+<ion-content class="medialist-content">
+  <mupi-swiper
+    [data]="swiperData()"
+    [compact]="headerHidden()"
+    [roundImages]="round()"
+    [positionKey]="listKey()"
+    [attr.data-names]="swiperNames()"
+    (elementClicked)="tileClicked($event.data)"
+  ></mupi-swiper>
 </ion-content>

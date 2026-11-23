@@ -1,4 +1,57 @@
-# MuPiBox
+# MuPiBox – Fork mit Spotify-Live-Suche
+
+> **Dies ist ein Fork von [splitti/MuPiBox](https://github.com/splitti/MuPiBox)** und nicht das offizielle MuPiBox.
+> Die MuPiBox, ihre Idee und fast der gesamte Code stammen vom MuPiBox-Team um **splitti** und **nero**
+> ([Mitwirkende](https://github.com/splitti/MuPiBox/graphs/contributors), [mupibox.de](https://mupibox.de)).
+> Alle Anerkennung gehört dem Original – dieser Fork baut nur eine Suche für Kinder dazu.
+>
+> *This is a fork of [splitti/MuPiBox](https://github.com/splitti/MuPiBox), not the official MuPiBox. All credit for MuPiBox
+> goes to the original authors; this fork only adds a child-friendly search on top.*
+
+## Was dieser Fork zusätzlich kann
+
+Alles Eigene sitzt hinter Schaltern in der Eltern-App; **ist ein Schalter aus, verhält sich die Box wie das Original**.
+
+- **Suche am Display** – eine Suche für Kinder, die aussieht wie die Startseite: runde Kacheln „Bei Spotify suchen“,
+  „Podcasts“, „Radio“ und „Einträge verwalten“, die Tastatur kommt erst nach einem Tipp auf das Suchfeld.
+- **Spotify live suchen und wünschen** – das Kind findet Alben und Künstler bei Spotify und wünscht sie sich; die Eltern
+  geben sie in der App frei (Bibliothek › Wünsche), widerrufen sie wieder oder räumen die Liste auf. Freigegebenes merkt
+  sich die Box, das Kind holt es danach selbst auf die Startseite. Meldung an Home Assistant bei einem neuen Wunsch.
+- **Podcasts und Radio für Kinder** – Sendungen und Sender aus Verzeichnissen, die das Kind ohne Freigabe hinzufügen darf;
+  was schon auf der Box ist, wird markiert und nicht doppelt angeboten.
+- **Eigene Einträge verwalten** – was das Kind selbst geholt hat, kann es verschieben oder entfernen; die Eltern sehen
+  alles unter Bibliothek › „Für die Suche freigegeben“.
+- **Schonender mit Spotify** – getrennte Kontingente (eine Sperre des Katalogs hält die Wiedergabe nicht an), gedrosseltes
+  Laden im Hintergrund.
+- **Updates aus dem Fork** – in der App unter Einstellungen › Updates: „Fork · Letzter Tag“ (der letzte benannte Stand)
+  und „Fork · Entwicklungsstand“ (der Zweig `wishes`); zurück zum Original geht es mit „Stabil“.
+
+Jede Änderung berücksichtigt Backup und Wiederherstellung sowie die Übersetzungen (App: 16 Sprachen, Display-Texte: 17).
+Der Code des Originals wird nur dort angefasst, wo es für diese Funktionen nötig ist, damit sich Änderungen von
+splitti weiter übernehmen lassen.
+
+## Versionen und Release-Notes
+
+- Benannte Stände sind **Tags** der Form `fork-<Datum>-<Name>`, zum Beispiel `fork-2026-11-23-spotify-live-suche`.
+- Was sich je Tag geändert hat: [RELEASE_NOTES.md](RELEASE_NOTES.md).
+- Der Zweig `wishes` ist der laufende Entwicklungsstand und kann sich jederzeit ändern.
+- Die Basis ist `splitti/MuPiBox` (Stand 5.0.17); die Versionsnummer in der App zeigt diese Basis („FORK 5.0.17 …“).
+
+## Installation und Update
+
+Auf einer vorhandenen MuPiBox: Eltern-App › Einstellungen › Updates › „Fork · Letzter Tag“ installieren. Vorher legt die Box
+ein Backup an. Neu installieren: die Anleitung des Originals ([mupibox.de](https://mupibox.de/anleitungen/installationsanleitung/einfache-installation/)),
+danach wie oben auf den Fork wechseln.
+
+## Hilfe, Fehler und Datenschutz
+
+Fragen und Fehler zu **diesem Fork** bitte hier als [Issue](https://github.com/fetredlwl/MuPiBox/issues) melden – bitte
+nicht beim MuPiBox-Team von splitti nachfragen, das den Fork nicht betreut. Spenden und Dank gehen an das Original (unten).
+Lizenz: MIT wie das Original ([LICENSE.md](LICENSE.md), Copyright MuPiBox.de); Drittanbieter: [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
+
+---
+
+# MuPiBox (Original-README von splitti/MuPiBox)
 [![GitHub Release](https://img.shields.io/github/v/release/splitti/MuPiBox?label=stable%20release)](https://github.com/splitti/MuPiBox/releases)
 [![GitHub Release](https://img.shields.io/github/v/release/splitti/MuPiBox?include_prereleases&label=dev%20release
 )](https://github.com/splitti/MuPiBox/releases)

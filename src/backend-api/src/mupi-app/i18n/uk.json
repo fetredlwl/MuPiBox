@@ -3268,5 +3268,9 @@
  "Liste leeren": "Очистити список",
  "Liste leeren?": "Очистити список?",
  "Liste geleert": "Список очищено",
- "Die entschiedenen Wünsche verschwinden aus der Liste. Offene Wünsche und Freigaben bleiben.": "Вирішені бажання зникнуть зі списку. Відкриті бажання й схвалення лишаються."
+ "Die entschiedenen Wünsche verschwinden aus der Liste. Offene Wünsche und Freigaben bleiben.": "Вирішені бажання зникнуть зі списку. Відкриті бажання й схвалення лишаються.",
+ "Tag „{}“ aus {} (Stand {}) – der letzte benannte Stand des Forks, nicht vom MuPiBox-Team. Die Box zeigt 10–30 Minuten eine Wartungsanzeige und startet danach von selbst neu. Am besten am Netzteil. Zurück zur offiziellen Version geht es mit „Stabil“.": "Тег «{}» з {} (стан на {}) – останній іменований стан форку, не від команди MuPiBox. Бокс 10–30 хвилин показує екран обслуговування, а потім сам перезапускається. Краще від блока живлення. Назад до офіційної версії — «Стабільна».",
+ "Fork · Entwicklungsstand · {} · Stand {}": "Fork · Стан розробки · {} · станом на {}",
+ "Fork · Letzter Tag · {}": "Fork · Останній тег · {}",
+ "Letzten Fork-Tag installieren?": "Встановити останній тег форку?"
 }

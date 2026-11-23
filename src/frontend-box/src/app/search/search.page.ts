@@ -48,6 +48,7 @@ import { SwiperComponent, type SwiperData } from '../swiper/swiper.component'
 import { KmThemeService } from '../theme/km-theme.service'
 import { localizeCoverUrl } from '../utils'
 import { NearEndDirective } from './near-end.directive'
+import { tilePicture } from './search-tiles'
 import {
   CATEGORY_LABEL,
   type KidsPodcast,
@@ -581,11 +582,7 @@ export class SearchPage implements AfterViewInit, OnDestroy {
 
   /** a tile's sign as a cover: on the theme's colour (km themes: its apricot and ink), as a picture */
   private wayPicture(m: SearchMode): string {
-    const st = getComputedStyle(this.host.nativeElement)
-    const bg = st.getPropertyValue('--srch-accent').trim() || '#3880ff'
-    const ink = (st.getPropertyValue('--km-ink').trim() || '#ffffff').replace(/"/g, '')
-    const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><rect width="24" height="24" fill="${bg.replace(/"/g, '')}"/><g transform="translate(6 6) scale(0.5)" fill="none" stroke="${ink}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${WAY_ICON[m]}</g></svg>`
-    return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`
+    return tilePicture(this.host.nativeElement, WAY_ICON[m])
   }
 
   /**

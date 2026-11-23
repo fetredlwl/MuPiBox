@@ -3268,5 +3268,9 @@
  "Liste leeren": "Listeyi temizle",
  "Liste leeren?": "Liste temizlensin mi?",
  "Liste geleert": "Liste temizlendi",
- "Die entschiedenen Wünsche verschwinden aus der Liste. Offene Wünsche und Freigaben bleiben.": "Karar verilen dilekler listeden kaybolur. Bekleyen dilekler ve onaylar kalır."
+ "Die entschiedenen Wünsche verschwinden aus der Liste. Offene Wünsche und Freigaben bleiben.": "Karar verilen dilekler listeden kaybolur. Bekleyen dilekler ve onaylar kalır.",
+ "Tag „{}“ aus {} (Stand {}) – der letzte benannte Stand des Forks, nicht vom MuPiBox-Team. Die Box zeigt 10–30 Minuten eine Wartungsanzeige und startet danach von selbst neu. Am besten am Netzteil. Zurück zur offiziellen Version geht es mit „Stabil“.": "{1} deposundan “{0}” etiketi ({2} itibarıyla) – fork’un adlandırılmış son durumu, MuPiBox ekibinden değil. Kutu 10–30 dakika bakım ekranı gösterir ve ardından kendiliğinden yeniden başlar. En iyisi adaptöre bağlıyken. Resmi sürüme „Kararlı“ ile dönülür.",
+ "Fork · Entwicklungsstand · {} · Stand {}": "Fork · Geliştirme durumu · {} · durum: {}",
+ "Fork · Letzter Tag · {}": "Fork · Son etiket · {}",
+ "Letzten Fork-Tag installieren?": "Fork’un son etiketi yüklensin mi?"
 }

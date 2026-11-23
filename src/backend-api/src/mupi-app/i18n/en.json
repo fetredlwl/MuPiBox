@@ -3268,5 +3268,9 @@
  "Liste leeren": "Clear the list",
  "Liste leeren?": "Clear the list?",
  "Liste geleert": "List cleared",
- "Die entschiedenen Wünsche verschwinden aus der Liste. Offene Wünsche und Freigaben bleiben.": "The decided wishes disappear from the list. Open wishes and approvals stay."
+ "Die entschiedenen Wünsche verschwinden aus der Liste. Offene Wünsche und Freigaben bleiben.": "The decided wishes disappear from the list. Open wishes and approvals stay.",
+ "Tag „{}“ aus {} (Stand {}) – der letzte benannte Stand des Forks, nicht vom MuPiBox-Team. Die Box zeigt 10–30 Minuten eine Wartungsanzeige und startet danach von selbst neu. Am besten am Netzteil. Zurück zur offiziellen Version geht es mit „Stabil“.": "Tag “{}” from {} (as of {}) – the last named state of the fork, not from the MuPiBox team. The box shows a maintenance screen for 10–30 minutes and then restarts by itself. Best on the power supply. Back to the official version with “Stable”.",
+ "Fork · Entwicklungsstand · {} · Stand {}": "Fork · Development state · {} · as of {}",
+ "Fork · Letzter Tag · {}": "Fork · Last tag · {}",
+ "Letzten Fork-Tag installieren?": "Install the fork’s last tag?"
 }

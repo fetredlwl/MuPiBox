@@ -11590,7 +11590,7 @@ function mountBackup(root) {
 
 const upd = { info: null, job: null, offline: false, showOut: false }
 const CHANNEL_LABEL = { stable: 'Stabil', beta: 'Beta', dev: 'Entwicklung', fork: 'Fork' }
-const JOB_LABEL = { stable: 'MuPiBox-Update · Stabil', beta: 'MuPiBox-Update · Beta', dev: 'MuPiBox-Update · Entwicklung', fork: 'MuPiBox-Update · Fork', os: 'Betriebssystem-Update' }
+const JOB_LABEL = { stable: 'MuPiBox-Update · Stabil', beta: 'MuPiBox-Update · Beta', dev: 'MuPiBox-Update · Entwicklung', fork: 'MuPiBox-Update · Fork', 'fork-tag': 'MuPiBox-Update · Fork', os: 'Betriebssystem-Update' }
 const jobRunning = () => upd.job?.phase === 'running' || upd.job?.phase === 'rebooting'
 
 function cmpVersion(a, b) {
@@ -11660,14 +11660,21 @@ function updatesTop() {
   // the fork's branch (not from the official repository): its last commit, the official version it is based on
   const f = i?.fork
   const forkRow = f
-    ? `<div class="row"><span class="lbl"><b>${esc(`Fork · ${f.branch} · Stand ${f.date}`)}</b><small>${esc(`${f.repo} · ${f.sha}${f.base ? ` · auf Basis von ${f.base}` : ''}${f.installed ? ' · installiert' : ''}`)}</small></span>
+    ? `<div class="row"><span class="lbl"><b>${esc(`Fork · Entwicklungsstand · ${f.branch} · Stand ${f.date}`)}</b><small>${esc(`${f.repo} · ${f.sha}${f.base ? ` · auf Basis von ${f.base}` : ''}${f.installed ? ' · installiert' : ''}`)}</small></span>
         <button class="btn danger" data-upd="fork" ${busy ? 'disabled' : ''}>${f.installed ? 'Neu installieren' : 'Installieren'}</button></div>`
+    : ''
+  // the fork's last tag: the named state to go back to, beside the branch that goes on
+  const t = i?.forkTag
+  const forkTagRow = t
+    ? `<div class="row"><span class="lbl"><b>${esc(`Fork · Letzter Tag · ${t.tag}`)}</b><small>${esc(`${t.repo} · ${t.sha}${t.base ? ` · auf Basis von ${t.base}` : ''}${t.installed ? ' · installiert' : ''}`)}</small></span>
+        <button class="btn" data-upd="fork-tag" ${busy ? 'disabled' : ''}>${t.installed ? 'Neu installieren' : 'Installieren'}</button></div>`
     : ''
   return [
     updJobCard(),
     `<section class="card"><h2>MuPiBox</h2><dl class="kv"><div><dt>Installiert</dt><dd>${esc(i?.installed || '–')}</dd></div></dl>
       ${i?.update ? `<div class="note">${icon('sync', 18)}<span>Neue Version ${esc(i.update.version)} verfügbar.</span></div>` : ''}
       ${rows || `<p class="help">Die Versionen des offiziellen Repositorys ließen sich nicht laden (keine Internetverbindung?).</p>`}
+      ${forkTagRow}
       ${forkRow}
       <p class="help" style="margin:0">Aus dem offiziellen MuPiBox-Repository (splitti/MuPiBox)${f ? `, der Fork aus ${esc(f.repo)} (nicht vom MuPiBox-Team; zurück mit „Stabil“)` : ''}. Die Box ist dabei 10–30 Minuten nicht nutzbar und startet danach von selbst neu. Einstellungen und Bibliothek bleiben erhalten und werden vorher zusätzlich auf der Box gesichert.</p></section>`,
     // (the system and the backup one below the other: beside the long MuPiBox card on a wide screen, no gap between)
@@ -11690,6 +11697,10 @@ async function startUpdate(kind, page) {
     const f = i?.fork
     title = 'Fork installieren?'
     text = `Zweig „${f?.branch ?? ''}“ aus ${f?.repo ?? ''} (Stand ${f?.date ?? ''}) – nicht vom MuPiBox-Team. Die Box zeigt 10–30 Minuten eine Wartungsanzeige und startet danach von selbst neu. Am besten am Netzteil. Zurück zur offiziellen Version geht es mit „Stabil“.`
+  } else if (kind === 'fork-tag') {
+    const t = i?.forkTag
+    title = 'Letzten Fork-Tag installieren?'
+    text = `Tag „${t?.tag ?? ''}“ aus ${t?.repo ?? ''} (Stand ${t?.date ?? ''}) – der letzte benannte Stand des Forks, nicht vom MuPiBox-Team. Die Box zeigt 10–30 Minuten eine Wartungsanzeige und startet danach von selbst neu. Am besten am Netzteil. Zurück zur offiziellen Version geht es mit „Stabil“.`
   } else {
     title = `MuPiBox ${rel.version} installieren?`
     text = `${CHANNEL_LABEL[kind]}-Version aus dem offiziellen Repository. Die Box zeigt 10–30 Minuten eine Wartungsanzeige und startet danach von selbst neu. Am besten am Netzteil.`

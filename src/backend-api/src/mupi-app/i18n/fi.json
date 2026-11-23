@@ -3268,5 +3268,9 @@
  "Liste leeren": "Tyhjennä lista",
  "Liste leeren?": "Tyhjennetäänkö lista?",
  "Liste geleert": "Lista tyhjennetty",
- "Die entschiedenen Wünsche verschwinden aus der Liste. Offene Wünsche und Freigaben bleiben.": "Ratkaistut toiveet katoavat listalta. Avoimet toiveet ja hyväksynnät säilyvät."
+ "Die entschiedenen Wünsche verschwinden aus der Liste. Offene Wünsche und Freigaben bleiben.": "Ratkaistut toiveet katoavat listalta. Avoimet toiveet ja hyväksynnät säilyvät.",
+ "Tag „{}“ aus {} (Stand {}) – der letzte benannte Stand des Forks, nicht vom MuPiBox-Team. Die Box zeigt 10–30 Minuten eine Wartungsanzeige und startet danach von selbst neu. Am besten am Netzteil. Zurück zur offiziellen Version geht es mit „Stabil“.": "Tagi ”{}” repositoriosta {} (tila {}) – forkin viimeisin nimetty tila, ei MuPiBox-tiimiltä. Laite näyttää huoltonäkymää 10–30 minuuttia ja käynnistyy sitten itsestään uudelleen. Mieluiten verkkovirrassa. Takaisin viralliseen versioon valinnalla ”Vakaa”.",
+ "Fork · Entwicklungsstand · {} · Stand {}": "Fork · Kehitystila · {} · tila {}",
+ "Fork · Letzter Tag · {}": "Fork · Viimeisin tagi · {}",
+ "Letzten Fork-Tag installieren?": "Asennetaanko forkin viimeisin tagi?"
 }

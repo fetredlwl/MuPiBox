@@ -18,8 +18,14 @@ elif [ "$1" = "branch" ]; then
   REPO="${3:-splitti/MuPiBox}"
   VERSION_LABEL="$4"
   BRANCH_EXISTS=$(curl -s -o /dev/null -w "%{http_code}" https://api.github.com/repos/${REPO}/branches/${BRANCH})
+  REF_KIND="heads"
   if [ "$BRANCH_EXISTS" != "200" ]; then
-    echo "Error: Branch '${BRANCH}' does not exist on GitHub repo '${REPO}'"
+    # (fork) no such branch: a tag of that name is installed the same way
+    BRANCH_EXISTS=$(curl -s -o /dev/null -w "%{http_code}" https://api.github.com/repos/${REPO}/git/ref/tags/${BRANCH})
+    REF_KIND="tags"
+  fi
+  if [ "$BRANCH_EXISTS" != "200" ]; then
+    echo "Error: Branch or tag '${BRANCH}' does not exist on GitHub repo '${REPO}'"
     exit 1
   fi
 else
@@ -425,7 +431,7 @@ if [ -z "$BRANCH" ]; then
   VERSION=$(/usr/bin/jq -r .release.${RELEASE}[-1].version ${VER_JSON})  >&3 2>&3
   MUPIBOX_URL=$(/usr/bin/jq -r .release.${RELEASE}[-1].url ${VER_JSON})  >&3 2>&3
 else
-  MUPIBOX_URL="https://github.com/${REPO}/archive/refs/heads/${BRANCH}.zip"
+  MUPIBOX_URL="https://github.com/${REPO}/archive/refs/${REF_KIND}/${BRANCH}.zip"
 fi
 
 USER=$(/usr/bin/whoami) >&3 2>&3

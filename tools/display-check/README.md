@@ -11,7 +11,7 @@ gebaute Display. Chrome klickt die Suche bei 1024×600 und 800×480 durch.
 |---|---|
 | R1 | Ein Spotify-Hinweis nur, wenn es das Kind betrifft (Spotify spielt nicht) – nie bei einer Katalogsperre mit „Kontingente trennen“, und nie so, dass er der Seite Platz nimmt (Popup) |
 | R2 | Aus der Suche in Künstler oder Album: Suchleiste und Tastatur weg; zurück kommt man zur Suche wie sie war (gleicher Text, gleiche Treffer), ohne dass Listen oder Spotify neu gefragt werden |
-| R3 | Künstler- und Albumseite sehen aus wie die Seiten der Startseite (Kopf der Albumliste, Cover-Karussell), nichts scrollt |
+| R3 | Künstler- und Albumseite sind die Albumliste der Startseite und von „Weiterhören“ (Kopf der Albumliste, dieselbe Cover-Liste); die Albumseite zeigt ihr Cover und daneben, was man tun kann, als Cover – keine eigenen Knöpfe; nichts scrollt |
 | R4 | Ein Weg zurück je Seite (kein zweites „Schließen“ mit derselben Wirkung) |
 | R5 | Die Texte kommen aus den Display-Übersetzungen (englische Box: kein Deutsch auf der Seite) |
 | R6 | Podcasts für Kinder: beim Tippen keine Anfrage, erst die Kachel fragt; nur Kindersendungen; ohne Freigabe auf die Startseite, danach unter „Von dir geholt“ |

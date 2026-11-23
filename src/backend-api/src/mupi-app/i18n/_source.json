@@ -3187,5 +3187,9 @@
  "Liste leeren",
  "Liste leeren?",
  "Liste geleert",
- "Die entschiedenen Wünsche verschwinden aus der Liste. Offene Wünsche und Freigaben bleiben."
+ "Die entschiedenen Wünsche verschwinden aus der Liste. Offene Wünsche und Freigaben bleiben.",
+ "Fork · Entwicklungsstand · {} · Stand {}",
+ "Fork · Letzter Tag · {}",
+ "Letzten Fork-Tag installieren?",
+ "Tag „{}“ aus {} (Stand {}) – der letzte benannte Stand des Forks, nicht vom MuPiBox-Team. Die Box zeigt 10–30 Minuten eine Wartungsanzeige und startet danach von selbst neu. Am besten am Netzteil. Zurück zur offiziellen Version geht es mit „Stabil“."
 ]

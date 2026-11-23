@@ -3268,5 +3268,9 @@
  "Liste leeren": "Εκκαθάριση λίστας",
  "Liste leeren?": "Εκκαθάριση λίστας;",
  "Liste geleert": "Η λίστα εκκαθαρίστηκε",
- "Die entschiedenen Wünsche verschwinden aus der Liste. Offene Wünsche und Freigaben bleiben.": "Οι αποφασισμένες ευχές φεύγουν από τη λίστα. Οι ανοιχτές ευχές και οι εγκρίσεις μένουν."
+ "Die entschiedenen Wünsche verschwinden aus der Liste. Offene Wünsche und Freigaben bleiben.": "Οι αποφασισμένες ευχές φεύγουν από τη λίστα. Οι ανοιχτές ευχές και οι εγκρίσεις μένουν.",
+ "Tag „{}“ aus {} (Stand {}) – der letzte benannte Stand des Forks, nicht vom MuPiBox-Team. Die Box zeigt 10–30 Minuten eine Wartungsanzeige und startet danach von selbst neu. Am besten am Netzteil. Zurück zur offiziellen Version geht es mit „Stabil“.": "Ετικέτα «{}» από {} (κατάσταση {}) – η τελευταία ονομασμένη κατάσταση του fork, όχι από την ομάδα MuPiBox. Το κουτί δείχνει οθόνη συντήρησης για 10–30 λεπτά και μετά επανεκκινεί μόνο του. Καλύτερα στο τροφοδοτικό. Επιστροφή στην επίσημη έκδοση με «Σταθερή».",
+ "Fork · Entwicklungsstand · {} · Stand {}": "Fork · Αναπτυξιακή κατάσταση · {} · κατάσταση {}",
+ "Fork · Letzter Tag · {}": "Fork · Τελευταία ετικέτα · {}",
+ "Letzten Fork-Tag installieren?": "Εγκατάσταση της τελευταίας ετικέτας του fork;"
 }

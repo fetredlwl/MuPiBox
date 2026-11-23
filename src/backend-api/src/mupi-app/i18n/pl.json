@@ -3268,5 +3268,9 @@
  "Liste leeren": "Wyczyść listę",
  "Liste leeren?": "Wyczyścić listę?",
  "Liste geleert": "Lista wyczyszczona",
- "Die entschiedenen Wünsche verschwinden aus der Liste. Offene Wünsche und Freigaben bleiben.": "Rozstrzygnięte prośby znikną z listy. Otwarte prośby i zatwierdzenia zostają."
+ "Die entschiedenen Wünsche verschwinden aus der Liste. Offene Wünsche und Freigaben bleiben.": "Rozstrzygnięte prośby znikną z listy. Otwarte prośby i zatwierdzenia zostają.",
+ "Tag „{}“ aus {} (Stand {}) – der letzte benannte Stand des Forks, nicht vom MuPiBox-Team. Die Box zeigt 10–30 Minuten eine Wartungsanzeige und startet danach von selbst neu. Am besten am Netzteil. Zurück zur offiziellen Version geht es mit „Stabil“.": "Tag „{}” z {} (stan z {}) – ostatni nazwany stan forka, nie od zespołu MuPiBox. Box przez 10–30 minut pokazuje ekran konserwacji, a potem sam się uruchamia ponownie. Najlepiej na zasilaczu. Powrót do oficjalnej wersji przez „Stabilna”.",
+ "Fork · Entwicklungsstand · {} · Stand {}": "Fork · Wersja rozwojowa · {} · stan z {}",
+ "Fork · Letzter Tag · {}": "Fork · Ostatni tag · {}",
+ "Letzten Fork-Tag installieren?": "Zainstalować ostatni tag forka?"
 }

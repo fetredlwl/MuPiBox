@@ -463,13 +463,16 @@ async function names(page, selector) {
   )
 }
 
-/** what the search lists: its album list (keyboard folded away; data-names) or the keyboard's row */
+/**
+ * what the page in front lists: its album list (the search with the keyboard folded away, the album page; data-names)
+ * or the keyboard's row of the search
+ */
 async function listNames(page) {
-  return page.evaluate(() => {
-    const list = document.querySelector('app-search mupi-swiper.srch-list')
+  return page.evaluate((top) => {
+    const list = eval(top)?.querySelector('mupi-swiper[data-names]')
     if (list) return (list.getAttribute('data-names') ?? '').split('|').filter(Boolean)
     return [...document.querySelectorAll('app-search .srch-hits .srch-name')].map((e) => e.textContent.trim())
-  })
+  }, TOP)
 }
 
 /**
@@ -477,8 +480,8 @@ async function listNames(page) {
  * covers to the side brought to the middle one by one, then the one in front), in the keyboard's row its tile or hit
  */
 async function tapListed(page, name) {
-  const how = await page.evaluate((n) => {
-    const list = document.querySelector('app-search mupi-swiper.srch-list')
+  const how = await page.evaluate((n, top) => {
+    const list = eval(top)?.querySelector('mupi-swiper[data-names]')
     if (!list) {
       const cell = [...document.querySelectorAll('app-search .srch-way')].find(
         (c) => c.querySelector('.srch-name')?.textContent.trim() === n,
@@ -502,27 +505,28 @@ async function tapListed(page, name) {
       return 'grid'
     }
     return list.querySelector('.km-stage') ? 'stage' : 'none'
-  }, name)
+  }, name, TOP)
   if (how === 'stage') {
     const all = await listNames(page)
     if (!all.includes(name)) return false
     for (let i = 0; i < 40; i++) {
       const cur = await page.evaluate(
-        () => document.querySelector('app-search .km-stage-name')?.textContent.trim() ?? '',
+        (top) => eval(top)?.querySelector('.km-stage-name')?.textContent.trim() ?? '',
+        TOP,
       )
       if (cur === name) {
-        await page.evaluate(() => {
-          const items = [...document.querySelectorAll('app-search .km-stage-item')]
+        await page.evaluate((top) => {
+          const items = [...eval(top).querySelectorAll('.km-stage-item')]
           items.sort((a, b) => (Number(b.style.zIndex) || 0) - (Number(a.style.zIndex) || 0))
           items[0]?.click()
-        })
+        }, TOP)
         await wait(1000)
         return true
       }
       const dir = all.indexOf(name) > all.indexOf(cur) ? 1 : -1
-      await page.evaluate((d) => {
+      await page.evaluate((d, top) => {
         const cx = innerWidth / 2
-        const side = [...document.querySelectorAll('app-search .km-stage-item')]
+        const side = [...eval(top).querySelectorAll('.km-stage-item')]
           .map((e) => {
             const r = e.getBoundingClientRect()
             return { e, x: r.left + r.width / 2 }
@@ -530,7 +534,7 @@ async function tapListed(page, name) {
           .filter((o) => (d > 0 ? o.x > cx + 20 : o.x < cx - 20))
           .sort((a, b) => Math.abs(a.x - cx) - Math.abs(b.x - cx))
         side[0]?.e.click()
-      }, dir)
+      }, dir, TOP)
       await wait(500)
     }
     return false
@@ -551,8 +555,8 @@ async function removeOwn(page, name) {
   await wait(400)
   if (!(await tapListed(page, name)) || (await topTag(page)) !== 'app-search-album')
     throw new Error(`no page for the own entry ${name}`)
-  await clickText(page, '.sa-btn', 'Remove')
-  await clickText(page, '.sa-btn', 'Yes, remove')
+  await tapListed(page, 'Remove')
+  await tapListed(page, 'Yes, remove')
   await wait(600)
   await back(page)
 }
@@ -711,8 +715,8 @@ async function tips(page, tag, asked, dir) {
   await shot(page, `${tag}-0-tipps`)
   const opened = await tapListed(page, 'Frosch Funkhaus')
   if (!opened || (await topTag(page)) !== 'app-search-album') throw new Error('no page for the tip')
-  await clickText(page, '.sa-btn', 'To the start page')
-  await clickText(page, '.sa-btn', 'Radio')
+  await tapListed(page, 'To the start page')
+  await tapListed(page, 'Radio')
   await wait(800)
   rule('R7', (await topTag(page)) === 'app-search', `${tag}: a tip put on the start page without approval`)
   const after = await listNames(page)
@@ -765,23 +769,21 @@ async function tips(page, tag, asked, dir) {
   if (!(await tapListed(page, 'Frosch Funkhaus')) || (await topTag(page)) !== 'app-search-album')
     throw new Error('no page for the own entry')
   const o = await overflow(page)
-  const words = await page.evaluate((top) => eval(top)?.innerText ?? '', TOP)
+  const words = (await listNames(page)).join(' | ')
   rule(
     'R12',
     words.includes('Somewhere else') && words.includes('Remove') && !o.scrolls && !o.below,
     `${tag}: its page - "Somewhere else", "Remove", nothing scrolls`,
   )
   rule('R4', (await visibleCount(page, '[data-mupi-back]')) === 1, `${tag}: its page has one way back`)
-  await clickText(page, '.sa-btn', 'Somewhere else')
-  const tabs = await page.evaluate(() =>
-    [...document.querySelectorAll('app-search-album .sa-btn')].map((e) => e.textContent.trim()),
-  )
+  await tapListed(page, 'Somewhere else')
+  const tabs = await listNames(page)
   rule(
     'R12',
     tabs.includes('Music') && tabs.includes('Audio books') && !tabs.includes('Radio'),
     `${tag}: the other tabs, not its own (${tabs.join(', ')})`,
   )
-  await clickText(page, '.sa-btn', 'Music')
+  await tapListed(page, 'Music')
   await wait(800)
   const row = () =>
     JSON.parse(fs.readFileSync(path.join(dir, 'config', 'data.json'), 'utf8')).find((r) =>
@@ -815,15 +817,15 @@ async function radio(page, tag, asked, dir) {
   )
   if (!(await tapListed(page, 'Kinderwelle')) || (await topTag(page)) !== 'app-search-album')
     throw new Error('no page for the station')
-  const words = await page.evaluate((top) => eval(top)?.innerText ?? '', TOP)
+  const words = (await listNames(page)).join(' | ')
   const o = await overflow(page)
   rule(
     'R13',
     words.includes('To the start page') && !words.includes('Play') && !o.scrolls && !o.below,
     `${tag}: a station goes on the start page (its page fits the screen)`,
   )
-  await clickText(page, '.sa-btn', 'To the start page')
-  await clickText(page, '.sa-btn', 'Radio')
+  await tapListed(page, 'To the start page')
+  await tapListed(page, 'Radio')
   await wait(800)
   const row = () =>
     JSON.parse(fs.readFileSync(path.join(dir, 'config', 'data.json'), 'utf8')).find(
@@ -876,12 +878,10 @@ async function wishes(page, tag, dir) {
   rule('R8', there.join('|') === 'Wunschalbum 1', `${tag}: what the box has is found and marked (${there.join(', ')})`)
   if (!(await clickText(page, '.srch-wish.srch-there', 'Wunschalbum 1')) || (await topTag(page)) !== 'app-search-album')
     throw new Error('no page for the album on the box')
-  const onBox = await page.evaluate((top) => eval(top)?.innerText ?? '', TOP)
+  const onBox = (await listNames(page)).join(' | ')
   rule(
     'R8',
-    onBox.includes('Already on the box') &&
-      !onBox.includes('Wish for it') &&
-      (await visibleCount(page, '.sa-onbox[disabled]')) === 1,
+    onBox.includes('Already on the box') && !onBox.includes('Wish for it') && !onBox.includes('To the start page'),
     `${tag}: an album on the box can be neither wished nor fetched`,
   )
   await page.click('app-search-album [data-mupi-back]')
@@ -960,7 +960,7 @@ async function wishes(page, tag, dir) {
   // an album: only "wish", the tab, back to the search, the parents' list
   if (!(await clickFrontCover(page)) || (await topTag(page)) !== 'app-search-album')
     throw new Error('no page for the album')
-  const words = await page.evaluate((top) => eval(top)?.innerText ?? '', TOP)
+  const words = (await listNames(page)).join(' | ')
   const o = await overflow(page)
   rule('R3', !o.scrolls && !o.below, `${tag}: wish page fits the screen`)
   if (first) {
@@ -969,8 +969,8 @@ async function wishes(page, tag, dir) {
       words.includes('Wish for it') && !words.includes('Play') && !words.includes('To the start page'),
       `${tag}: an album of Spotify can be wished, not played or put on the start page`,
     )
-    await clickText(page, '.sa-btn', 'Wish for it')
-    await clickText(page, '.sa-btn', 'Music')
+    await tapListed(page, 'Wish for it')
+    await tapListed(page, 'Music')
     await wait(1000)
     const note = await page.evaluate(() => document.querySelector('app-search .srch-toast')?.textContent ?? '')
     rule(
@@ -982,9 +982,7 @@ async function wishes(page, tag, dir) {
     // (the album the first run wished: shown as wished, nothing to tap - then back to the search)
     rule(
       'R8',
-      words.includes('Wished') &&
-        !words.includes('Wish for it') &&
-        (await visibleCount(page, '.sa-wished[disabled]')) === 1,
+      words.includes('Wished') && !words.includes('Wish for it'),
       `${tag}: an album wished already says so, nothing to tap`,
     )
     await page.click('app-search-album [data-mupi-back]')
@@ -1205,7 +1203,7 @@ async function podcasts(page, tag, asked) {
   )
   const opened = await clickText(page, '.srch-pod', 'Frosch Funkhaus')
   if (!opened || (await topTag(page)) !== 'app-search-album') throw new Error('no page for the podcast')
-  const words = await page.evaluate((top) => eval(top)?.innerText ?? '', TOP)
+  const words = (await listNames(page)).join(' | ')
   rule(
     'R6',
     words.includes('To the start page') && !words.includes('Play'),
@@ -1213,8 +1211,8 @@ async function podcasts(page, tag, asked) {
   )
   const o = await overflow(page)
   rule('R3', !o.scrolls && !o.below, `${tag}: podcast page fits the screen`)
-  await clickText(page, '.sa-btn', 'To the start page')
-  await clickText(page, '.sa-btn', 'Audio books')
+  await tapListed(page, 'To the start page')
+  await tapListed(page, 'Audio books')
   await wait(800)
   const note = await page.evaluate(() => document.querySelector('app-search .srch-toast')?.textContent ?? '')
   rule(
@@ -1257,6 +1255,11 @@ async function navigation(page, tag, hitsBefore, asked) {
   rule('R2', atAlbum && (await topTag(page)) === 'app-search-album', `${tag}: an album of the artist opens its page`)
   if ((await topTag(page)) !== 'app-search-album') throw new Error('no album page')
   await shot(page, `${tag}-3-album`)
+  rule(
+    'R3',
+    (await visibleCount(page, 'mupi-swiper')) === 1 && (await visibleCount(page, 'button.sa-btn, .sa-page')) === 0,
+    `${tag}: album page is the album list of the start page (its cover, then what can be done as covers)`,
+  )
   const o = await overflow(page)
   rule('R3', !o.scrolls && !o.below, `${tag}: album page fits the screen (no scrolling)`)
   rule(
@@ -1265,7 +1268,7 @@ async function navigation(page, tag, hitsBefore, asked) {
       (await visibleCount(page, '[aria-label="Schließen"], [aria-label="Close"]')) === 0,
     `${tag}: album page has one way back, no second close`,
   )
-  const words = await page.evaluate((top) => eval(top)?.innerText ?? '', TOP)
+  const words = (await listNames(page)).join(' | ')
   rule(
     'R5',
     words.includes('To the start page') && !/Abspielen|Auf die Startseite|Wohin/.test(words),
@@ -1273,15 +1276,19 @@ async function navigation(page, tag, hitsBefore, asked) {
   )
 
   // the tabs
-  await clickText(page, '.sa-btn', 'To the start page')
+  await tapListed(page, 'To the start page')
   await shot(page, `${tag}-4-reiter`)
   const o2 = await overflow(page)
-  rule('R3', !o2.scrolls && !o2.below && (await visibleCount(page, '.sa-btn')) >= 2, `${tag}: the tabs fit the screen`)
+  rule(
+    'R3',
+    !o2.scrolls && !o2.below && (await listNames(page)).length >= 2,
+    `${tag}: the tabs fit the screen (${(await listNames(page)).join(', ')})`,
+  )
   await page.click('app-search-album [data-mupi-back]')
   await wait(500)
   rule(
     'R4',
-    (await topTag(page)) === 'app-search-album' && (await visibleCount(page, '.sa-main')) === 1,
+    (await topTag(page)) === 'app-search-album' && (await listNames(page)).includes('To the start page'),
     `${tag}: back from the tabs to the buttons, on the same page`,
   )
 

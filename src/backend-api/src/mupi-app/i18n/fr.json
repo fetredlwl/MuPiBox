@@ -3268,5 +3268,9 @@
  "Liste leeren": "Vider la liste",
  "Liste leeren?": "Vider la liste ?",
  "Liste geleert": "Liste vidée",
- "Die entschiedenen Wünsche verschwinden aus der Liste. Offene Wünsche und Freigaben bleiben.": "Les souhaits décidés disparaissent de la liste. Les souhaits en attente et les autorisations restent."
+ "Die entschiedenen Wünsche verschwinden aus der Liste. Offene Wünsche und Freigaben bleiben.": "Les souhaits décidés disparaissent de la liste. Les souhaits en attente et les autorisations restent.",
+ "Tag „{}“ aus {} (Stand {}) – der letzte benannte Stand des Forks, nicht vom MuPiBox-Team. Die Box zeigt 10–30 Minuten eine Wartungsanzeige und startet danach von selbst neu. Am besten am Netzteil. Zurück zur offiziellen Version geht es mit „Stabil“.": "Tag « {} » de {} (état du {}) – le dernier état nommé du fork, pas de l’équipe MuPiBox. La box affiche un écran de maintenance pendant 10 à 30 minutes puis redémarre seule. De préférence sur secteur. Retour à la version officielle avec « Stable ».",
+ "Fork · Entwicklungsstand · {} · Stand {}": "Fork · État de développement · {} · au {}",
+ "Fork · Letzter Tag · {}": "Fork · Dernier tag · {}",
+ "Letzten Fork-Tag installieren?": "Installer le dernier tag du fork ?"
 }

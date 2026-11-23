@@ -3268,5 +3268,9 @@
  "Liste leeren": "Tøm listen",
  "Liste leeren?": "Tømme listen?",
  "Liste geleert": "Listen tømt",
- "Die entschiedenen Wünsche verschwinden aus der Liste. Offene Wünsche und Freigaben bleiben.": "De avgjorte ønskene forsvinner fra listen. Åpne ønsker og godkjenninger blir."
+ "Die entschiedenen Wünsche verschwinden aus der Liste. Offene Wünsche und Freigaben bleiben.": "De avgjorte ønskene forsvinner fra listen. Åpne ønsker og godkjenninger blir.",
+ "Tag „{}“ aus {} (Stand {}) – der letzte benannte Stand des Forks, nicht vom MuPiBox-Team. Die Box zeigt 10–30 Minuten eine Wartungsanzeige und startet danach von selbst neu. Am besten am Netzteil. Zurück zur offiziellen Version geht es mit „Stabil“.": "Taggen «{}» fra {} (status {}) – forkens siste navngitte status, ikke fra MuPiBox-teamet. Boksen viser en vedlikeholdsskjerm i 10–30 minutter og starter deretter på nytt av seg selv. Helst med strømforsyningen. Tilbake til den offisielle versjonen med «Stabil».",
+ "Fork · Entwicklungsstand · {} · Stand {}": "Fork · Utviklingsstatus · {} · status {}",
+ "Fork · Letzter Tag · {}": "Fork · Siste tagg · {}",
+ "Letzten Fork-Tag installieren?": "Installere forkens siste tagg?"
 }
