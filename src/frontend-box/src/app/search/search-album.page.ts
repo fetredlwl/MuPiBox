@@ -376,9 +376,13 @@ export class SearchAlbumPage extends SwiperIonicEventsHelper {
       return
     }
     if (tile.t === 'track') {
-      // (one of the album's songs: its own page - into a playlist, or wished for one)
+      // (one of the album's songs: its own page - into a playlist, or wished for one; an address of its own: the router
+      // does not go to the same address again)
       this.flow.openedOwnPage()
-      void this.navController.navigateForward(['/search-album'], { state: { track: tile.w } })
+      void this.navController.navigateForward(['/search-album'], {
+        queryParams: { song: tile.w.id },
+        state: { track: tile.w },
+      })
       return
     }
     if (tile.t === 'song') {

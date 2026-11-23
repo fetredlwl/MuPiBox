@@ -1361,11 +1361,12 @@ async function playlistsPass(browser, dir) {
       `songs: the album's songs, explicit ones never (${albumSongs.join(', ')})`,
     )
     await tapListed(page, 'Albumsong')
-    await wait(600)
+    await wait(1200)
+    const songActs = await listNames(page)
     rule(
       'R16',
-      (await listNames(page)).includes('Into a playlist'),
-      'songs: a song of an album on the box goes into a playlist at once',
+      songActs.includes('Into a playlist'),
+      `songs: a song of an album on the box goes into a playlist at once (${await topTag(page)}: ${songActs.join(', ')})`,
     )
     await topBack()
     await topBack()
