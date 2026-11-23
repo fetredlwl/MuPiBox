@@ -3292,5 +3292,15 @@
  "Song": "Utwór",
  "in Playlist „{}“": "w playliście „{}”",
  "Die Playlist „{}“ ist nicht mehr auf der Startseite – erst wieder dorthin holen oder ablehnen": "Playlisty „{}” nie ma już na stronie startowej – najpierw dodaj ją z powrotem albo odrzuć",
- "Freigegeben: {} – ist jetzt in „{}“": "Zatwierdzono: {} – jest teraz w „{}”"
+ "Freigegeben: {} – ist jetzt in „{}“": "Zatwierdzono: {} – jest teraz w „{}”",
+ "Suche am Display": "Wyszukiwanie na wyświetlaczu",
+ "Lupe, Spotify-Wünsche, Songs, Playlists, Podcasts, Radio": "Lupa, prośby ze Spotify, utwory, playlisty, podcasty, radio",
+ "Podcasts und Radio": "Podcasty i radio",
+ "Spotify-Recht für Playlists und Songs vorhanden": "Uprawnienie Spotify do playlist i utworów nadane",
+ "Recht bei Spotify fehlt": "Brak uprawnienia Spotify",
+ "Für neue Playlists und einzelne Songs braucht die Box das Recht, private Playlists im Spotify-Konto zu ändern. Jetzt bei Spotify neu anmelden (mit dem Konto der Box)?": "Do nowych playlist i pojedynczych utworów box potrzebuje prawa do zmiany prywatnych playlist na koncie Spotify. Zalogować się teraz ponownie do Spotify (kontem boxa)?",
+ "Wünsche, Songs, Playlists – Recht vorhanden": "Prośby, utwory, playlisty – uprawnienie nadane",
+ "Recht für Playlists fehlt – neu anmelden": "Brak uprawnienia do playlist – zaloguj się ponownie",
+ "Wünsche, Songs und Playlists für das Kind": "Prośby, utwory i playlisty dla dziecka",
+ "Die Suche am Display braucht zusätzlich das Recht, private Playlists zu ändern – dafür neu anmelden.": "Wyszukiwanie na wyświetlaczu potrzebuje też prawa do zmiany prywatnych playlist – zaloguj się w tym celu ponownie."
 }

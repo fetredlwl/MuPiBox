@@ -3211,5 +3211,15 @@
  "Song",
  "in Playlist „{}“",
  "Die Playlist „{}“ ist nicht mehr auf der Startseite – erst wieder dorthin holen oder ablehnen",
- "Freigegeben: {} – ist jetzt in „{}“"
+ "Freigegeben: {} – ist jetzt in „{}“",
+ "Suche am Display",
+ "Lupe, Spotify-Wünsche, Songs, Playlists, Podcasts, Radio",
+ "Podcasts und Radio",
+ "Spotify-Recht für Playlists und Songs vorhanden",
+ "Recht bei Spotify fehlt",
+ "Für neue Playlists und einzelne Songs braucht die Box das Recht, private Playlists im Spotify-Konto zu ändern. Jetzt bei Spotify neu anmelden (mit dem Konto der Box)?",
+ "Wünsche, Songs, Playlists – Recht vorhanden",
+ "Recht für Playlists fehlt – neu anmelden",
+ "Wünsche, Songs und Playlists für das Kind",
+ "Die Suche am Display braucht zusätzlich das Recht, private Playlists zu ändern – dafür neu anmelden."
 ]

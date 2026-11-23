@@ -3292,5 +3292,15 @@
  "Song": "Kappale",
  "in Playlist „{}“": "soittolistaan ”{}”",
  "Die Playlist „{}“ ist nicht mehr auf der Startseite – erst wieder dorthin holen oder ablehnen": "Soittolista ”{}” ei ole enää aloitussivulla – lisää se ensin takaisin tai hylkää",
- "Freigegeben: {} – ist jetzt in „{}“": "Hyväksytty: {} – on nyt listalla ”{}”"
+ "Freigegeben: {} – ist jetzt in „{}“": "Hyväksytty: {} – on nyt listalla ”{}”",
+ "Suche am Display": "Haku näytöllä",
+ "Lupe, Spotify-Wünsche, Songs, Playlists, Podcasts, Radio": "Suurennuslasi, Spotify-toiveet, kappaleet, soittolistat, podcastit, radio",
+ "Podcasts und Radio": "Podcastit ja radio",
+ "Spotify-Recht für Playlists und Songs vorhanden": "Spotify-oikeus soittolistoihin ja kappaleisiin on annettu",
+ "Recht bei Spotify fehlt": "Spotify-oikeus puuttuu",
+ "Für neue Playlists und einzelne Songs braucht die Box das Recht, private Playlists im Spotify-Konto zu ändern. Jetzt bei Spotify neu anmelden (mit dem Konto der Box)?": "Uusia soittolistoja ja yksittäisiä kappaleita varten laite tarvitsee oikeuden muuttaa Spotify-tilin yksityisiä soittolistoja. Kirjaudutaanko Spotifyhin nyt uudelleen (laitteen tilillä)?",
+ "Wünsche, Songs, Playlists – Recht vorhanden": "Toiveet, kappaleet, soittolistat – oikeus annettu",
+ "Recht für Playlists fehlt – neu anmelden": "Soittolistojen oikeus puuttuu – kirjaudu uudelleen",
+ "Wünsche, Songs und Playlists für das Kind": "Toiveet, kappaleet ja soittolistat lapselle",
+ "Die Suche am Display braucht zusätzlich das Recht, private Playlists zu ändern – dafür neu anmelden.": "Näytön haku tarvitsee lisäksi oikeuden muuttaa yksityisiä soittolistoja – kirjaudu sitä varten uudelleen."
 }

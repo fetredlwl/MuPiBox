@@ -252,6 +252,8 @@ describe('songs', () => {
     const again = await request(app).post('/api/wishes/track').send({ id: SONG, playlist: id })
     assert.equal(again.body.result, 'already')
     assert.equal(calls.filter((c) => c.startsWith('add')).length, 1)
+    // (the ✓ at "In welche Playlist?": the playlists it is in)
+    assert.deepEqual((await request(app).get('/api/search-playlists/containing').query({ id: SONG })).body.in, [id])
   })
 
   it('one it cannot play yet is wished for the playlist; approved, it goes in and is allowed from then on', async () => {

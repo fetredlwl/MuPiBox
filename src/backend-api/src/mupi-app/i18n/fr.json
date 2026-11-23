@@ -3292,5 +3292,15 @@
  "Song": "Titre",
  "in Playlist „{}“": "dans la playlist « {} »",
  "Die Playlist „{}“ ist nicht mehr auf der Startseite – erst wieder dorthin holen oder ablehnen": "La playlist « {} » n’est plus sur la page d’accueil – la remettre d’abord ou refuser",
- "Freigegeben: {} – ist jetzt in „{}“": "Autorisé : {} – est maintenant dans « {} »"
+ "Freigegeben: {} – ist jetzt in „{}“": "Autorisé : {} – est maintenant dans « {} »",
+ "Suche am Display": "Recherche à l’écran",
+ "Lupe, Spotify-Wünsche, Songs, Playlists, Podcasts, Radio": "Loupe, souhaits Spotify, titres, playlists, podcasts, radio",
+ "Podcasts und Radio": "Podcasts et radio",
+ "Spotify-Recht für Playlists und Songs vorhanden": "Droit Spotify pour playlists et titres présent",
+ "Recht bei Spotify fehlt": "Droit Spotify manquant",
+ "Für neue Playlists und einzelne Songs braucht die Box das Recht, private Playlists im Spotify-Konto zu ändern. Jetzt bei Spotify neu anmelden (mit dem Konto der Box)?": "Pour les nouvelles playlists et les titres isolés, la box a besoin du droit de modifier les playlists privées du compte Spotify. Se reconnecter à Spotify maintenant (avec le compte de la box) ?",
+ "Wünsche, Songs, Playlists – Recht vorhanden": "Souhaits, titres, playlists – droit présent",
+ "Recht für Playlists fehlt – neu anmelden": "Droit pour les playlists manquant – se reconnecter",
+ "Wünsche, Songs und Playlists für das Kind": "Souhaits, titres et playlists pour l’enfant",
+ "Die Suche am Display braucht zusätzlich das Recht, private Playlists zu ändern – dafür neu anmelden.": "La recherche à l’écran a aussi besoin du droit de modifier les playlists privées – se reconnecter pour cela."
 }

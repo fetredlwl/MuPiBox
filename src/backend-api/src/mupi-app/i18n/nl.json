@@ -3292,5 +3292,15 @@
  "Song": "Nummer",
  "in Playlist „{}“": "in playlist „{}”",
  "Die Playlist „{}“ ist nicht mehr auf der Startseite – erst wieder dorthin holen oder ablehnen": "De playlist „{}” staat niet meer op de startpagina – eerst terugzetten of weigeren",
- "Freigegeben: {} – ist jetzt in „{}“": "Vrijgegeven: {} – staat nu in „{}”"
+ "Freigegeben: {} – ist jetzt in „{}“": "Vrijgegeven: {} – staat nu in „{}”",
+ "Suche am Display": "Zoeken op het display",
+ "Lupe, Spotify-Wünsche, Songs, Playlists, Podcasts, Radio": "Vergrootglas, Spotify-wensen, nummers, playlists, podcasts, radio",
+ "Podcasts und Radio": "Podcasts en radio",
+ "Spotify-Recht für Playlists und Songs vorhanden": "Spotify-recht voor playlists en nummers aanwezig",
+ "Recht bei Spotify fehlt": "Recht bij Spotify ontbreekt",
+ "Für neue Playlists und einzelne Songs braucht die Box das Recht, private Playlists im Spotify-Konto zu ändern. Jetzt bei Spotify neu anmelden (mit dem Konto der Box)?": "Voor nieuwe playlists en losse nummers heeft de box het recht nodig om privé playlists in het Spotify-account te wijzigen. Nu opnieuw aanmelden bij Spotify (met het account van de box)?",
+ "Wünsche, Songs, Playlists – Recht vorhanden": "Wensen, nummers, playlists – recht aanwezig",
+ "Recht für Playlists fehlt – neu anmelden": "Recht voor playlists ontbreekt – opnieuw aanmelden",
+ "Wünsche, Songs und Playlists für das Kind": "Wensen, nummers en playlists voor het kind",
+ "Die Suche am Display braucht zusätzlich das Recht, private Playlists zu ändern – dafür neu anmelden.": "Het zoeken op het display heeft ook het recht nodig om privé playlists te wijzigen – meld je daarvoor opnieuw aan."
 }

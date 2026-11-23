@@ -3292,5 +3292,15 @@
  "Song": "Песня",
  "in Playlist „{}“": "в плейлист «{}»",
  "Die Playlist „{}“ ist nicht mehr auf der Startseite – erst wieder dorthin holen oder ablehnen": "Плейлиста «{}» больше нет на стартовой странице – сначала верни его туда или отклони",
- "Freigegeben: {} – ist jetzt in „{}“": "Одобрено: {} – теперь в «{}»"
+ "Freigegeben: {} – ist jetzt in „{}“": "Одобрено: {} – теперь в «{}»",
+ "Suche am Display": "Поиск на дисплее",
+ "Lupe, Spotify-Wünsche, Songs, Playlists, Podcasts, Radio": "Лупа, пожелания из Spotify, песни, плейлисты, подкасты, радио",
+ "Podcasts und Radio": "Подкасты и радио",
+ "Spotify-Recht für Playlists und Songs vorhanden": "Право Spotify на плейлисты и песни есть",
+ "Recht bei Spotify fehlt": "Не хватает права Spotify",
+ "Für neue Playlists und einzelne Songs braucht die Box das Recht, private Playlists im Spotify-Konto zu ändern. Jetzt bei Spotify neu anmelden (mit dem Konto der Box)?": "Для новых плейлистов и отдельных песен боксу нужно право изменять приватные плейлисты в учётной записи Spotify. Войти в Spotify заново сейчас (учётной записью бокса)?",
+ "Wünsche, Songs, Playlists – Recht vorhanden": "Пожелания, песни, плейлисты – право есть",
+ "Recht für Playlists fehlt – neu anmelden": "Нет права на плейлисты – войти заново",
+ "Wünsche, Songs und Playlists für das Kind": "Пожелания, песни и плейлисты для ребёнка",
+ "Die Suche am Display braucht zusätzlich das Recht, private Playlists zu ändern – dafür neu anmelden.": "Поиску на дисплее нужно ещё право изменять приватные плейлисты – для этого войди заново."
 }

@@ -156,7 +156,7 @@ Alles Neue hat **Schalter in der App**; solange ein Schalter aus ist, verhält s
    führt dich durch das Anlegen deiner **eigenen** Spotify-Entwickler-App (kostenlos auf
    [developer.spotify.com](https://developer.spotify.com/dashboard)) und das Eintragen von **Client-ID** und **Client-Secret**.
    Diese beiden Werte sind persönlich – nicht weitergeben, nicht in Issues oder Bildschirmfotos zeigen.
-2. **Schalter für die Suche:** *Einstellungen › Display & Bedienung › Suche*. Zuerst der Hauptschalter, **ohne den es am Display
+2. **Schalter für die Suche:** *Einstellungen › Display & Bedienung › Suche am Display*. Zuerst der Hauptschalter, **ohne den es am Display
    gar keine Suche gibt**:
    - **Suche auf dem Display** – eine Lupe oben links auf der Startseite öffnet die Suche mit Bildschirmtastatur. Nach der
      Installation ist sie **aus**, die Startseite sieht also genauso aus wie vorher.
@@ -168,8 +168,9 @@ Alles Neue hat **Schalter in der App**; solange ein Schalter aus ist, verhält s
    - **Playlists in der Suche** – Kachel „Playlists“ mit den Playlists, die du unter *Bibliothek › Spotify › Auf Spotify suchen ›
      Meine Playlists* mit „Nur in der Suche“ freigibst.
    - **Kind darf Playlists anlegen** (mit „Neue Playlists pro Tag“) und **Einzelne Songs aus Spotify** – das Kind legt private
-     Playlists in seinem Spotify-Konto an und legt Songs hinein. Dafür braucht die Box ein zusätzliches Recht bei Spotify: Die App
-     zeigt dann „Spotify neu verbinden“ – einmal antippen und mit dem Spotify-Konto der Box anmelden.
+     Playlists in seinem Spotify-Konto an und legt Songs hinein. Dafür braucht die Box ein zusätzliches Recht bei Spotify: Beim Einschalten fragt
+     die App gleich „Jetzt bei Spotify anmelden?“ – bestätigen und mit dem Spotify-Konto der Box anmelden; danach ist man wieder
+     auf dieser Seite.
 3. **Wünsche freigeben:** *Bibliothek › Wünsche*. Dort erscheinen die Wünsche des Kindes zum Freigeben oder Ablehnen; was du
    freigibst, merkt sich die Box (*Bibliothek › Für die Suche freigegeben*), das Kind kann es dann selbst holen und wieder entfernen.
 4. **Testen:** Am Display auf die **Lupe** oben links auf der Startseite tippen. Du siehst runde Kacheln: „Bei Spotify suchen“, „Podcasts“, „Radio“ und

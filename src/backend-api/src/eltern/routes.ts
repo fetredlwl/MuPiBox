@@ -88,6 +88,8 @@ import { btBattery, headphonesPlaying } from '../audio-output'
 import { playbackSnapshot } from '../playback-snapshot'
 import {
   requestedScopes,
+  playlistWritesOn,
+  PLAYLIST_WRITE_SCOPE,
   buildAuthorizeUrl,
   buildRedirectUri,
   redirectModeOf,
@@ -2541,6 +2543,11 @@ export function createElternApiRouter(deps: ElternRouterDeps): Router {
       tokenUpdatedAt: str(sp.tokenUpdatedAt) || null,
       scopes: Array.isArray(sp.tokenScopes) ? sp.tokenScopes : [],
       processPlaylists: sp.disableScraperForPlaylists !== true,
+      // (fork "wishes") the right the search's playlists and songs need: needed (their switches on), given (at the login)
+      searchRight: {
+        needed: playlistWritesOn(cfg),
+        given: Array.isArray(sp.tokenScopes) && (sp.tokenScopes as unknown[]).includes(PLAYLIST_WRITE_SCOPE),
+      },
       // since when the login holds and until when (6 months), or that Spotify refused it (see spotify-auth-age.ts)
       login: await spotifyLoginAge(cfg),
     })

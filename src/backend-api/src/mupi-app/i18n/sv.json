@@ -3292,5 +3292,15 @@
  "Song": "Låt",
  "in Playlist „{}“": "i spellistan ”{}”",
  "Die Playlist „{}“ ist nicht mehr auf der Startseite – erst wieder dorthin holen oder ablehnen": "Spellistan ”{}” finns inte längre på startsidan – lägg tillbaka den först eller neka",
- "Freigegeben: {} – ist jetzt in „{}“": "Godkänd: {} – finns nu i ”{}”"
+ "Freigegeben: {} – ist jetzt in „{}“": "Godkänd: {} – finns nu i ”{}”",
+ "Suche am Display": "Sökning på displayen",
+ "Lupe, Spotify-Wünsche, Songs, Playlists, Podcasts, Radio": "Förstoringsglas, Spotify-önskningar, låtar, spellistor, poddar, radio",
+ "Podcasts und Radio": "Poddar och radio",
+ "Spotify-Recht für Playlists und Songs vorhanden": "Spotify-rätt för spellistor och låtar finns",
+ "Recht bei Spotify fehlt": "Rätt hos Spotify saknas",
+ "Für neue Playlists und einzelne Songs braucht die Box das Recht, private Playlists im Spotify-Konto zu ändern. Jetzt bei Spotify neu anmelden (mit dem Konto der Box)?": "För nya spellistor och enskilda låtar behöver boxen rätt att ändra privata spellistor i Spotify-kontot. Logga in på Spotify igen nu (med boxens konto)?",
+ "Wünsche, Songs, Playlists – Recht vorhanden": "Önskningar, låtar, spellistor – rätt finns",
+ "Recht für Playlists fehlt – neu anmelden": "Rätt för spellistor saknas – logga in igen",
+ "Wünsche, Songs und Playlists für das Kind": "Önskningar, låtar och spellistor för barnet",
+ "Die Suche am Display braucht zusätzlich das Recht, private Playlists zu ändern – dafür neu anmelden.": "Sökningen på displayen behöver också rätt att ändra privata spellistor – logga in igen för det."
 }

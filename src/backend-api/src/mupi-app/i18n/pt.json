@@ -3292,5 +3292,15 @@
  "Song": "Música",
  "in Playlist „{}“": "na playlist «{}»",
  "Die Playlist „{}“ ist nicht mehr auf der Startseite – erst wieder dorthin holen oder ablehnen": "A playlist «{}» já não está na página inicial – volta a pô-la primeiro ou recusa",
- "Freigegeben: {} – ist jetzt in „{}“": "Autorizado: {} – está agora em «{}»"
+ "Freigegeben: {} – ist jetzt in „{}“": "Autorizado: {} – está agora em «{}»",
+ "Suche am Display": "Pesquisa no ecrã",
+ "Lupe, Spotify-Wünsche, Songs, Playlists, Podcasts, Radio": "Lupa, pedidos do Spotify, músicas, playlists, podcasts, rádio",
+ "Podcasts und Radio": "Podcasts e rádio",
+ "Spotify-Recht für Playlists und Songs vorhanden": "Direito do Spotify para playlists e músicas concedido",
+ "Recht bei Spotify fehlt": "Falta um direito do Spotify",
+ "Für neue Playlists und einzelne Songs braucht die Box das Recht, private Playlists im Spotify-Konto zu ändern. Jetzt bei Spotify neu anmelden (mit dem Konto der Box)?": "Para novas playlists e músicas soltas a caixa precisa do direito de alterar playlists privadas na conta Spotify. Voltar a entrar no Spotify agora (com a conta da caixa)?",
+ "Wünsche, Songs, Playlists – Recht vorhanden": "Pedidos, músicas, playlists – direito concedido",
+ "Recht für Playlists fehlt – neu anmelden": "Falta o direito para playlists – entrar de novo",
+ "Wünsche, Songs und Playlists für das Kind": "Pedidos, músicas e playlists para a criança",
+ "Die Suche am Display braucht zusätzlich das Recht, private Playlists zu ändern – dafür neu anmelden.": "A pesquisa no ecrã precisa também do direito de alterar playlists privadas – entra de novo para isso."
 }

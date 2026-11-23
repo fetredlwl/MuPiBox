@@ -358,6 +358,18 @@ export class SearchFlowService {
     }
   }
 
+  /** the child's playlists a song is in already (their ids; none when it could not be asked) */
+  async trackIn(trackId: string): Promise<Set<string>> {
+    try {
+      const r = await firstValueFrom(
+        this.http.get<{ in: string[] }>(`${this.api}/search-playlists/containing`, { params: { id: trackId } }),
+      )
+      return new Set(r?.in ?? [])
+    } catch {
+      return new Set()
+    }
+  }
+
   /** the songs of a playlist the child put on the start page itself (undefined: not read) */
   async songs(playlistId: string): Promise<PlaylistSong[] | undefined> {
     try {

@@ -3292,5 +3292,15 @@
  "Song": "Skladba",
  "in Playlist „{}“": "do playlistu „{}“",
  "Die Playlist „{}“ ist nicht mehr auf der Startseite – erst wieder dorthin holen oder ablehnen": "Playlist „{}“ už není na úvodní stránce – nejdřív ho tam vrať, nebo odmítni",
- "Freigegeben: {} – ist jetzt in „{}“": "Schváleno: {} – je teď v „{}“"
+ "Freigegeben: {} – ist jetzt in „{}“": "Schváleno: {} – je teď v „{}“",
+ "Suche am Display": "Vyhledávání na displeji",
+ "Lupe, Spotify-Wünsche, Songs, Playlists, Podcasts, Radio": "Lupa, přání ze Spotify, skladby, playlisty, podcasty, rádio",
+ "Podcasts und Radio": "Podcasty a rádio",
+ "Spotify-Recht für Playlists und Songs vorhanden": "Oprávnění Spotify pro playlisty a skladby uděleno",
+ "Recht bei Spotify fehlt": "Chybí oprávnění Spotify",
+ "Für neue Playlists und einzelne Songs braucht die Box das Recht, private Playlists im Spotify-Konto zu ändern. Jetzt bei Spotify neu anmelden (mit dem Konto der Box)?": "Pro nové playlisty a jednotlivé skladby potřebuje box oprávnění měnit soukromé playlisty v účtu Spotify. Přihlásit se teď znovu ke Spotify (účtem boxu)?",
+ "Wünsche, Songs, Playlists – Recht vorhanden": "Přání, skladby, playlisty – oprávnění uděleno",
+ "Recht für Playlists fehlt – neu anmelden": "Chybí oprávnění pro playlisty – přihlásit znovu",
+ "Wünsche, Songs und Playlists für das Kind": "Přání, skladby a playlisty pro dítě",
+ "Die Suche am Display braucht zusätzlich das Recht, private Playlists zu ändern – dafür neu anmelden.": "Vyhledávání na displeji potřebuje navíc oprávnění měnit soukromé playlisty – kvůli tomu se přihlas znovu."
 }

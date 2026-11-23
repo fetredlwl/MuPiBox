@@ -3292,5 +3292,15 @@
  "Song": "Song",
  "in Playlist „{}“": "in playlist “{}”",
  "Die Playlist „{}“ ist nicht mehr auf der Startseite – erst wieder dorthin holen oder ablehnen": "The playlist “{}” is no longer on the start page – put it back there first or refuse",
- "Freigegeben: {} – ist jetzt in „{}“": "Approved: {} – it is now in “{}”"
+ "Freigegeben: {} – ist jetzt in „{}“": "Approved: {} – it is now in “{}”",
+ "Suche am Display": "Search on the display",
+ "Lupe, Spotify-Wünsche, Songs, Playlists, Podcasts, Radio": "Magnifier, Spotify wishes, songs, playlists, podcasts, radio",
+ "Podcasts und Radio": "Podcasts and radio",
+ "Spotify-Recht für Playlists und Songs vorhanden": "Spotify right for playlists and songs given",
+ "Recht bei Spotify fehlt": "Spotify right missing",
+ "Für neue Playlists und einzelne Songs braucht die Box das Recht, private Playlists im Spotify-Konto zu ändern. Jetzt bei Spotify neu anmelden (mit dem Konto der Box)?": "For new playlists and single songs the box needs the right to change private playlists in the Spotify account. Sign in to Spotify again now (with the box’s account)?",
+ "Wünsche, Songs, Playlists – Recht vorhanden": "Wishes, songs, playlists – right given",
+ "Recht für Playlists fehlt – neu anmelden": "Right for playlists missing – sign in again",
+ "Wünsche, Songs und Playlists für das Kind": "Wishes, songs and playlists for the child",
+ "Die Suche am Display braucht zusätzlich das Recht, private Playlists zu ändern – dafür neu anmelden.": "The search on the display also needs the right to change private playlists – sign in again for it."
 }

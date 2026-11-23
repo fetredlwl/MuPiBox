@@ -3292,5 +3292,15 @@
  "Song": "Brano",
  "in Playlist „{}“": "nella playlist «{}»",
  "Die Playlist „{}“ ist nicht mehr auf der Startseite – erst wieder dorthin holen oder ablehnen": "La playlist «{}» non è più nella pagina iniziale – prima rimetterla lì o rifiutare",
- "Freigegeben: {} – ist jetzt in „{}“": "Autorizzato: {} – ora è in «{}»"
+ "Freigegeben: {} – ist jetzt in „{}“": "Autorizzato: {} – ora è in «{}»",
+ "Suche am Display": "Ricerca sul display",
+ "Lupe, Spotify-Wünsche, Songs, Playlists, Podcasts, Radio": "Lente, desideri Spotify, brani, playlist, podcast, radio",
+ "Podcasts und Radio": "Podcast e radio",
+ "Spotify-Recht für Playlists und Songs vorhanden": "Permesso Spotify per playlist e brani presente",
+ "Recht bei Spotify fehlt": "Manca un permesso Spotify",
+ "Für neue Playlists und einzelne Songs braucht die Box das Recht, private Playlists im Spotify-Konto zu ändern. Jetzt bei Spotify neu anmelden (mit dem Konto der Box)?": "Per nuove playlist e singoli brani il box ha bisogno del permesso di modificare le playlist private dell’account Spotify. Accedere di nuovo a Spotify ora (con l’account del box)?",
+ "Wünsche, Songs, Playlists – Recht vorhanden": "Desideri, brani, playlist – permesso presente",
+ "Recht für Playlists fehlt – neu anmelden": "Manca il permesso per le playlist – accedi di nuovo",
+ "Wünsche, Songs und Playlists für das Kind": "Desideri, brani e playlist per il bambino",
+ "Die Suche am Display braucht zusätzlich das Recht, private Playlists zu ändern – dafür neu anmelden.": "La ricerca sul display ha bisogno anche del permesso di modificare le playlist private – accedi di nuovo per questo."
 }

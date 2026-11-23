@@ -3292,5 +3292,15 @@
  "Song": "Canción",
  "in Playlist „{}“": "en la playlist «{}»",
  "Die Playlist „{}“ ist nicht mehr auf der Startseite – erst wieder dorthin holen oder ablehnen": "La playlist «{}» ya no está en la página de inicio – primero vuelve a ponerla o rechaza",
- "Freigegeben: {} – ist jetzt in „{}“": "Autorizado: {} – ahora está en «{}»"
+ "Freigegeben: {} – ist jetzt in „{}“": "Autorizado: {} – ahora está en «{}»",
+ "Suche am Display": "Búsqueda en la pantalla",
+ "Lupe, Spotify-Wünsche, Songs, Playlists, Podcasts, Radio": "Lupa, deseos de Spotify, canciones, playlists, podcasts, radio",
+ "Podcasts und Radio": "Podcasts y radio",
+ "Spotify-Recht für Playlists und Songs vorhanden": "Permiso de Spotify para playlists y canciones concedido",
+ "Recht bei Spotify fehlt": "Falta un permiso de Spotify",
+ "Für neue Playlists und einzelne Songs braucht die Box das Recht, private Playlists im Spotify-Konto zu ändern. Jetzt bei Spotify neu anmelden (mit dem Konto der Box)?": "Para playlists nuevas y canciones sueltas, la caja necesita permiso para cambiar playlists privadas de la cuenta de Spotify. ¿Volver a iniciar sesión en Spotify ahora (con la cuenta de la caja)?",
+ "Wünsche, Songs, Playlists – Recht vorhanden": "Deseos, canciones, playlists – permiso concedido",
+ "Recht für Playlists fehlt – neu anmelden": "Falta el permiso para playlists – iniciar sesión de nuevo",
+ "Wünsche, Songs und Playlists für das Kind": "Deseos, canciones y playlists para el niño",
+ "Die Suche am Display braucht zusätzlich das Recht, private Playlists zu ändern – dafür neu anmelden.": "La búsqueda en la pantalla también necesita permiso para cambiar playlists privadas: vuelve a iniciar sesión para ello."
 }

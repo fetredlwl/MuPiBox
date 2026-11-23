@@ -101,7 +101,7 @@ describe('the pool', () => {
     const again = await pool.add({ kind: 'artist', spotifyId: ARTIST, name: 'Lena', artist: '', cover: '' })
     assert.equal(a.id, again.id)
     // (fetched in the background: a moment, longer on a busy machine)
-    for (let i = 0; i < 40 && !(await pool.entries())[0]?.albums; i++) await settle()
+    for (let i = 0; i < 200 && !(await pool.entries())[0]?.albums; i++) await settle()
     const [entry] = await pool.entries()
     assert.equal(entry.albums?.length, 2)
     assert.equal(entry.albums?.[0].cover, 'https://i.scdn.co/image/mid')
@@ -112,7 +112,8 @@ describe('the pool', () => {
 
   it('puts an album of a pool artist into the library under the chosen tab, once', async () => {
     const a = await pool.add({ kind: 'artist', spotifyId: ARTIST, name: 'Lena', artist: '', cover: '' })
-    await settle()
+    // (fetched in the background: a moment, longer on a busy machine)
+    for (let i = 0; i < 200 && !(await pool.entries())[0]?.albums; i++) await settle()
     assert.equal(await pool.addToLibrary(a.id, ALBUM_2, 'music'), 'added')
     assert.equal(await pool.addToLibrary(a.id, ALBUM_2, 'audiobook'), 'already')
     const rows = library()

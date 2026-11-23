@@ -2326,6 +2326,16 @@
    ]
   },
   {
+   "id": "suchedisplay",
+   "slug": "search-display",
+   "area": "einstellungen",
+   "parent": "g-display",
+   "title": "Suche am Display",
+   "description": "Lupe, Spotify-Wünsche, Songs, Playlists, Podcasts, Radio",
+   "icon": "search",
+   "sections": []
+  },
+  {
    "id": "displaylive",
    "slug": "display-live",
    "area": "einstellungen",
@@ -6687,6 +6697,46 @@
    "l": "System",
    "where": "System",
    "id": "g-system"
+  },
+  {
+   "l": "Suche am Display",
+   "where": "Display & Bedienung › Suche am Display",
+   "id": "suchedisplay"
+  },
+  {
+   "l": "Suche auf dem Display",
+   "where": "Display & Bedienung › Suche am Display",
+   "id": "suchedisplay"
+  },
+  {
+   "l": "Wünsche aus Spotify",
+   "where": "Display & Bedienung › Suche am Display",
+   "id": "suchedisplay"
+  },
+  {
+   "l": "Einzelne Songs aus Spotify",
+   "where": "Display & Bedienung › Suche am Display",
+   "id": "suchedisplay"
+  },
+  {
+   "l": "Playlists in der Suche",
+   "where": "Display & Bedienung › Suche am Display",
+   "id": "suchedisplay"
+  },
+  {
+   "l": "Kind darf Playlists anlegen",
+   "where": "Display & Bedienung › Suche am Display",
+   "id": "suchedisplay"
+  },
+  {
+   "l": "Podcasts für Kinder in der Suche",
+   "where": "Display & Bedienung › Suche am Display",
+   "id": "suchedisplay"
+  },
+  {
+   "l": "Radio für Kinder in der Suche",
+   "where": "Display & Bedienung › Suche am Display",
+   "id": "suchedisplay"
   }
  ],
  "themes": [

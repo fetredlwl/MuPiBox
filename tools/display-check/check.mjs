@@ -1315,6 +1315,20 @@ async function playlistsPass(browser, dir) {
       (await topTag(page)) === 'app-search' && calls().some((c) => c.startsWith(`playlist add ${made?.playlistid} spotify:track:wt001`)),
       `songs: put into the playlist at once (${(await note()).trim()})`,
     )
+    // the same song again: the playlist it is in now marked ✓ at "Which playlist?"
+    if (!(await tapListed(page, 'Erlaubter Song')) || (await topTag(page)) !== 'app-search-album')
+      throw new Error('no page for the song again')
+    await tapListed(page, 'Into a playlist')
+    await wait(1500)
+    const marks = await page.evaluate(
+      (top) => [...(eval(top)?.querySelectorAll('mupi-swiper[data-names] .mupi-mark') ?? [])].map((m) => m.textContent.trim()),
+      TOP,
+    )
+    rule('R16', marks.includes('✓'), `songs: a playlist the song is in already is marked ✓ (${marks.join(' ') || 'no mark'})`)
+    for (let i = 0; i < 2; i++) {
+      await page.evaluate((top) => eval(top)?.querySelector('[data-mupi-back]')?.click(), TOP)
+      await wait(900)
+    }
     if (!(await tapListed(page, 'Wunschsong')) || (await topTag(page)) !== 'app-search-album')
       throw new Error('no page for the new song')
     const wishActs = await listNames(page)

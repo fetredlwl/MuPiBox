@@ -86,7 +86,7 @@ async function boot() {
   const back = new URLSearchParams(location.search)
   if (back.has('spotify_connected') || back.has('spotify_error')) {
     // (back to the page that started the login: the assistant goes on with its last step)
-    const from = back.get('from') === 'wizard' ? 'wizard' : 'spotify'
+    const from = back.get('from') === 'wizard' || back.get('from') === 'suchedisplay' ? back.get('from') : 'spotify'
     history.replaceState(null, '', `${location.pathname.replace(/\/?$/, '/')}${hashOf(from)}`)
     setTimeout(() => toast(back.has('spotify_connected') ? 'Mit Spotify verbunden' : `Spotify-Anmeldung fehlgeschlagen (${back.get('spotify_error')})`, back.has('spotify_connected') ? 'ok' : 'info'), 300)
   }
@@ -5639,7 +5639,7 @@ async function loadSpotify() {
 async function connectSpotify() {
   // (the way back says where from: Spotify returns to https://<box>, another address than this one - its storage is
   // not there)
-  const back = currentId() === 'wizard' ? '/app?from=wizard' : '/app'
+  const back = currentId() === 'wizard' || currentId() === 'suchedisplay' ? `/app?from=${currentId()}` : '/app'
   const r = await api(`${API}/spotify-oauth/init?return=${encodeURIComponent(back)}`)
   if (r.ok && r.body?.authorize_url) {
     location.href = r.body.authorize_url
@@ -5679,7 +5679,8 @@ function spotifySteps() {
     { id: 'app', short: 'App', title: 'Spotify-App anlegen', done: !!a.clientId },
     { id: 'fields', short: 'Felder', title: 'Felder ausfüllen', done: !!a.clientId },
     { id: 'keys', short: 'Zugang', title: 'Client ID und Client Secret', done: keys },
-    { id: 'login', short: 'Login', title: 'Bei Spotify anmelden', done: keys && a.connected && login.state !== 'refused' && tok.scopes_ok !== false },
+    // ((fork "wishes") the search's playlists and songs need one more right: missing, the login is to be made again)
+    { id: 'login', short: 'Login', title: 'Bei Spotify anmelden', done: keys && a.connected && login.state !== 'refused' && tok.scopes_ok !== false && !(a.searchRight?.needed && !a.searchRight?.given) },
     { id: 'sync', short: 'Sync', title: 'Smart-Sync', done: !!spot.status?.enabled, optional: true },
   ]
 }
@@ -5777,6 +5778,7 @@ function spotifyTop() {
       ${navRow('syncopt', 'Sync-Einstellungen', 'Playlist-Präfix, Intervall, an/aus', 'gear')}
       ${navRow('spzugang', 'Zugangsdaten', 'Client ID, Secret, Anmeldung', 'lock')}
       ${navRow('wizard', 'Einrichtungs-Assistent', ready ? 'Alles eingerichtet – Schritt für Schritt ansehen' : 'Schritt für Schritt – zeigt, was fehlt', 'sync')}
+      ${navRow('suchedisplay', 'Suche am Display', a.searchRight?.needed ? (a.searchRight.given ? 'Wünsche, Songs, Playlists – Recht vorhanden' : 'Recht für Playlists fehlt – neu anmelden') : 'Wünsche, Songs und Playlists für das Kind', 'search')}
     </div></section>`)
 
   if (conflicts.length) {
@@ -6049,7 +6051,7 @@ function wizardTop() {
     keys: `<h2>Client ID und Client Secret</h2><p class="help">Stehen in der Spotify-App unter „Settings“; den Secret zeigt „View client secret“. Die Box braucht beide – ohne Secret findet sie bei Spotify keine Alben und Cover.</p>
       <div class="field"><label for="wz-id">Client ID</label><input class="input mono" id="wz-id" value="${esc(state.values.get('wzClient') ?? a.clientId ?? '')}" ${NO_PW_MANAGER} spellcheck="false" placeholder="aus der Spotify-App"></div>
       <div class="field"><label for="wz-secret">Client Secret</label><div class="input-wrap"><input class="input has-eye mono" id="wz-secret" type="password" ${NO_PW_MANAGER} placeholder="${a.hasSecret ? 'gespeichert – leer lassen = behalten' : 'aus der Spotify-App'}"><button type="button" class="eye" data-eye aria-label="Anzeigen">${icon('eye', 18)}</button></div></div>`,
-    login: `<h2>Bei Spotify anmelden</h2><p class="help">Öffnet Spotify: anmelden und zustimmen, danach kommst du hierher zurück. Die Anmeldung gilt 6 Monate – die Box erinnert 14 und 3 Tage vorher.</p>
+    login: `<h2>Bei Spotify anmelden</h2><p class="help">Öffnet Spotify: anmelden und zustimmen, danach kommst du hierher zurück. Die Anmeldung gilt 6 Monate – die Box erinnert 14 und 3 Tage vorher.${a.searchRight?.needed && !a.searchRight?.given ? ` ${esc('Die Suche am Display braucht zusätzlich das Recht, private Playlists zu ändern – dafür neu anmelden.')}` : ''}</p>
       ${a.connected ? spKv([['Status', login.state === 'refused' ? 'Von Spotify abgelehnt – bitte neu anmelden' : 'Angemeldet'], login.until && ['Gültig bis', login.until]]) : ''}
       <div class="btns"><button class="btn${step.done ? '' : ' primary'}" data-wz="connect">${icon('sync', 18)}${a.connected ? 'Neu anmelden' : 'Mit Spotify verbinden'}</button></div>`,
     sync: `<h2>Smart-Sync <small class="wz-opt">optional</small></h2><p class="help">Playlists in deinem Spotify, deren Name mit dem Präfix beginnt, landen von selbst auf der Box – z. B. „${esc(String(state.values.get('prefix') ?? state.boxName ?? 'MuPiBox'))} Hörspiele“. Ohne Smart-Sync fügst du Spotify-Inhalte von Hand hinzu.</p>
@@ -11981,6 +11983,99 @@ function mountTidal(root, page) {
   }
 }
 
+// (fork "wishes") "Suche am Display": everything the child may do in the display's search, in one place - the magnifier,
+// what Spotify brings (wishes, songs, playlists; the right to change the child's private playlists asked where it is
+// switched on), podcasts and radio for children. Was a section of "Bedienung am Display".
+function searchSections() {
+  const on = !!state.values.get('dispSearch')
+  const writes = !!state.values.get('dispTracks') || (!!state.values.get('dispPlaylists') && !!state.values.get('dispPlCreate'))
+  const right = !!state.values.get('plScope')
+  return [
+    {
+      title: 'Suche',
+      items: [
+        {
+          type: 'toggle',
+          key: 'dispSearch',
+          label: 'Suche auf dem Display',
+          help: 'Eine Lupe oben links auf der Startseite öffnet eine Suche mit Bildschirmtastatur. Gesucht wird in der Bibliothek der Box – in den Reitern, die sichtbar sind – und im Vorrat unten.',
+        },
+        {
+          type: 'toggle',
+          key: 'appPool',
+          label: '„Nur in der Suche“ in der App',
+          help: 'Zeigt in der App beim Hinzufügen die Knöpfe „Nur in der Suche“. Aus: ausgeblendet, der Vorrat bleibt erhalten – die Suche am Display findet ihn weiter, solange sie an ist.',
+        },
+      ],
+    },
+    {
+      title: 'Spotify',
+      items: [
+        {
+          type: 'toggle',
+          key: 'dispWishes',
+          label: 'Wünsche aus Spotify',
+          help: 'In der Suche am Display sucht eine Kachel „Bei Spotify suchen“ nach Alben, Künstlern und Podcasts. Das Kind kann sich etwas wünschen und den Reiter wählen; du gibst es in der App frei (Bibliothek › Wünsche), Home Assistant bekommt eine Nachricht mit Link. Spotify wird erst beim Tippen auf die Kachel gefragt, jeweils 10 Treffer, weitere erst beim Weiterblättern; jede Seite merkt sich die Box einen Tag. Aus: keine Spotify-Suche am Display, alles andere bleibt.',
+          disabled: !on,
+        },
+        {
+          type: 'toggle',
+          key: 'dispTracks',
+          label: 'Einzelne Songs aus Spotify',
+          help: 'Die Spotify-Suche am Display findet auch einzelne Songs (Songs mit anstößigem Text nie). Kann das Kind den Song schon hören – sein Album oder der ganze Künstler ist auf der Box oder freigegeben –, legt es ihn gleich in eine seiner Playlists auf der Startseite; sonst wünscht es ihn sich für eine davon, und du gibst ihn unter Bibliothek › Wünsche frei. Braucht „Wünsche aus Spotify“.',
+          disabled: !on || !state.values.get('dispWishes'),
+        },
+        {
+          type: 'toggle',
+          key: 'dispPlaylists',
+          label: 'Playlists in der Suche',
+          help: 'In der Suche am Display zeigt eine Kachel „Playlists“ die Playlists, die du für die Suche freigegeben hast (Bibliothek › Spotify › Auf Spotify suchen › Meine Playlists › „Nur in der Suche“). Das Kind hört sie an und holt sie selbst auf die Startseite. Songs kommen nur in Playlists, die dem Konto der Box selbst gehören.',
+          disabled: !on,
+        },
+        {
+          type: 'toggle',
+          key: 'dispPlCreate',
+          label: 'Kind darf Playlists anlegen',
+          help: 'Hinter der Kachel „Playlists“ legt das Kind mit „Neue Playlist“ eine eigene, private Playlist im Spotify-Konto der Box an und holt sie unter einen Reiter seiner Wahl. Löschen kannst du sie in der Spotify-App.',
+          disabled: !on || !state.values.get('dispPlaylists'),
+        },
+        ...(state.values.get('dispPlaylists') && state.values.get('dispPlCreate')
+          ? [{ type: 'stepper', key: 'plPerDay', label: 'Neue Playlists pro Tag', help: 'So viele Playlists darf das Kind am Tag anlegen.', min: 1, max: 20 }]
+          : []),
+        // (making and changing playlists needs one more right from Spotify: asked when switched on, a button here until given)
+        ...(writes && !right
+          ? [
+          { type: 'warn', text: 'Spotify einmal neu verbinden: Für neue Playlists und Songs braucht die Box das Recht, private Playlists zu ändern. Bis dahin bleiben „Neue Playlist“ und die Songs am Display aus.' },
+          { type: 'html', html: `<div class="btns"><button class="btn primary" data-sp-connect>${icon('sync', 18)}${esc('Spotify neu verbinden')}</button></div>` },
+        ]
+          : writes
+        ? [{ type: 'html', html: `<p class="help" style="margin:0">${icon('check', 16)} ${esc('Spotify-Recht für Playlists und Songs vorhanden')}</p>` }]
+        : []),
+      ],
+    },
+    {
+      title: 'Podcasts und Radio',
+      items: [
+        {
+          type: 'toggle',
+          key: 'dispPodcasts',
+          label: 'Podcasts für Kinder in der Suche',
+          help: 'In der Suche am Display sucht eine Kachel „Podcasts“ in Apples Podcast-Verzeichnis (bei Deutsch auch in der ARD Audiothek) – nur Sendungen der Kinder-Kategorien. Das Kind kann sie ohne Freigabe auf die Startseite holen und selbst wieder entfernen. Gesucht wird erst beim Tippen auf die Kachel; der Suchbegriff geht dabei an Apple bzw. die ARD.',
+          disabled: !on,
+        },
+        {
+          type: 'toggle',
+          key: 'dispRadio',
+          label: 'Radio für Kinder in der Suche',
+          help: 'In der Suche am Display sucht eine Kachel „Radio“ im Senderverzeichnis radio-browser.info – nur Sender, die dort als Kinderradio markiert sind. Das Kind kann sie ohne Freigabe auf die Startseite holen und selbst wieder entfernen. Gesucht wird erst, wenn das Kind es will; der Suchbegriff geht dabei an radio-browser.info.',
+          disabled: !on,
+        },
+        { type: 'html', html: `<p class="help" style="margin:0">${esc('Was freigegeben ist und was das Kind geholt hat: Bibliothek › Für die Suche freigegeben.')}</p>` },
+      ],
+    },
+  ]
+}
+
 const CONTROLLERS = {
   spielzeit: {
     load: loadCaps,
@@ -12642,6 +12737,15 @@ const CONTROLLERS = {
       },
     },
   },
+  // (fork "wishes") the search's switches (searchSections) - saved as on "Bedienung am Display"
+  suchedisplay: {
+    load: loadControls,
+    sections: () => searchSections(),
+    change: (key, v, page) => CONTROLLERS.bedienung.change(key, v, page),
+    mount(root) {
+      root.querySelector('[data-sp-connect]')?.addEventListener('click', () => connectSpotify())
+    },
+  },
   bedienung: {
     load: loadControls,
     // the tabs of the display (switched on = shown), how long to hold, where it goes on, podcasts
@@ -12668,69 +12772,13 @@ const CONTROLLERS = {
           ],
         },
         {
+          // ((fork "wishes") the search's switches: a page of their own, "Suche am Display")
           title: 'Suche',
           items: [
             {
-              type: 'toggle',
-              key: 'dispSearch',
-              label: 'Suche auf dem Display',
-              help: 'Eine Lupe oben links auf der Startseite öffnet eine Suche mit Bildschirmtastatur. Gesucht wird in der Bibliothek der Box – in den Reitern, die sichtbar sind – und im Vorrat unten.',
+              type: 'html',
+              html: `<div class="navlist">${navRow('suchedisplay', 'Suche am Display', 'Lupe, Spotify-Wünsche, Songs, Playlists, Podcasts, Radio', 'search')}</div>`,
             },
-            {
-              type: 'toggle',
-              key: 'appPool',
-              label: '„Nur in der Suche“ in der App',
-              help: 'Zeigt in der App beim Hinzufügen die Knöpfe „Nur in der Suche“. Aus: ausgeblendet, der Vorrat bleibt erhalten – die Suche am Display findet ihn weiter, solange sie an ist.',
-            },
-            {
-              type: 'toggle',
-              key: 'dispWishes',
-              label: 'Wünsche aus Spotify',
-              help: 'In der Suche am Display sucht eine Kachel „Bei Spotify suchen“ nach Alben, Künstlern und Podcasts. Das Kind kann sich etwas wünschen und den Reiter wählen; du gibst es in der App frei (Bibliothek › Wünsche), Home Assistant bekommt eine Nachricht mit Link. Spotify wird erst beim Tippen auf die Kachel gefragt, jeweils 10 Treffer, weitere erst beim Weiterblättern; jede Seite merkt sich die Box einen Tag. Aus: keine Spotify-Suche am Display, alles andere bleibt.',
-            },
-            {
-              type: 'toggle',
-              key: 'dispTracks',
-              label: 'Einzelne Songs aus Spotify',
-              help: 'Die Spotify-Suche am Display findet auch einzelne Songs (Songs mit anstößigem Text nie). Kann das Kind den Song schon hören – sein Album oder der ganze Künstler ist auf der Box oder freigegeben –, legt es ihn gleich in eine seiner Playlists auf der Startseite; sonst wünscht es ihn sich für eine davon, und du gibst ihn unter Bibliothek › Wünsche frei. Braucht „Wünsche aus Spotify“.',
-              disabled: !state.values.get('dispWishes'),
-            },
-            {
-              type: 'toggle',
-              key: 'dispPlaylists',
-              label: 'Playlists in der Suche',
-              help: 'In der Suche am Display zeigt eine Kachel „Playlists“ die Playlists, die du für die Suche freigegeben hast (Bibliothek › Spotify › Auf Spotify suchen › Meine Playlists › „Nur in der Suche“). Das Kind hört sie an und holt sie selbst auf die Startseite. Songs kommen nur in Playlists, die dem Konto der Box selbst gehören.',
-            },
-            {
-              type: 'toggle',
-              key: 'dispPlCreate',
-              label: 'Kind darf Playlists anlegen',
-              help: 'Hinter der Kachel „Playlists“ legt das Kind mit „Neue Playlist“ eine eigene, private Playlist im Spotify-Konto der Box an und holt sie unter einen Reiter seiner Wahl. Löschen kannst du sie in der Spotify-App.',
-              disabled: !state.values.get('dispPlaylists'),
-            },
-            ...(state.values.get('dispPlaylists') && state.values.get('dispPlCreate')
-              ? [{ type: 'stepper', key: 'plPerDay', label: 'Neue Playlists pro Tag', help: 'So viele Playlists darf das Kind am Tag anlegen.', min: 1, max: 20 }]
-              : []),
-            // (making and changing playlists needs one more right from Spotify: a new login once)
-            ...((state.values.get('dispTracks') || (state.values.get('dispPlaylists') && state.values.get('dispPlCreate'))) && !state.values.get('plScope')
-              ? [
-                  { type: 'warn', text: 'Spotify einmal neu verbinden: Für neue Playlists und Songs braucht die Box das Recht, private Playlists zu ändern. Bis dahin bleiben „Neue Playlist“ und die Songs am Display aus.' },
-                  { type: 'html', html: `<div class="navlist">${navRow('wizard', 'Spotify neu verbinden', 'Bibliothek › Spotify einrichten', 'sync')}</div>` },
-                ]
-              : []),
-            {
-              type: 'toggle',
-              key: 'dispPodcasts',
-              label: 'Podcasts für Kinder in der Suche',
-              help: 'In der Suche am Display sucht eine Kachel „Podcasts“ in Apples Podcast-Verzeichnis (bei Deutsch auch in der ARD Audiothek) – nur Sendungen der Kinder-Kategorien. Das Kind kann sie ohne Freigabe auf die Startseite holen und selbst wieder entfernen. Gesucht wird erst beim Tippen auf die Kachel; der Suchbegriff geht dabei an Apple bzw. die ARD.',
-            },
-            {
-              type: 'toggle',
-              key: 'dispRadio',
-              label: 'Radio für Kinder in der Suche',
-              help: 'In der Suche am Display sucht eine Kachel „Radio“ im Senderverzeichnis radio-browser.info – nur Sender, die dort als Kinderradio markiert sind. Das Kind kann sie ohne Freigabe auf die Startseite holen und selbst wieder entfernen. Gesucht wird erst, wenn das Kind es will; der Suchbegriff geht dabei an radio-browser.info.',
-            },
-            { type: 'html', html: `<p class="help" style="margin:0">${esc('Was freigegeben ist und was das Kind geholt hat: Bibliothek › Für die Suche freigegeben.')}</p>` },
           ],
         },
         {
@@ -12803,7 +12851,12 @@ const CONTROLLERS = {
       if (key === 'listTimer') return saveDisplayOptions({ listviewTimer: v }, `Titelliste nach ${fmtSec(v)}`)
       if (key === 'setTimer') return saveDisplayOptions({ settingsAccessTimer: v }, `Einstellungen nach ${fmtSec(v)}`)
       if (key === 'outPick') return saveDisplayOptions({ outputPicker: !!v }, v ? 'Kinder können am Display umschalten' : 'Umschalten nur in der App')
-      if (key === 'dispSearch') return saveDisplayOptions({ displaySearch: !!v }, v ? 'Suche auf dem Display an' : 'Suche auf dem Display aus')
+      if (key === 'dispSearch') {
+        const r = await saveDisplayOptions({ displaySearch: !!v }, v ? 'Suche auf dem Display an' : 'Suche auf dem Display aus')
+        // ((fork "wishes") the search's other switches depend on it)
+        renderPage(page, false)
+        return r
+      }
       if (key === 'dispWishes') {
         const r = await saveDisplayOptions({ displayWishes: !!v }, v ? 'Wünsche aus Spotify an' : 'Wünsche aus Spotify aus')
         // ((fork "wishes") "Einzelne Songs aus Spotify" depends on it)
@@ -12816,9 +12869,20 @@ const CONTROLLERS = {
         return r
       }
       if (key === 'dispPlaylists') return again(await saveDisplayOptions({ displayPlaylists: !!v }, v ? 'Playlists in der Suche an' : 'Playlists in der Suche aus'))
-      if (key === 'dispPlCreate') return again(await saveDisplayOptions({ displayPlaylistCreate: !!v }, v ? 'Kind darf Playlists anlegen' : 'Keine neuen Playlists am Display'))
+      // (switched on without the right to change the child's playlists: the sign-in at once, back to this page)
+      const needRight = async (r) => {
+        if (r && v && !state.values.get('plScope')) {
+          renderPage(page, false)
+          if (await ask('Recht bei Spotify fehlt', 'Für neue Playlists und einzelne Songs braucht die Box das Recht, private Playlists im Spotify-Konto zu ändern. Jetzt bei Spotify neu anmelden (mit dem Konto der Box)?', 'Bei Spotify anmelden')) {
+            connectSpotify()
+            return r
+          }
+        }
+        return again(r)
+      }
+      if (key === 'dispPlCreate') return needRight(await saveDisplayOptions({ displayPlaylistCreate: !!v }, v ? 'Kind darf Playlists anlegen' : 'Keine neuen Playlists am Display'))
       if (key === 'plPerDay') return saveDisplayOptions({ playlistsPerDay: v }, `${v} neue Playlists pro Tag`)
-      if (key === 'dispTracks') return again(await saveDisplayOptions({ displayTracks: !!v }, v ? 'Einzelne Songs aus Spotify an' : 'Einzelne Songs aus Spotify aus'))
+      if (key === 'dispTracks') return needRight(await saveDisplayOptions({ displayTracks: !!v }, v ? 'Einzelne Songs aus Spotify an' : 'Einzelne Songs aus Spotify aus'))
       if (key === 'dispRadio') return saveDisplayOptions({ displayRadio: !!v }, v ? 'Radio für Kinder in der Suche an' : 'Radio für Kinder in der Suche aus')
       if (key === 'dispPodcasts') return saveDisplayOptions({ displayPodcasts: !!v }, v ? 'Podcasts für Kinder in der Suche an' : 'Podcasts für Kinder in der Suche aus')
       if (key === 'appPool') return saveDisplayOptions({ appSearchPool: !!v }, v ? '„Nur in der Suche“ in der App an' : '„Nur in der Suche“ in der App ausgeblendet')

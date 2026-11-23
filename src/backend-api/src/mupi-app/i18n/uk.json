@@ -3292,5 +3292,15 @@
  "Song": "Пісня",
  "in Playlist „{}“": "у плейлист «{}»",
  "Die Playlist „{}“ ist nicht mehr auf der Startseite – erst wieder dorthin holen oder ablehnen": "Плейлиста «{}» більше немає на стартовій сторінці – спершу поверни його туди або відхили",
- "Freigegeben: {} – ist jetzt in „{}“": "Схвалено: {} – тепер у «{}»"
+ "Freigegeben: {} – ist jetzt in „{}“": "Схвалено: {} – тепер у «{}»",
+ "Suche am Display": "Пошук на дисплеї",
+ "Lupe, Spotify-Wünsche, Songs, Playlists, Podcasts, Radio": "Лупа, бажання зі Spotify, пісні, плейлисти, подкасти, радіо",
+ "Podcasts und Radio": "Подкасти й радіо",
+ "Spotify-Recht für Playlists und Songs vorhanden": "Право Spotify на плейлисти й пісні надано",
+ "Recht bei Spotify fehlt": "Бракує права Spotify",
+ "Für neue Playlists und einzelne Songs braucht die Box das Recht, private Playlists im Spotify-Konto zu ändern. Jetzt bei Spotify neu anmelden (mit dem Konto der Box)?": "Для нових плейлистів і окремих пісень боксу потрібне право змінювати приватні плейлисти в обліковому записі Spotify. Увійти в Spotify знову зараз (обліковим записом бокса)?",
+ "Wünsche, Songs, Playlists – Recht vorhanden": "Бажання, пісні, плейлисти – право надано",
+ "Recht für Playlists fehlt – neu anmelden": "Бракує права на плейлисти – увійти знову",
+ "Wünsche, Songs und Playlists für das Kind": "Бажання, пісні й плейлисти для дитини",
+ "Die Suche am Display braucht zusätzlich das Recht, private Playlists zu ändern – dafür neu anmelden.": "Пошуку на дисплеї потрібне ще право змінювати приватні плейлисти – для цього увійди знову."
 }

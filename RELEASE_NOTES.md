@@ -16,7 +16,7 @@ die Box ein Backup an.
 **Basis jetzt splitti/MuPiBox 5.0.18** (NAS: `.wma` spielt wieder; Neuinstallation mit DietPi ab 10.8).
 
 **Neu: Playlists und einzelne Songs in der Suche** (alles hinter drei neuen Schaltern unter *Einstellungen › Display &
-Bedienung › Suche*; aus = wie bisher)
+Bedienung › Suche am Display*; aus = wie bisher)
 - **Playlists in der Suche:** Kachel „Playlists“ mit den Playlists, die die Eltern in „Meine Playlists“ für die Suche
   freigeben; das Kind hört sie an und holt sie auf die Startseite. Die Box merkt sich, ob eine Playlist dem eigenen Konto gehört.
 - **Kind darf Playlists anlegen:** „Neue Playlist“ – Name über die Tastatur, Reiter wählen; die Playlist entsteht **privat** im
@@ -29,7 +29,12 @@ Bedienung › Suche*; aus = wie bisher)
   (auch eines, das schon auf der Box ist) bietet „Songs“ – so kommt das Kind über Künstler und Album bis zum einzelnen Lied.
 - Private Playlists: Ihre Titelliste im Player kommt jetzt über den Spotify-Login der Box (Spotify zeigt private Playlists nicht
   öffentlich an – bisher kam „Spotify antwortet gerade nicht“); nach einem neuen oder herausgenommenen Song sofort aktuell.
-- Für Anlegen und Songs braucht die Box das Recht, private Playlists zu ändern: Die App zeigt „Spotify neu verbinden“ (einmal).
+- **Eigene Seite „Suche am Display“** (*Einstellungen › Display & Bedienung*) mit allen Schaltern der Suche: Lupe, Spotify
+  (Wünsche, Songs, Playlists), Podcasts und Radio – jeder Schalter nur noch an einer Stelle; was die Lupe braucht, ist ohne sie grau.
+- Für Anlegen und Songs braucht die Box das Recht, private Playlists zu ändern: Beim Einschalten fragt die App gleich nach der
+  Spotify-Anmeldung und kommt danach auf die Seite zurück. Die Spotify-Seite und der Einrichtungs-Assistent kennen das Recht
+  (der Assistent sagt nicht mehr „Alles eingerichtet“, solange es fehlt).
+- „In welche Playlist?“ zeigt mit ✓, in welcher Playlist der Song schon steckt.
 - Home Assistant: Ereignisse für neue Playlists (`created`) und Songs (`kind: "track"`, mit `playlist`); die Wünsche-Erweiterung
   (`search_events.py`) ist dafür aktualisiert. Backup und Wiederherstellung sichern die neue Datei `search-playlists.json` mit.
 - Display-Prüfung: Regeln R14–R16; alle neuen Texte in allen Sprachen.

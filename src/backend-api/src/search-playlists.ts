@@ -148,6 +148,9 @@ export class SearchPlaylists {
   private readonly file: string
   private readonly now: () => number
   private queue: Promise<unknown> = Promise.resolve()
+  // the songs of the child's playlists as read last (2 minutes; a song put in or taken out: read anew) - for the ✓ at
+  // "In welche Playlist?"
+  private readonly songsKept = new Map<string, { at: number; ids: Set<string> }>()
 
   constructor(private readonly deps: SearchPlaylistsDeps) {
     this.file = path.join(deps.configDir, 'search-playlists.json')
@@ -244,6 +247,7 @@ export class SearchPlaylists {
     const target = (await this.targets()).find((p) => p.id === playlistId)
     if (!target) return 'no_target'
     const api = this.api()
+    this.songsKept.delete(playlistId)
     if ((await api.items(playlistId)).some((s) => s.id === t.id)) return 'already'
     await api.add(playlistId, [`spotify:track:${t.id}`])
     if (told)
@@ -256,6 +260,22 @@ export class SearchPlaylists {
         playlist: target.name,
       })
     return 'added'
+  }
+
+  /** the songs of a playlist (their ids), kept 2 minutes */
+  private async songIds(playlistId: string): Promise<Set<string>> {
+    const have = this.songsKept.get(playlistId)
+    if (have && this.now() - have.at < 120_000) return have.ids
+    const ids = new Set((await this.api().items(playlistId)).map((s) => s.id))
+    this.songsKept.set(playlistId, { at: this.now(), ids })
+    return ids
+  }
+
+  /** the child's playlists on the start page the song is in already (the ✓ at "In welche Playlist?") */
+  async containing(trackId: string): Promise<string[]> {
+    const out: string[] = []
+    for (const p of await this.targets()) if ((await this.songIds(p.id)).has(trackId)) out.push(p.id)
+    return out
   }
 
   /** a song the parents approved: into the playlist the child chose, and remembered (next time at once) */
@@ -294,6 +314,7 @@ export class SearchPlaylists {
   async takeOut(playlistId: string, song: { id: string; name: string }): Promise<'removed' | 'not_own'> {
     const target = (await this.targets()).find((p) => p.id === playlistId && p.kidAdded)
     if (!target) return 'not_own'
+    this.songsKept.delete(playlistId)
     await this.api().remove(playlistId, [`spotify:track:${song.id}`])
     await this.deps.pool.announce({
       what: 'removed',
@@ -366,6 +387,18 @@ export function registerSearchPlaylistsRoutes(app: Express, deps: SearchPlaylist
       res.json({ songs: r })
     } catch (err) {
       failed(res, err, 'songs')
+    }
+  })
+
+  /** GET /api/search-playlists/containing?id= - the child's playlists on the start page a song is in already */
+  app.get('/api/search-playlists/containing', localOnly, async (req, res) => {
+    if (!tracksOn(cfg())) return fail(res, 403, 'off')
+    const id = String(req.query.id ?? '')
+    if (!SPOTIFY_ID.test(id)) return fail(res, 400, 'invalid_request')
+    try {
+      res.json({ in: await playlists.containing(id) })
+    } catch (err) {
+      failed(res, err, 'containing')
     }
   })
 

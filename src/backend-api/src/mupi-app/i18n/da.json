@@ -3292,5 +3292,15 @@
  "Song": "Sang",
  "in Playlist „{}“": "i playlisten »{}«",
  "Die Playlist „{}“ ist nicht mehr auf der Startseite – erst wieder dorthin holen oder ablehnen": "Playlisten »{}« er ikke længere på startsiden – læg den tilbage først eller afvis",
- "Freigegeben: {} – ist jetzt in „{}“": "Godkendt: {} – er nu i »{}«"
+ "Freigegeben: {} – ist jetzt in „{}“": "Godkendt: {} – er nu i »{}«",
+ "Suche am Display": "Søgning på skærmen",
+ "Lupe, Spotify-Wünsche, Songs, Playlists, Podcasts, Radio": "Lup, Spotify-ønsker, sange, playlister, podcasts, radio",
+ "Podcasts und Radio": "Podcasts og radio",
+ "Spotify-Recht für Playlists und Songs vorhanden": "Spotify-ret til playlister og sange er givet",
+ "Recht bei Spotify fehlt": "Ret hos Spotify mangler",
+ "Für neue Playlists und einzelne Songs braucht die Box das Recht, private Playlists im Spotify-Konto zu ändern. Jetzt bei Spotify neu anmelden (mit dem Konto der Box)?": "Til nye playlister og enkelte sange skal boksen have ret til at ændre private playlister på Spotify-kontoen. Log ind på Spotify igen nu (med boksens konto)?",
+ "Wünsche, Songs, Playlists – Recht vorhanden": "Ønsker, sange, playlister – ret givet",
+ "Recht für Playlists fehlt – neu anmelden": "Ret til playlister mangler – log ind igen",
+ "Wünsche, Songs und Playlists für das Kind": "Ønsker, sange og playlister til barnet",
+ "Die Suche am Display braucht zusätzlich das Recht, private Playlists zu ändern – dafür neu anmelden.": "Søgningen på skærmen skal også have ret til at ændre private playlister – log ind igen for det."
 }

@@ -3292,5 +3292,15 @@
  "Song": "Şarkı",
  "in Playlist „{}“": "“{}” çalma listesinde",
  "Die Playlist „{}“ ist nicht mehr auf der Startseite – erst wieder dorthin holen oder ablehnen": "“{}” çalma listesi artık başlangıç sayfasında değil – önce geri ekle ya da reddet",
- "Freigegeben: {} – ist jetzt in „{}“": "Onaylandı: {} – artık “{}” içinde"
+ "Freigegeben: {} – ist jetzt in „{}“": "Onaylandı: {} – artık “{}” içinde",
+ "Suche am Display": "Ekranda arama",
+ "Lupe, Spotify-Wünsche, Songs, Playlists, Podcasts, Radio": "Büyüteç, Spotify dilekleri, şarkılar, çalma listeleri, podcast’ler, radyo",
+ "Podcasts und Radio": "Podcast’ler ve radyo",
+ "Spotify-Recht für Playlists und Songs vorhanden": "Çalma listeleri ve şarkılar için Spotify izni var",
+ "Recht bei Spotify fehlt": "Spotify izni eksik",
+ "Für neue Playlists und einzelne Songs braucht die Box das Recht, private Playlists im Spotify-Konto zu ändern. Jetzt bei Spotify neu anmelden (mit dem Konto der Box)?": "Yeni çalma listeleri ve tek şarkılar için kutunun Spotify hesabındaki özel çalma listelerini değiştirme izni gerekir. Şimdi Spotify’a yeniden giriş yapılsın mı (kutunun hesabıyla)?",
+ "Wünsche, Songs, Playlists – Recht vorhanden": "Dilekler, şarkılar, çalma listeleri – izin var",
+ "Recht für Playlists fehlt – neu anmelden": "Çalma listesi izni eksik – yeniden giriş yap",
+ "Wünsche, Songs und Playlists für das Kind": "Çocuk için dilekler, şarkılar ve çalma listeleri",
+ "Die Suche am Display braucht zusätzlich das Recht, private Playlists zu ändern – dafür neu anmelden.": "Ekrandaki arama ayrıca özel çalma listelerini değiştirme izni ister – bunun için yeniden giriş yap."
 }

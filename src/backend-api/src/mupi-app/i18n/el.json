@@ -3292,5 +3292,15 @@
  "Song": "Τραγούδι",
  "in Playlist „{}“": "στη λίστα «{}»",
  "Die Playlist „{}“ ist nicht mehr auf der Startseite – erst wieder dorthin holen oder ablehnen": "Η λίστα «{}» δεν είναι πια στην αρχική σελίδα – βάλ’ την πρώτα ξανά εκεί ή απόρριψε",
- "Freigegeben: {} – ist jetzt in „{}“": "Εγκρίθηκε: {} – είναι τώρα στο «{}»"
+ "Freigegeben: {} – ist jetzt in „{}“": "Εγκρίθηκε: {} – είναι τώρα στο «{}»",
+ "Suche am Display": "Αναζήτηση στην οθόνη",
+ "Lupe, Spotify-Wünsche, Songs, Playlists, Podcasts, Radio": "Μεγεθυντικός φακός, ευχές Spotify, τραγούδια, λίστες, podcast, ραδιόφωνο",
+ "Podcasts und Radio": "Podcast και ραδιόφωνο",
+ "Spotify-Recht für Playlists und Songs vorhanden": "Το δικαίωμα Spotify για λίστες και τραγούδια υπάρχει",
+ "Recht bei Spotify fehlt": "Λείπει δικαίωμα Spotify",
+ "Für neue Playlists und einzelne Songs braucht die Box das Recht, private Playlists im Spotify-Konto zu ändern. Jetzt bei Spotify neu anmelden (mit dem Konto der Box)?": "Για νέες λίστες και μεμονωμένα τραγούδια το κουτί χρειάζεται δικαίωμα να αλλάζει ιδιωτικές λίστες στον λογαριασμό Spotify. Νέα σύνδεση στο Spotify τώρα (με τον λογαριασμό του κουτιού);",
+ "Wünsche, Songs, Playlists – Recht vorhanden": "Ευχές, τραγούδια, λίστες – το δικαίωμα υπάρχει",
+ "Recht für Playlists fehlt – neu anmelden": "Λείπει το δικαίωμα για λίστες – νέα σύνδεση",
+ "Wünsche, Songs und Playlists für das Kind": "Ευχές, τραγούδια και λίστες για το παιδί",
+ "Die Suche am Display braucht zusätzlich das Recht, private Playlists zu ändern – dafür neu anmelden.": "Η αναζήτηση στην οθόνη χρειάζεται επιπλέον δικαίωμα να αλλάζει ιδιωτικές λίστες – κάνε γι’ αυτό νέα σύνδεση."
 }

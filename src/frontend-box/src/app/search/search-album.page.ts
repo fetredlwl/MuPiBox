@@ -169,6 +169,8 @@ export class SearchAlbumPage extends SwiperIonicEventsHelper {
   /** "Songs herausnehmen": the songs of the child's playlist (null: not shown), the one tapped (asked once more) */
   protected readonly songs = signal<PlaylistSong[] | null>(null)
   protected readonly songPick = signal<PlaylistSong | null>(null)
+  /** the child's playlists the song is in already (✓, not to choose) */
+  protected readonly inPlaylists = signal<Set<string>>(new Set())
   /** "Songs" of an album: its songs as covers (null: not shown) - one tapped opens its page */
   protected readonly albumTracks = signal<WishItem[] | null>(null)
   /** the album of Spotify this page shows (a hit, an album of an allowed artist, an allowed one) - its songs */
@@ -280,13 +282,17 @@ export class SearchAlbumPage extends SwiperIonicEventsHelper {
           dim: this.busy(),
         }
       }
-      if (tile.t === 'target')
+      if (tile.t === 'target') {
+        // (the song is in it already: ✓, grey - a tap says so)
+        const there = this.inPlaylists().has(tile.p.id)
         return {
           name: tile.p.name,
           imgSrc: of(localizeCoverUrl(tile.p.cover || undefined)),
           data: tile,
-          dim: this.busy(),
+          dim: this.busy() || there,
+          ...(there ? { mark: '✓' } : {}),
         }
+      }
       if (tile.t === 'track')
         return {
           name: tile.w.name,
@@ -441,14 +447,25 @@ export class SearchAlbumPage extends SwiperIonicEventsHelper {
       this.flow.noteBack(this.texts.text('trackNoPlaylist'))
       return
     }
-    // (always asked, one playlist too: the child sees where the song goes)
+    // (always asked, one playlist too: the child sees where the song goes; those it is in already marked ✓)
+    void this.markContaining()
     this.choosing.set(true)
+  }
+
+  /** the child's playlists the song is in already (asked while the choice shows) */
+  private async markContaining(): Promise<void> {
+    const t = this.track()
+    if (t) this.inPlaylists.set(await this.flow.trackIn(t.id))
   }
 
   /** the song into the playlist chosen - at once when the child can play it already, else wished for it */
   private async intoPlaylist(p: TargetPlaylist): Promise<void> {
     const t = this.track()
     if (!t || this.busy()) return
+    if (this.inPlaylists().has(p.id)) {
+      this.flow.noteBack(this.texts.text('trackAlready', { n: t.name, p: p.name }))
+      return
+    }
     this.busy.set(true)
     if (t.allowed) await this.flow.putTrack(t, p)
     else await this.flow.wish(t, 'music', p)
