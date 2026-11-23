@@ -23,5 +23,4 @@ von splitti. Der Schnitt ist klein gehalten, damit man ihn nach einem Update der
 Die beiden ersetzten Dateien sind abgeleitet von der Integration von **splitti (Copyright MuPiBox.de, MIT-Lizenz)**; ihr
 Lizenztext steht im [Repository der Integration](https://github.com/splitti/MuPiBox-homeassistant/blob/main/LICENSE) und
 gilt hier unverändert weiter. Dank und alle Rechte am Rest der Integration: splitti und das MuPiBox-Team.
-Diese Erweiterung wird vom MuPiBox-Team nicht betreut – Fragen dazu bitte in den
-[Issues dieses Forks](https://github.com/fetredlwl/MuPiBox/issues).
+Diese Erweiterung wird vom MuPiBox-Team nicht betreut (bitte dort nicht nachfragen) und kommt ohne Support und ohne Zusagen.

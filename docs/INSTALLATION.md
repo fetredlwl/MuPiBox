@@ -5,7 +5,7 @@ und -Radio) bringst. Sie ist so geschrieben, dass du sie für **jede weitere Box
 
 > **Was ist von wem?** Die MuPiBox und fast der gesamte Code stammen von **splitti** und dem MuPiBox-Team
 > ([splitti/MuPiBox](https://github.com/splitti/MuPiBox), [mupibox.de](https://mupibox.de)). Dieser Fork ist eine Ergänzung und wird
-> vom MuPiBox-Team nicht betreut. Fragen dazu bitte in den [Issues dieses Forks](https://github.com/fetredlwl/MuPiBox/issues).
+> vom MuPiBox-Team nicht betreut (bitte dort nicht nachfragen) und kommt ohne Support und ohne Zusagen.
 
 **Inhalt:** [1 Voraussetzungen](#1-voraussetzungen) · [2 Sicherung](#2-vorher-eine-sicherung-machen) ·
 [3 Per SSH verbinden](#3-mit-der-box-per-ssh-verbinden) · [4 Installieren](#4-den-fork-installieren) ·
@@ -223,5 +223,6 @@ Neue Stände erkennst du in den [Release-Notes](../RELEASE_NOTES.md) und auf der
 | Fehler im Backend ansehen | per SSH: `pm2 logs server --lines 50 --nostream` |
 | Alles zurück | Backup aus Teil 2 in der App unter *Einstellungen › System › Backup* wiederherstellen; oder **Stabil** unter Updates |
 
-Hilft das nicht: ein [Issue im Fork](https://github.com/fetredlwl/MuPiBox/issues) eröffnen und die **Version aus Teil 3/5** sowie die
-Fehlermeldung aufschreiben – **ohne** Adressen, Passwörter, Schlüssel oder Tokens.
+Hilft das nicht: Notiere dir die **Version aus Teil 3/5**, die Fehlermeldung und die letzten Zeilen von
+`/boot/mupibox_update.log`. Mit der Sicherung aus Teil 2 oder **Stabil** unter Updates kommst du jederzeit zurück. Den Fork gibt es
+ohne Support; zeigst du eine Fehlermeldung anderswo, lass **Adressen, Passwörter, Schlüssel und Tokens** weg.

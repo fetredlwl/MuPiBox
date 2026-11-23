@@ -55,10 +55,11 @@ Updates: „Fork · Letzter Tag“ (der letzte benannte Stand) oder „Fork · E
 Eine neue MuPiBox richtest du zuerst nach der Anleitung des Originals ein
 ([mupibox.de](https://mupibox.de/anleitungen/installationsanleitung/einfache-installation/)).
 
-## Hilfe, Fehler und Datenschutz
+## Hinweise
 
-Fragen und Fehler zu **diesem Fork** bitte hier als [Issue](https://github.com/fetredlwl/MuPiBox/issues) melden – bitte
-nicht beim MuPiBox-Team von splitti nachfragen, das den Fork nicht betreut. Spenden und Dank gehen an das Original (unten).
+Dieser Fork wird **ohne Support und ohne Zusagen** gepflegt; die Nutzung geschieht auf eigene Verantwortung (siehe Lizenz:
+„as is“). Das MuPiBox-Team von splitti betreut den Fork nicht – bitte dort nicht nachfragen. Spenden und Dank gehen an das
+Original (unten).
 Lizenz: MIT wie das Original ([LICENSE.md](LICENSE.md), Copyright MuPiBox.de); Drittanbieter: [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
 
 ---

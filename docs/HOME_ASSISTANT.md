@@ -298,8 +298,7 @@ die Wunsch-Meldungen hören auf. Dann:
 
 1. In `/config/custom_components/mupibox/manifest.json` die Version ansehen.
 2. Ist sie noch **0.5.3**: Teil C noch einmal ausführen. (`search_events.py` bleibt liegen.)
-3. Ist sie **neuer**: schau im [Issue-Tracker dieses Forks](https://github.com/fetredlwl/MuPiBox/issues) und in den
-   [Release-Notes](../RELEASE_NOTES.md) nach, ob es schon eine passende Version der Erweiterung gibt. Die zwei Dateien einer
+3. Ist sie **neuer**: schau in den [Release-Notes](../RELEASE_NOTES.md) nach, ob es schon eine passende Version der Erweiterung gibt. Die zwei Dateien einer
    neueren Version einfach zu überschreiben **kann die Integration beschädigen** – im Zweifel die Dateien aus der Sicherung
    (`/config/mupibox-sicherung/`) zurückspielen oder in HACS die Version 0.5.3 wählen (*MuPiBox › ⋮ › Neu herunterladen › Version wählen*).
    Ohne die Erweiterung läuft alles andere der Integration weiter.
