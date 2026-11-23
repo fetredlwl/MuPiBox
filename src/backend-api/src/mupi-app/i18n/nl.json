@@ -3230,7 +3230,6 @@
  "Wünsche aus Spotify an": "Wensen uit Spotify aan",
  "Wünsche aus Spotify aus": "Wensen uit Spotify uit",
  "In der Suche am Display sucht eine Kachel „Bei Spotify suchen“ nach Alben, Künstlern und Podcasts. Das Kind kann sich etwas wünschen und den Reiter wählen; du gibst es in der App frei (Bibliothek › Wünsche), Home Assistant bekommt eine Nachricht mit Link. Spotify wird erst beim Tippen auf die Kachel gefragt, jeweils 10 Treffer, weitere erst beim Weiterblättern; jede Seite merkt sich die Box einen Tag. Aus: keine Spotify-Suche am Display, alles andere bleibt.": "In het zoeken op het display zoekt een tegel „Op Spotify zoeken” naar albums, artiesten en podcasts. Het kind kan iets wensen en het tabblad kiezen; jij geeft het vrij in de app (Bibliotheek › Wensen), Home Assistant krijgt een bericht met een link. Spotify wordt pas gevraagd als op de tegel wordt getikt, 10 resultaten per keer, meer pas bij verder scrollen; de box onthoudt elke pagina een dag. Uit: geen Spotify-zoekopdracht op het display, de rest blijft.",
- "Wünsche sind ausgeschaltet: Display & Bedienung › Suche › „Wünsche aus Spotify“.": "Wensen staan uit: Display & bediening › Zoeken › „Wensen uit Spotify”.",
  "Offene Wünsche": "Openstaande wensen",
  "Keine offenen Wünsche.": "Geen openstaande wensen.",
  "Entschieden": "Besloten",
@@ -3302,5 +3301,12 @@
  "Wünsche, Songs, Playlists – Recht vorhanden": "Wensen, nummers, playlists – recht aanwezig",
  "Recht für Playlists fehlt – neu anmelden": "Recht voor playlists ontbreekt – opnieuw aanmelden",
  "Wünsche, Songs und Playlists für das Kind": "Wensen, nummers en playlists voor het kind",
- "Die Suche am Display braucht zusätzlich das Recht, private Playlists zu ändern – dafür neu anmelden.": "Het zoeken op het display heeft ook het recht nodig om privé playlists te wijzigen – meld je daarvoor opnieuw aan."
+ "Die Suche am Display braucht zusätzlich das Recht, private Playlists zu ändern – dafür neu anmelden.": "Het zoeken op het display heeft ook het recht nodig om privé playlists te wijzigen – meld je daarvoor opnieuw aan.",
+ "Wünsche sind ausgeschaltet: Display & Bedienung › Suche am Display › „Wünsche aus Spotify“.": "Wensen staan uit: Display & bediening › Zoeken op het display › „Wensen uit Spotify”.",
+ "Kind darf eigene Playlists löschen": "Kind mag eigen playlists wissen",
+ "Kind kann eigene Playlists nur von der Startseite nehmen": "Kind kan eigen playlists alleen van de startpagina halen",
+ "Nur Playlists, die das Kind am Display selbst angelegt hat: Unter „Einträge verwalten“ gibt es dann „Ganz löschen“ (einmal nachgefragt). Die Playlist verschwindet von der Startseite, aus der Suche und aus seiner Spotify-Bibliothek – Spotify selbst löscht Playlists nie, sie ist für das Kind nur nicht mehr zu finden. Braucht ein weiteres Recht bei Spotify. Aus: das Kind kann sie nur von der Startseite nehmen.": "Alleen playlists die het kind zelf op het display heeft gemaakt: onder „Items beheren” staat dan „Helemaal wissen” (met nog een vraag). De playlist verdwijnt van de startpagina, uit het zoeken en uit zijn Spotify-bibliotheek – Spotify wist playlists zelf nooit, het kind vindt hem gewoon niet meer. Heeft nog een recht van Spotify nodig. Uit: het kind kan hem alleen van de startpagina halen.",
+ "„{}“ verschwindet aus den Playlists des Kindes – außer sein Album oder der ganze Künstler ist freigegeben. Das Kind kann es sich danach wieder wünschen.": "„{}” verdwijnt uit de playlists van het kind – tenzij het album of de hele artiest is vrijgegeven. Het kind kan hem daarna opnieuw wensen.",
+ "Zurückgenommen: {} – bleibt, weil Album oder Künstler freigegeben ist": "Ingetrokken: {} – blijft, omdat album of artiest is vrijgegeven",
+ "Zurückgenommen: {} – aus „{}“ genommen": "Ingetrokken: {} – uit „{}” gehaald"
 }

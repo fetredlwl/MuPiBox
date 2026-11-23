@@ -91,6 +91,8 @@
         "wishButton": "Wish for it",
         "wishWhole": "Wish for everything by {n}",
         "wishWished": "Wished",
+        "wishAdult": "Not for children",
+        "wishAdultNote": "{n} is not for children.",
         "wishSent": "Wish sent: {n}",
         "wishAlready": "You have wished for {n} already.",
         "wishThere": "{n} is on the box already.",
@@ -125,7 +127,11 @@
         "trackSongs": "Songs",
         "searchKindAlbum": "Album",
         "searchKindSong": "Song",
-        "wishSentTo": "Wish sent: {n} – for {p}"
+        "wishSentTo": "Wish sent: {n} – for {p}",
+        "plDelete": "Delete completely",
+        "plDeleteQ": "Delete it completely?",
+        "plDeleteYes": "Yes, delete completely",
+        "plDeleted": "{n} is deleted."
       }
     },
     "de": {
@@ -218,6 +224,8 @@
         "wishButton": "Wünschen",
         "wishWhole": "Alles von {n} wünschen",
         "wishWished": "Gewünscht",
+        "wishAdult": "Nicht für Kinder",
+        "wishAdultNote": "{n} ist nicht für Kinder.",
         "wishSent": "Wunsch gesendet: {n}",
         "wishAlready": "{n} hast du dir schon gewünscht.",
         "wishThere": "{n} ist schon auf der Box.",
@@ -252,7 +260,11 @@
         "trackSongs": "Songs",
         "searchKindAlbum": "Album",
         "searchKindSong": "Song",
-        "wishSentTo": "Wunsch gesendet: {n} – für {p}"
+        "wishSentTo": "Wunsch gesendet: {n} – für {p}",
+        "plDelete": "Ganz löschen",
+        "plDeleteQ": "Ganz löschen?",
+        "plDeleteYes": "Ja, ganz löschen",
+        "plDeleted": "{n} ist gelöscht."
       }
     },
     "fr": {
@@ -345,6 +357,8 @@
         "wishButton": "Le souhaiter",
         "wishWhole": "Souhaiter tout de {n}",
         "wishWished": "Souhaité",
+        "wishAdult": "Pas pour les enfants",
+        "wishAdultNote": "{n} n’est pas pour les enfants.",
         "wishSent": "Souhait envoyé : {n}",
         "wishAlready": "Tu as déjà souhaité {n}.",
         "wishThere": "{n} est déjà sur la box.",
@@ -379,7 +393,11 @@
         "trackSongs": "Titres",
         "searchKindAlbum": "Album",
         "searchKindSong": "Titre",
-        "wishSentTo": "Souhait envoyé : {n} – pour {p}"
+        "wishSentTo": "Souhait envoyé : {n} – pour {p}",
+        "plDelete": "Supprimer complètement",
+        "plDeleteQ": "Supprimer complètement ?",
+        "plDeleteYes": "Oui, supprimer complètement",
+        "plDeleted": "{n} est supprimée."
       }
     },
     "es": {
@@ -472,6 +490,8 @@
         "wishButton": "Pedirlo",
         "wishWhole": "Pedir todo de {n}",
         "wishWished": "Pedido",
+        "wishAdult": "No es para niños",
+        "wishAdultNote": "{n} no es para niños.",
         "wishSent": "Deseo enviado: {n}",
         "wishAlready": "Ya pediste {n}.",
         "wishThere": "{n} ya está en la caja.",
@@ -506,7 +526,11 @@
         "trackSongs": "Canciones",
         "searchKindAlbum": "Álbum",
         "searchKindSong": "Canción",
-        "wishSentTo": "Deseo enviado: {n} – para {p}"
+        "wishSentTo": "Deseo enviado: {n} – para {p}",
+        "plDelete": "Borrar del todo",
+        "plDeleteQ": "¿Borrar del todo?",
+        "plDeleteYes": "Sí, borrar del todo",
+        "plDeleted": "{n} está borrada."
       }
     },
     "it": {
@@ -599,6 +623,8 @@
         "wishButton": "Desiderarlo",
         "wishWhole": "Desidera tutto di {n}",
         "wishWished": "Desiderato",
+        "wishAdult": "Non per bambini",
+        "wishAdultNote": "{n} non è per bambini.",
         "wishSent": "Desiderio inviato: {n}",
         "wishAlready": "Hai già desiderato {n}.",
         "wishThere": "{n} è già sul box.",
@@ -633,7 +659,11 @@
         "trackSongs": "Brani",
         "searchKindAlbum": "Album",
         "searchKindSong": "Brano",
-        "wishSentTo": "Desiderio inviato: {n} – per {p}"
+        "wishSentTo": "Desiderio inviato: {n} – per {p}",
+        "plDelete": "Elimina del tutto",
+        "plDeleteQ": "Eliminare del tutto?",
+        "plDeleteYes": "Sì, elimina del tutto",
+        "plDeleted": "{n} è eliminata."
       }
     },
     "nl": {
@@ -726,6 +756,8 @@
         "wishButton": "Wensen",
         "wishWhole": "Alles van {n} wensen",
         "wishWished": "Gewenst",
+        "wishAdult": "Niet voor kinderen",
+        "wishAdultNote": "{n} is niet voor kinderen.",
         "wishSent": "Wens verstuurd: {n}",
         "wishAlready": "Je hebt {n} al gewenst.",
         "wishThere": "{n} staat al op de box.",
@@ -760,7 +792,11 @@
         "trackSongs": "Nummers",
         "searchKindAlbum": "Album",
         "searchKindSong": "Nummer",
-        "wishSentTo": "Wens verstuurd: {n} – voor {p}"
+        "wishSentTo": "Wens verstuurd: {n} – voor {p}",
+        "plDelete": "Helemaal wissen",
+        "plDeleteQ": "Helemaal wissen?",
+        "plDeleteYes": "Ja, helemaal wissen",
+        "plDeleted": "{n} is gewist."
       }
     },
     "sv": {
@@ -853,6 +889,8 @@
         "wishButton": "Önska",
         "wishWhole": "Önska allt av {n}",
         "wishWished": "Önskat",
+        "wishAdult": "Inte för barn",
+        "wishAdultNote": "{n} är inte för barn.",
         "wishSent": "Önskan skickad: {n}",
         "wishAlready": "Du har redan önskat dig {n}.",
         "wishThere": "{n} finns redan på boxen.",
@@ -887,7 +925,11 @@
         "trackSongs": "Låtar",
         "searchKindAlbum": "Album",
         "searchKindSong": "Låt",
-        "wishSentTo": "Önskan skickad: {n} – till {p}"
+        "wishSentTo": "Önskan skickad: {n} – till {p}",
+        "plDelete": "Ta bort helt",
+        "plDeleteQ": "Ta bort helt?",
+        "plDeleteYes": "Ja, ta bort helt",
+        "plDeleted": "{n} är borttagen."
       }
     },
     "da": {
@@ -980,6 +1022,8 @@
         "wishButton": "Ønske",
         "wishWhole": "Ønske alt af {n}",
         "wishWished": "Ønsket",
+        "wishAdult": "Ikke for børn",
+        "wishAdultNote": "{n} er ikke for børn.",
         "wishSent": "Ønske sendt: {n}",
         "wishAlready": "Du har allerede ønsket dig {n}.",
         "wishThere": "{n} er allerede på boksen.",
@@ -1014,7 +1058,11 @@
         "trackSongs": "Sange",
         "searchKindAlbum": "Album",
         "searchKindSong": "Sang",
-        "wishSentTo": "Ønske sendt: {n} – til {p}"
+        "wishSentTo": "Ønske sendt: {n} – til {p}",
+        "plDelete": "Slet helt",
+        "plDeleteQ": "Slette helt?",
+        "plDeleteYes": "Ja, slet helt",
+        "plDeleted": "{n} er slettet."
       }
     },
     "nb": {
@@ -1107,6 +1155,8 @@
         "wishButton": "Ønske",
         "wishWhole": "Ønske alt av {n}",
         "wishWished": "Ønsket",
+        "wishAdult": "Ikke for barn",
+        "wishAdultNote": "{n} er ikke for barn.",
         "wishSent": "Ønske sendt: {n}",
         "wishAlready": "Du har allerede ønsket deg {n}.",
         "wishThere": "{n} er allerede på boksen.",
@@ -1141,7 +1191,11 @@
         "trackSongs": "Låter",
         "searchKindAlbum": "Album",
         "searchKindSong": "Låt",
-        "wishSentTo": "Ønske sendt: {n} – til {p}"
+        "wishSentTo": "Ønske sendt: {n} – til {p}",
+        "plDelete": "Slett helt",
+        "plDeleteQ": "Slette helt?",
+        "plDeleteYes": "Ja, slett helt",
+        "plDeleted": "{n} er slettet."
       }
     },
     "fi": {
@@ -1234,6 +1288,8 @@
         "wishButton": "Toivo tätä",
         "wishWhole": "Toivo kaikki: {n}",
         "wishWished": "Toivottu",
+        "wishAdult": "Ei lapsille",
+        "wishAdultNote": "{n} ei ole lapsille.",
         "wishSent": "Toive lähetetty: {n}",
         "wishAlready": "Olet jo toivonut: {n}.",
         "wishThere": "{n} on jo laitteessa.",
@@ -1268,7 +1324,11 @@
         "trackSongs": "Kappaleet",
         "searchKindAlbum": "Albumi",
         "searchKindSong": "Kappale",
-        "wishSentTo": "Toive lähetetty: {n} – listalle {p}"
+        "wishSentTo": "Toive lähetetty: {n} – listalle {p}",
+        "plDelete": "Poista kokonaan",
+        "plDeleteQ": "Poistetaanko kokonaan?",
+        "plDeleteYes": "Kyllä, poista kokonaan",
+        "plDeleted": "{n} on poistettu."
       }
     },
     "pl": {
@@ -1361,6 +1421,8 @@
         "wishButton": "Poproś o to",
         "wishWhole": "Poproś o wszystko od {n}",
         "wishWished": "Poproszono",
+        "wishAdult": "Nie dla dzieci",
+        "wishAdultNote": "{n} nie jest dla dzieci.",
         "wishSent": "Prośba wysłana: {n}",
         "wishAlready": "Już prosiłeś o {n}.",
         "wishThere": "{n} już jest na boxie.",
@@ -1395,7 +1457,11 @@
         "trackSongs": "Utwory",
         "searchKindAlbum": "Album",
         "searchKindSong": "Utwór",
-        "wishSentTo": "Prośba wysłana: {n} – do {p}"
+        "wishSentTo": "Prośba wysłana: {n} – do {p}",
+        "plDelete": "Usuń całkiem",
+        "plDeleteQ": "Usunąć całkiem?",
+        "plDeleteYes": "Tak, usuń całkiem",
+        "plDeleted": "{n} usunięto."
       }
     },
     "pt": {
@@ -1488,6 +1554,8 @@
         "wishButton": "Pedir",
         "wishWhole": "Pedir tudo de {n}",
         "wishWished": "Pedido",
+        "wishAdult": "Não é para crianças",
+        "wishAdultNote": "{n} não é para crianças.",
         "wishSent": "Pedido enviado: {n}",
         "wishAlready": "Já pediste {n}.",
         "wishThere": "{n} já está na caixa.",
@@ -1522,7 +1590,11 @@
         "trackSongs": "Músicas",
         "searchKindAlbum": "Álbum",
         "searchKindSong": "Música",
-        "wishSentTo": "Pedido enviado: {n} – para {p}"
+        "wishSentTo": "Pedido enviado: {n} – para {p}",
+        "plDelete": "Apagar de vez",
+        "plDeleteQ": "Apagar de vez?",
+        "plDeleteYes": "Sim, apagar de vez",
+        "plDeleted": "{n} foi apagada."
       }
     },
     "tr": {
@@ -1615,6 +1687,8 @@
         "wishButton": "Dile",
         "wishWhole": "{n} ile ilgili her şeyi dile",
         "wishWished": "Dilendi",
+        "wishAdult": "Çocuklar için değil",
+        "wishAdultNote": "{n} çocuklar için değil.",
         "wishSent": "Dilek gönderildi: {n}",
         "wishAlready": "{n} için zaten dilek tuttun.",
         "wishThere": "{n} zaten kutuda.",
@@ -1649,7 +1723,11 @@
         "trackSongs": "Şarkılar",
         "searchKindAlbum": "Albüm",
         "searchKindSong": "Şarkı",
-        "wishSentTo": "Dilek gönderildi: {n} – {p} için"
+        "wishSentTo": "Dilek gönderildi: {n} – {p} için",
+        "plDelete": "Tamamen sil",
+        "plDeleteQ": "Tamamen silinsin mi?",
+        "plDeleteYes": "Evet, tamamen sil",
+        "plDeleted": "{n} silindi."
       }
     },
     "uk": {
@@ -1742,6 +1820,8 @@
         "wishButton": "Побажати",
         "wishWhole": "Побажати все від {n}",
         "wishWished": "Побажано",
+        "wishAdult": "Не для дітей",
+        "wishAdultNote": "{n} – не для дітей.",
         "wishSent": "Бажання надіслано: {n}",
         "wishAlready": "Ти вже побажав {n}.",
         "wishThere": "{n} вже є на боксі.",
@@ -1776,7 +1856,11 @@
         "trackSongs": "Пісні",
         "searchKindAlbum": "Альбом",
         "searchKindSong": "Пісня",
-        "wishSentTo": "Бажання надіслано: {n} – для {p}"
+        "wishSentTo": "Бажання надіслано: {n} – для {p}",
+        "plDelete": "Видалити повністю",
+        "plDeleteQ": "Видалити повністю?",
+        "plDeleteYes": "Так, видалити повністю",
+        "plDeleted": "{n} видалено."
       }
     },
     "ru": {
@@ -1869,6 +1953,8 @@
         "wishButton": "Попросить",
         "wishWhole": "Попросить всё от {n}",
         "wishWished": "Запрошено",
+        "wishAdult": "Не для детей",
+        "wishAdultNote": "{n} – не для детей.",
         "wishSent": "Просьба отправлена: {n}",
         "wishAlready": "Ты уже просил {n}.",
         "wishThere": "{n} уже есть на боксе.",
@@ -1903,7 +1989,11 @@
         "trackSongs": "Песни",
         "searchKindAlbum": "Альбом",
         "searchKindSong": "Песня",
-        "wishSentTo": "Пожелание отправлено: {n} – для {p}"
+        "wishSentTo": "Пожелание отправлено: {n} – для {p}",
+        "plDelete": "Удалить полностью",
+        "plDeleteQ": "Удалить полностью?",
+        "plDeleteYes": "Да, удалить полностью",
+        "plDeleted": "{n} удалён."
       }
     },
     "cs": {
@@ -1996,6 +2086,8 @@
         "wishButton": "Přát si",
         "wishWhole": "Přát si vše od {n}",
         "wishWished": "Přáno",
+        "wishAdult": "Není pro děti",
+        "wishAdultNote": "{n} není pro děti.",
         "wishSent": "Přání odesláno: {n}",
         "wishAlready": "{n} už sis přál.",
         "wishThere": "{n} už je na boxu.",
@@ -2030,7 +2122,11 @@
         "trackSongs": "Skladby",
         "searchKindAlbum": "Album",
         "searchKindSong": "Skladba",
-        "wishSentTo": "Přání odesláno: {n} – pro {p}"
+        "wishSentTo": "Přání odesláno: {n} – pro {p}",
+        "plDelete": "Smazat úplně",
+        "plDeleteQ": "Smazat úplně?",
+        "plDeleteYes": "Ano, smazat úplně",
+        "plDeleted": "{n} je smazaný."
       }
     },
     "el": {
@@ -2123,6 +2219,8 @@
         "wishButton": "Ευχή",
         "wishWhole": "Ευχή για όλα από {n}",
         "wishWished": "Ζητήθηκε",
+        "wishAdult": "Όχι για παιδιά",
+        "wishAdultNote": "Το {n} δεν είναι για παιδιά.",
         "wishSent": "Η ευχή στάλθηκε: {n}",
         "wishAlready": "Έχεις ήδη ζητήσει το {n}.",
         "wishThere": "Το {n} είναι ήδη στο κουτί.",
@@ -2157,7 +2255,11 @@
         "trackSongs": "Τραγούδια",
         "searchKindAlbum": "Άλμπουμ",
         "searchKindSong": "Τραγούδι",
-        "wishSentTo": "Η ευχή στάλθηκε: {n} – για {p}"
+        "wishSentTo": "Η ευχή στάλθηκε: {n} – για {p}",
+        "plDelete": "Πλήρης διαγραφή",
+        "plDeleteQ": "Πλήρης διαγραφή;",
+        "plDeleteYes": "Ναι, πλήρης διαγραφή",
+        "plDeleted": "Το {n} διαγράφηκε."
       }
     }
   }

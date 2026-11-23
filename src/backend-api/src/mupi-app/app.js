@@ -8247,6 +8247,7 @@ async function loadControls() {
   state.values.set('dispPlCreate', o.displayPlaylistCreate === true)
   state.values.set('plPerDay', o.playlistsPerDay ?? 5)
   state.values.set('dispTracks', o.displayTracks === true)
+  state.values.set('dispPlDelete', o.displayPlaylistDelete === true)
   state.values.set('plScope', o.playlistScope === true)
   state.values.set('resume', o.resume)
   state.values.set('listTimer', o.listviewTimer)
@@ -8280,7 +8281,7 @@ function wishesTop() {
   const decided = wishesState.decided.slice(0, 20)
   return [
     `<p class="page-intro">${esc('Was das Kind in der Suche am Display bei Spotify gefunden und sich gewünscht hat. Freigegeben kommt es auf die Startseite – unter den Reiter, den das Kind gewählt hat. Die Freigabe bleibt: Das Kind kann es selbst entfernen und über die Suche wieder holen, bis du sie widerrufst.')}</p>`,
-    ...(wishesState.on ? [] : [`<p class="help">${esc('Wünsche sind ausgeschaltet: Display & Bedienung › Suche › „Wünsche aus Spotify“.')}</p>`]),
+    ...(wishesState.on ? [] : [`<p class="help">${esc('Wünsche sind ausgeschaltet: Display & Bedienung › Suche am Display › „Wünsche aus Spotify“.')}</p>`]),
     `<section class="card wide"><h2>${esc('Offene Wünsche')}</h2>${
       open.length
         ? `<div class="rows">${open.map((w) => row(w, `<span class="btns" style="flex-wrap:nowrap"><button class="btn" data-wish-no="${esc(w.id)}">${esc('Ablehnen')}</button><button class="btn primary" data-wish-yes="${esc(w.id)}">${icon('check', 18)}${esc('Freigeben')}</button></span>`)).join('')}</div>`
@@ -8358,14 +8359,30 @@ function mountWishes(root, page) {
     b.onclick = async () => {
       const w = wishesState.decided.find((x) => x.id === b.dataset.wishRevoke)
       if (!w) return
-      if (!(await ask('Freigabe widerrufen?', `„${w.name}“ verschwindet aus der Suche am Display und von der Startseite. Das Kind kann es sich danach wieder wünschen.`, 'Widerrufen'))) return
+      if (
+        !(await ask(
+          'Freigabe widerrufen?',
+          w.kind === 'track'
+            ? `„${w.name}“ verschwindet aus den Playlists des Kindes – außer sein Album oder der ganze Künstler ist freigegeben. Das Kind kann es sich danach wieder wünschen.`
+            : `„${w.name}“ verschwindet aus der Suche am Display und von der Startseite. Das Kind kann es sich danach wieder wünschen.`,
+          'Widerrufen',
+        ))
+      )
+        return
       b.disabled = true
       const r = await api(`${API}/wishes/revoke`, { method: 'POST', body: { id: w.id } })
       if (!r.ok) {
         b.disabled = false
         return toast('Das hat nicht geklappt', 'info')
       }
-      toast(`Zurückgenommen: ${w.name}`)
+      // ((fork "wishes") a song: where it was taken out of, or that another approval keeps it)
+      toast(
+        w.kind === 'track' && r.body?.still
+          ? `Zurückgenommen: ${w.name} – bleibt, weil Album oder Künstler freigegeben ist`
+          : w.kind === 'track' && r.body?.removed?.length
+            ? `Zurückgenommen: ${w.name} – aus „${r.body.removed.join('“, „')}“ genommen`
+            : `Zurückgenommen: ${w.name}`,
+      )
       libChanged()
       lib.items = null
       await loadWishes()
@@ -12040,6 +12057,17 @@ function searchSections() {
           disabled: !on || !state.values.get('dispPlaylists'),
         },
         ...(state.values.get('dispPlaylists') && state.values.get('dispPlCreate')
+          ? [
+              {
+                type: 'toggle',
+                key: 'dispPlDelete',
+                label: 'Kind darf eigene Playlists löschen',
+                help: 'Nur Playlists, die das Kind am Display selbst angelegt hat: Unter „Einträge verwalten“ gibt es dann „Ganz löschen“ (einmal nachgefragt). Die Playlist verschwindet von der Startseite, aus der Suche und aus seiner Spotify-Bibliothek – Spotify selbst löscht Playlists nie, sie ist für das Kind nur nicht mehr zu finden. Braucht ein weiteres Recht bei Spotify. Aus: das Kind kann sie nur von der Startseite nehmen.',
+                disabled: !on,
+              },
+            ]
+          : []),
+        ...(state.values.get('dispPlaylists') && state.values.get('dispPlCreate')
           ? [{ type: 'stepper', key: 'plPerDay', label: 'Neue Playlists pro Tag', help: 'So viele Playlists darf das Kind am Tag anlegen.', min: 1, max: 20 }]
           : []),
         // (making and changing playlists needs one more right from Spotify: asked when switched on, a button here until given)
@@ -12882,6 +12910,7 @@ const CONTROLLERS = {
       }
       if (key === 'dispPlCreate') return needRight(await saveDisplayOptions({ displayPlaylistCreate: !!v }, v ? 'Kind darf Playlists anlegen' : 'Keine neuen Playlists am Display'))
       if (key === 'plPerDay') return saveDisplayOptions({ playlistsPerDay: v }, `${v} neue Playlists pro Tag`)
+      if (key === 'dispPlDelete') return needRight(await saveDisplayOptions({ displayPlaylistDelete: !!v }, v ? 'Kind darf eigene Playlists löschen' : 'Kind kann eigene Playlists nur von der Startseite nehmen'))
       if (key === 'dispTracks') return needRight(await saveDisplayOptions({ displayTracks: !!v }, v ? 'Einzelne Songs aus Spotify an' : 'Einzelne Songs aus Spotify aus'))
       if (key === 'dispRadio') return saveDisplayOptions({ displayRadio: !!v }, v ? 'Radio für Kinder in der Suche an' : 'Radio für Kinder in der Suche aus')
       if (key === 'dispPodcasts') return saveDisplayOptions({ displayPodcasts: !!v }, v ? 'Podcasts für Kinder in der Suche an' : 'Podcasts für Kinder in der Suche aus')

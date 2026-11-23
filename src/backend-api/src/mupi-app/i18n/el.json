@@ -3230,7 +3230,6 @@
  "Wünsche aus Spotify an": "Ευχές από το Spotify ενεργές",
  "Wünsche aus Spotify aus": "Ευχές από το Spotify ανενεργές",
  "In der Suche am Display sucht eine Kachel „Bei Spotify suchen“ nach Alben, Künstlern und Podcasts. Das Kind kann sich etwas wünschen und den Reiter wählen; du gibst es in der App frei (Bibliothek › Wünsche), Home Assistant bekommt eine Nachricht mit Link. Spotify wird erst beim Tippen auf die Kachel gefragt, jeweils 10 Treffer, weitere erst beim Weiterblättern; jede Seite merkt sich die Box einen Tag. Aus: keine Spotify-Suche am Display, alles andere bleibt.": "Στην αναζήτηση της οθόνης ένα πλακίδιο «Αναζήτηση στο Spotify» ψάχνει άλμπουμ, καλλιτέχνες και podcasts. Το παιδί μπορεί να ζητήσει κάτι και να επιλέξει καρτέλα· εσύ το εγκρίνεις στην εφαρμογή (Βιβλιοθήκη › Ευχές), το Home Assistant λαμβάνει μήνυμα με σύνδεσμο. Το Spotify ερωτάται μόνο όταν πατηθεί το πλακίδιο, 10 αποτελέσματα κάθε φορά, περισσότερα μόνο με κύλιση· το κουτί κρατά κάθε σελίδα μία μέρα. Ανενεργό: καμία αναζήτηση Spotify στην οθόνη, τα υπόλοιπα μένουν.",
- "Wünsche sind ausgeschaltet: Display & Bedienung › Suche › „Wünsche aus Spotify“.": "Οι ευχές είναι απενεργοποιημένες: Οθόνη & Χειρισμός › Αναζήτηση › «Ευχές από το Spotify».",
  "Offene Wünsche": "Ανοιχτές ευχές",
  "Keine offenen Wünsche.": "Καμία ανοιχτή ευχή.",
  "Entschieden": "Αποφασισμένες",
@@ -3302,5 +3301,12 @@
  "Wünsche, Songs, Playlists – Recht vorhanden": "Ευχές, τραγούδια, λίστες – το δικαίωμα υπάρχει",
  "Recht für Playlists fehlt – neu anmelden": "Λείπει το δικαίωμα για λίστες – νέα σύνδεση",
  "Wünsche, Songs und Playlists für das Kind": "Ευχές, τραγούδια και λίστες για το παιδί",
- "Die Suche am Display braucht zusätzlich das Recht, private Playlists zu ändern – dafür neu anmelden.": "Η αναζήτηση στην οθόνη χρειάζεται επιπλέον δικαίωμα να αλλάζει ιδιωτικές λίστες – κάνε γι’ αυτό νέα σύνδεση."
+ "Die Suche am Display braucht zusätzlich das Recht, private Playlists zu ändern – dafür neu anmelden.": "Η αναζήτηση στην οθόνη χρειάζεται επιπλέον δικαίωμα να αλλάζει ιδιωτικές λίστες – κάνε γι’ αυτό νέα σύνδεση.",
+ "Wünsche sind ausgeschaltet: Display & Bedienung › Suche am Display › „Wünsche aus Spotify“.": "Οι ευχές είναι απενεργοποιημένες: Οθόνη & Χειρισμός › Αναζήτηση στην οθόνη › «Ευχές από το Spotify».",
+ "Kind darf eigene Playlists löschen": "Το παιδί μπορεί να διαγράφει δικές του λίστες",
+ "Kind kann eigene Playlists nur von der Startseite nehmen": "Το παιδί μπορεί μόνο να βγάζει τις λίστες του από την αρχική σελίδα",
+ "Nur Playlists, die das Kind am Display selbst angelegt hat: Unter „Einträge verwalten“ gibt es dann „Ganz löschen“ (einmal nachgefragt). Die Playlist verschwindet von der Startseite, aus der Suche und aus seiner Spotify-Bibliothek – Spotify selbst löscht Playlists nie, sie ist für das Kind nur nicht mehr zu finden. Braucht ein weiteres Recht bei Spotify. Aus: das Kind kann sie nur von der Startseite nehmen.": "Μόνο λίστες που το παιδί έφτιαξε μόνο του στην οθόνη: στο «Διαχείριση καταχωρίσεων» υπάρχει τότε «Πλήρης διαγραφή» (με ερώτηση ακόμη μία φορά). Η λίστα φεύγει από την αρχική σελίδα, την αναζήτηση και τη βιβλιοθήκη Spotify του – το Spotify δεν διαγράφει ποτέ πλήρως λίστες, απλώς το παιδί δεν τη βρίσκει πια. Χρειάζεται ένα ακόμη δικαίωμα Spotify. Ανενεργό: το παιδί μπορεί μόνο να τη βγάλει από την αρχική σελίδα.",
+ "„{}“ verschwindet aus den Playlists des Kindes – außer sein Album oder der ganze Künstler ist freigegeben. Das Kind kann es sich danach wieder wünschen.": "Το «{}» φεύγει από τις λίστες του παιδιού – εκτός αν το άλμπουμ του ή ολόκληρος ο καλλιτέχνης είναι εγκεκριμένος. Το παιδί μπορεί μετά να το ευχηθεί ξανά.",
+ "Zurückgenommen: {} – bleibt, weil Album oder Künstler freigegeben ist": "Ανακλήθηκε: {} – μένει, επειδή το άλμπουμ ή ο καλλιτέχνης είναι εγκεκριμένος",
+ "Zurückgenommen: {} – aus „{}“ genommen": "Ανακλήθηκε: {} – βγήκε από το «{}»"
 }

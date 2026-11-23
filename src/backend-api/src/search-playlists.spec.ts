@@ -36,6 +36,9 @@ let app: express.Express
 let calls: string[]
 let songs: Map<string, PlaylistSong[]>
 let day = 0
+// (the versions of the account's playlists as Spotify gives them with /me/playlists - none: unknown)
+let snaps: Map<string, string>
+let snapsAt = 0
 
 const library = () => JSON.parse(readFileSync(dataFile, 'utf8')) as Record<string, unknown>[]
 
@@ -49,6 +52,7 @@ const api: PlaylistsApi = {
   add: async (id, uris) => {
     calls.push(`add ${id} ${uris.join(',')}`)
     for (const uri of uris) songs.get(id)?.push({ id: uri.split(':').pop() ?? '', name: uri, artist: '', cover: '' })
+    return `snap${calls.length}`
   },
   remove: async (id, uris) => {
     calls.push(`remove ${id} ${uris.join(',')}`)
@@ -56,9 +60,16 @@ const api: PlaylistsApi = {
       id,
       (songs.get(id) ?? []).filter((s) => !uris.includes(`spotify:track:${s.id}`)),
     )
+    return `snap${calls.length}`
   },
-  items: async (id) => songs.get(id) ?? [],
+  items: async (id) => {
+    calls.push(`items ${id}`)
+    return songs.get(id) ?? []
+  },
   cover: async () => 'https://i.scdn.co/image/mosaic',
+  unlist: async (id) => {
+    calls.push(`unlist ${id}`)
+  },
 }
 
 beforeEach(() => {
@@ -70,7 +81,9 @@ beforeEach(() => {
   )
   calls = []
   songs = new Map()
+  snaps = new Map()
   day = Date.parse('2026-11-23T10:00:00')
+  snapsAt = day
   cfg = {
     mupibox: {
       displaySearch: true,
@@ -80,7 +93,7 @@ beforeEach(() => {
       displayTracks: true,
       playlistsPerDay: 2,
     },
-    spotify: { tokenScopes: ['playlist-read-private', 'playlist-modify-private'] },
+    spotify: { tokenScopes: ['playlist-read-private', 'playlist-modify-private', 'user-library-modify'] },
   }
   app = express()
   app.use(express.json())
@@ -101,6 +114,7 @@ beforeEach(() => {
     api: () => api,
     accountPlaylists: async () => new Set([ACCOUNT_PL]),
     accountCovers: async () => new Map([[ACCOUNT_PL, 'https://i.scdn.co/image/account']]),
+    accountSnapshots: async () => ({ at: snapsAt, snapshots: snaps }),
     now: () => day,
   })
   registerWishesRoutes(app, {
@@ -209,6 +223,23 @@ describe('a new playlist', () => {
   })
 })
 
+describe('deleting', () => {
+  it('a playlist the child made goes from the start page, the search and its library - only with the switch on', async () => {
+    const id = String(
+      (await request(app).post('/api/search-playlists/create').send({ name: 'Weg', category: 'music' })).body.id,
+    )
+    assert.equal((await request(app).post('/api/search-playlists/delete').send({ id })).status, 403)
+    ;(cfg.mupibox as Record<string, unknown>).displayPlaylistDelete = true
+    assert.deepEqual((await request(app).get('/api/search-playlists')).body.deletable, [id])
+    assert.equal((await request(app).post('/api/search-playlists/delete').send({ id })).status, 200)
+    assert.ok(calls.includes(`unlist ${id}`))
+    assert.ok(!library().some((x) => x.playlistid === id))
+    assert.ok(!(await pool.entries()).some((e) => e.spotifyId === id))
+    // (one it did not make: never)
+    assert.equal((await request(app).post('/api/search-playlists/delete').send({ id: ALLOWED_PL })).status, 403)
+  })
+})
+
 describe('songs', () => {
   const target = async () => {
     const r = await request(app).post('/api/search-playlists/create').send({ name: 'Ziel', category: 'music' })
@@ -287,6 +318,13 @@ describe('songs', () => {
     )
   })
 
+  it('an album with an explicit song is not for children - asked once with its songs, kept', async () => {
+    const r = await request(app).get('/api/wishes/album-check').query({ id: ALBUM })
+    assert.deepEqual(r.body, { explicit: true })
+    // (an album the box does not know: not asked)
+    assert.equal((await request(app).get('/api/wishes/album-check').query({ id: 'C'.repeat(22) })).status, 403)
+  })
+
   it('one the child can play goes into its playlist at once - once', async () => {
     const id = await target()
     await request(app).get('/api/wishes/search').query({ q: 'song', offset: 0 })
@@ -315,6 +353,32 @@ describe('songs', () => {
     assert.equal(library().filter((x) => x.kidAdded).length, 1)
   })
 
+  it('a revoked song goes out of the playlists of the child again - unless its album is allowed otherwise', async () => {
+    const id = await target()
+    await request(app).get('/api/wishes/search').query({ q: 'song', offset: 0 })
+    await request(app).post('/api/wishes').send({ kind: 'track', id: OTHER_SONG, playlist: id })
+    const open = (await request(app).get('/api/app/wishes')).body.open as { id: string }[]
+    await request(app).post('/api/app/wishes/decide').send({ id: open[0].id, approve: true })
+    assert.ok(songs.get(id)?.some((x) => x.id === OTHER_SONG))
+    const r = await request(app).post('/api/app/wishes/revoke').send({ id: open[0].id })
+    assert.deepEqual([r.body.removed, r.body.still], [['Ziel'], false])
+    assert.ok(!songs.get(id)?.some((x) => x.id === OTHER_SONG))
+    assert.equal(await playlists.allowed({ id: OTHER_SONG, name: '', artist: '', cover: '' }), false)
+  })
+
+  it('a revoked song stays where its album is allowed otherwise', async () => {
+    const id = await target()
+    await request(app).get('/api/wishes/search').query({ q: 'song', offset: 0 })
+    await request(app).post('/api/wishes').send({ kind: 'track', id: OTHER_SONG, playlist: id })
+    const open = (await request(app).get('/api/app/wishes')).body.open as { id: string }[]
+    await request(app).post('/api/app/wishes/decide').send({ id: open[0].id, approve: true })
+    // (its album allowed for the search in the meantime)
+    await pool.add({ kind: 'album', spotifyId: 'C'.repeat(22), name: 'Album', artist: 'Y', cover: '' })
+    const r = await request(app).post('/api/app/wishes/revoke').send({ id: open[0].id })
+    assert.deepEqual([r.body.removed, r.body.still], [[], true])
+    assert.ok(songs.get(id)?.some((x) => x.id === OTHER_SONG))
+  })
+
   it('go into a playlist of the account the parents put on the start page, as Spotify knows it', async () => {
     const lib = library()
     lib.push({ type: 'spotify', category: 'music', playlistid: ACCOUNT_PL, title: 'Mixtape', index: lib.length })
@@ -328,6 +392,52 @@ describe('songs', () => {
     )
     // (but no songs taken out of it by the child: the parents put it there)
     assert.equal((await request(app).get('/api/search-playlists/songs').query({ id: ACCOUNT_PL })).status, 403)
+  })
+
+  it('go into a playlist of the account allowed for the search, also when it is not on the start page', async () => {
+    await pool.add({ kind: 'playlist', spotifyId: ACCOUNT_PL, name: 'Lieblingslieder', artist: '', cover: '' })
+    const targets = (await request(app).get('/api/search-playlists')).body.targets as { id: string; category: string }[]
+    assert.deepEqual(
+      targets.map((t) => [t.id, t.category]),
+      [[ACCOUNT_PL, '']],
+    )
+    await request(app).get('/api/wishes/search').query({ q: 'song', offset: 0 })
+    assert.equal(
+      (await request(app).post('/api/wishes/track').send({ id: SONG, playlist: ACCOUNT_PL })).body.result,
+      'added',
+    )
+  })
+
+  it('the ✓ reads the songs of a playlist again only when Spotify has another version of it', async () => {
+    const id = await target()
+    songs.get(id)?.push({ id: SONG, name: 'Erlaubter Song', artist: 'X', cover: '' })
+    snaps.set(id, 'v1')
+    const reads = () => calls.filter((c) => c === `items ${id}`).length
+    const tick = async () =>
+      (await request(app).get('/api/search-playlists/containing').query({ id: SONG })).body.in as string[]
+    assert.deepEqual(await tick(), [id])
+    assert.equal(reads(), 1)
+    // (hours later, the same version: nothing read)
+    day += 3 * 3600_000
+    assert.deepEqual(await tick(), [id])
+    assert.equal(reads(), 1)
+    // (changed in the Spotify app: another version - read again)
+    songs.set(id, [])
+    snaps.set(id, 'v2')
+    snapsAt = day
+    assert.deepEqual(await tick(), [])
+    assert.equal(reads(), 2)
+    // (put in by the box: read right before - then kept with the version Spotify gave back, the ✓ reads nothing)
+    await request(app).get('/api/wishes/search').query({ q: 'song', offset: 0 })
+    day += 1000
+    assert.equal((await request(app).post('/api/wishes/track').send({ id: SONG, playlist: id })).body.result, 'added')
+    assert.equal(reads(), 3)
+    day += 1000
+    assert.deepEqual(await tick(), [id])
+    assert.equal(reads(), 3)
+    // (kept on the SD card: a restart of the box reads nothing either)
+    const kept = JSON.parse(readFileSync(path.join(dir, 'search-playlists-songs.json'), 'utf8'))
+    assert.deepEqual(kept[id].ids, [SONG])
   })
 
   it('cannot go into a playlist that is not one of the child account on the start page', async () => {

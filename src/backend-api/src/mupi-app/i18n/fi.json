@@ -3230,7 +3230,6 @@
  "Wünsche aus Spotify an": "Toiveet Spotifysta päällä",
  "Wünsche aus Spotify aus": "Toiveet Spotifysta pois",
  "In der Suche am Display sucht eine Kachel „Bei Spotify suchen“ nach Alben, Künstlern und Podcasts. Das Kind kann sich etwas wünschen und den Reiter wählen; du gibst es in der App frei (Bibliothek › Wünsche), Home Assistant bekommt eine Nachricht mit Link. Spotify wird erst beim Tippen auf die Kachel gefragt, jeweils 10 Treffer, weitere erst beim Weiterblättern; jede Seite merkt sich die Box einen Tag. Aus: keine Spotify-Suche am Display, alles andere bleibt.": "Näytön haussa ruutu ”Hae Spotifysta” hakee albumeja, artisteja ja podcasteja. Lapsi voi toivoa jotain ja valita välilehden; sinä hyväksyt sen sovelluksessa (Kirjasto › Toiveet), Home Assistant saa viestin linkin kanssa. Spotifylta kysytään vasta ruutua napautettaessa, 10 osumaa kerrallaan, lisää vasta selattaessa; laite muistaa jokaisen sivun päivän. Pois: ei Spotify-hakua näytöllä, kaikki muu pysyy.",
- "Wünsche sind ausgeschaltet: Display & Bedienung › Suche › „Wünsche aus Spotify“.": "Toiveet ovat pois päältä: Näyttö ja käyttö › Haku › ”Toiveet Spotifysta”.",
  "Offene Wünsche": "Avoimet toiveet",
  "Keine offenen Wünsche.": "Ei avoimia toiveita.",
  "Entschieden": "Ratkaistut",
@@ -3302,5 +3301,12 @@
  "Wünsche, Songs, Playlists – Recht vorhanden": "Toiveet, kappaleet, soittolistat – oikeus annettu",
  "Recht für Playlists fehlt – neu anmelden": "Soittolistojen oikeus puuttuu – kirjaudu uudelleen",
  "Wünsche, Songs und Playlists für das Kind": "Toiveet, kappaleet ja soittolistat lapselle",
- "Die Suche am Display braucht zusätzlich das Recht, private Playlists zu ändern – dafür neu anmelden.": "Näytön haku tarvitsee lisäksi oikeuden muuttaa yksityisiä soittolistoja – kirjaudu sitä varten uudelleen."
+ "Die Suche am Display braucht zusätzlich das Recht, private Playlists zu ändern – dafür neu anmelden.": "Näytön haku tarvitsee lisäksi oikeuden muuttaa yksityisiä soittolistoja – kirjaudu sitä varten uudelleen.",
+ "Wünsche sind ausgeschaltet: Display & Bedienung › Suche am Display › „Wünsche aus Spotify“.": "Toiveet ovat pois päältä: Näyttö ja käyttö › Haku näytöllä › ”Toiveet Spotifysta”.",
+ "Kind darf eigene Playlists löschen": "Lapsi saa poistaa omia soittolistojaan",
+ "Kind kann eigene Playlists nur von der Startseite nehmen": "Lapsi voi vain poistaa omat soittolistansa aloitussivulta",
+ "Nur Playlists, die das Kind am Display selbst angelegt hat: Unter „Einträge verwalten“ gibt es dann „Ganz löschen“ (einmal nachgefragt). Die Playlist verschwindet von der Startseite, aus der Suche und aus seiner Spotify-Bibliothek – Spotify selbst löscht Playlists nie, sie ist für das Kind nur nicht mehr zu finden. Braucht ein weiteres Recht bei Spotify. Aus: das Kind kann sie nur von der Startseite nehmen.": "Vain soittolistat, jotka lapsi on itse luonut näytöllä: kohdassa ”Hallitse kohteita” on silloin ”Poista kokonaan” (varmistetaan kerran). Soittolista katoaa aloitussivulta, hausta ja lapsen Spotify-kirjastosta – Spotify ei koskaan poista soittolistoja kokonaan, lapsi ei vain löydä sitä enää. Vaatii toisen oikeuden Spotifylta. Pois: lapsi voi vain poistaa sen aloitussivulta.",
+ "„{}“ verschwindet aus den Playlists des Kindes – außer sein Album oder der ganze Künstler ist freigegeben. Das Kind kann es sich danach wieder wünschen.": "”{}” poistuu lapsen soittolistoilta – ellei sen albumi tai koko artisti ole hyväksytty. Lapsi voi toivoa sitä sen jälkeen uudelleen.",
+ "Zurückgenommen: {} – bleibt, weil Album oder Künstler freigegeben ist": "Peruttu: {} – jää, koska albumi tai artisti on hyväksytty",
+ "Zurückgenommen: {} – aus „{}“ genommen": "Peruttu: {} – poistettu listalta ”{}”"
 }

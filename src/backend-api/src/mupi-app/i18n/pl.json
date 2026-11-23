@@ -3230,7 +3230,6 @@
  "Wünsche aus Spotify an": "Prośby ze Spotify włączone",
  "Wünsche aus Spotify aus": "Prośby ze Spotify wyłączone",
  "In der Suche am Display sucht eine Kachel „Bei Spotify suchen“ nach Alben, Künstlern und Podcasts. Das Kind kann sich etwas wünschen und den Reiter wählen; du gibst es in der App frei (Bibliothek › Wünsche), Home Assistant bekommt eine Nachricht mit Link. Spotify wird erst beim Tippen auf die Kachel gefragt, jeweils 10 Treffer, weitere erst beim Weiterblättern; jede Seite merkt sich die Box einen Tag. Aus: keine Spotify-Suche am Display, alles andere bleibt.": "W wyszukiwaniu na wyświetlaczu kafelek „Szukaj na Spotify” szuka albumów, artystów i podcastów. Dziecko może o coś poprosić i wybrać zakładkę; ty zatwierdzasz to w aplikacji (Biblioteka › Prośby), Home Assistant dostaje wiadomość z linkiem. Spotify jest pytane dopiero po stuknięciu kafelka, po 10 wyników, kolejne dopiero przy przewijaniu; box pamięta każdą stronę przez dzień. Wył.: brak wyszukiwania Spotify na wyświetlaczu, reszta zostaje.",
- "Wünsche sind ausgeschaltet: Display & Bedienung › Suche › „Wünsche aus Spotify“.": "Prośby są wyłączone: Wyświetlacz i obsługa › Wyszukiwanie › „Prośby ze Spotify”.",
  "Offene Wünsche": "Otwarte prośby",
  "Keine offenen Wünsche.": "Brak otwartych próśb.",
  "Entschieden": "Rozstrzygnięte",
@@ -3302,5 +3301,12 @@
  "Wünsche, Songs, Playlists – Recht vorhanden": "Prośby, utwory, playlisty – uprawnienie nadane",
  "Recht für Playlists fehlt – neu anmelden": "Brak uprawnienia do playlist – zaloguj się ponownie",
  "Wünsche, Songs und Playlists für das Kind": "Prośby, utwory i playlisty dla dziecka",
- "Die Suche am Display braucht zusätzlich das Recht, private Playlists zu ändern – dafür neu anmelden.": "Wyszukiwanie na wyświetlaczu potrzebuje też prawa do zmiany prywatnych playlist – zaloguj się w tym celu ponownie."
+ "Die Suche am Display braucht zusätzlich das Recht, private Playlists zu ändern – dafür neu anmelden.": "Wyszukiwanie na wyświetlaczu potrzebuje też prawa do zmiany prywatnych playlist – zaloguj się w tym celu ponownie.",
+ "Wünsche sind ausgeschaltet: Display & Bedienung › Suche am Display › „Wünsche aus Spotify“.": "Prośby są wyłączone: Wyświetlacz i obsługa › Wyszukiwanie na wyświetlaczu › „Prośby ze Spotify”.",
+ "Kind darf eigene Playlists löschen": "Dziecko może usuwać własne playlisty",
+ "Kind kann eigene Playlists nur von der Startseite nehmen": "Dziecko może tylko zdjąć swoje playlisty ze strony startowej",
+ "Nur Playlists, die das Kind am Display selbst angelegt hat: Unter „Einträge verwalten“ gibt es dann „Ganz löschen“ (einmal nachgefragt). Die Playlist verschwindet von der Startseite, aus der Suche und aus seiner Spotify-Bibliothek – Spotify selbst löscht Playlists nie, sie ist für das Kind nur nicht mehr zu finden. Braucht ein weiteres Recht bei Spotify. Aus: das Kind kann sie nur von der Startseite nehmen.": "Tylko playlisty, które dziecko samo utworzyło na wyświetlaczu: w „Zarządzaj wpisami” pojawia się wtedy „Usuń całkiem” (z ponownym pytaniem). Playlista znika ze strony startowej, z wyszukiwania i z jego biblioteki Spotify – Spotify nigdy nie usuwa playlist naprawdę, dziecko po prostu jej już nie znajdzie. Wymaga kolejnego uprawnienia Spotify. Wyłączone: dziecko może ją tylko zdjąć ze strony startowej.",
+ "„{}“ verschwindet aus den Playlists des Kindes – außer sein Album oder der ganze Künstler ist freigegeben. Das Kind kann es sich danach wieder wünschen.": "„{}” znika z playlist dziecka – chyba że jego album albo cały wykonawca jest zatwierdzony. Dziecko może potem znów o nie poprosić.",
+ "Zurückgenommen: {} – bleibt, weil Album oder Künstler freigegeben ist": "Wycofano: {} – zostaje, bo album lub wykonawca jest zatwierdzony",
+ "Zurückgenommen: {} – aus „{}“ genommen": "Wycofano: {} – usunięto z „{}”"
 }

@@ -35,8 +35,23 @@ export function playlistWritesOn(cfg: MupiboxConfig | undefined): boolean {
   const mb = ((cfg as Record<string, unknown> | undefined)?.mupibox ?? {}) as Record<string, unknown>
   return mb.displaySearch === true && (mb.displayPlaylistCreate === true || mb.displayTracks === true)
 }
+/** "Kind darf eigene Playlists löschen": out of the child's Spotify library (DELETE /me/library) */
+export const LIBRARY_WRITE_SCOPE = 'user-library-modify'
+export function playlistDeleteOn(cfg: MupiboxConfig | undefined): boolean {
+  const mb = ((cfg as Record<string, unknown> | undefined)?.mupibox ?? {}) as Record<string, unknown>
+  return mb.displaySearch === true && mb.displayPlaylistCreate === true && mb.displayPlaylistDelete === true
+}
+/** the rights the search's switches need beyond the box's own */
+export function searchScopes(cfg: MupiboxConfig | undefined): string[] {
+  return [...(playlistWritesOn(cfg) ? [PLAYLIST_WRITE_SCOPE] : []), ...(playlistDeleteOn(cfg) ? [LIBRARY_WRITE_SCOPE] : [])]
+}
+/** whether the last login gave all of them */
+export function searchScopesGiven(cfg: MupiboxConfig | undefined): boolean {
+  const scopes = ((cfg as Record<string, unknown> | undefined)?.spotify as Record<string, unknown> | undefined)?.tokenScopes
+  return searchScopes(cfg).every((s) => Array.isArray(scopes) && scopes.includes(s))
+}
 export function requestedScopes(cfg: MupiboxConfig | undefined): string[] {
-  return playlistWritesOn(cfg) ? [...REQUESTED_SCOPES, PLAYLIST_WRITE_SCOPE] : [...REQUESTED_SCOPES]
+  return [...REQUESTED_SCOPES, ...searchScopes(cfg)]
 }
 
 const STATE_TTL_MS = 10 * 60 * 1000

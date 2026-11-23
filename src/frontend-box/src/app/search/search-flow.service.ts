@@ -127,6 +127,8 @@ export interface PlaylistsInfo {
   tracks: boolean
   left: number
   targets: TargetPlaylist[]
+  /** the playlists the child may delete (made by it, "Kind darf eigene Playlists löschen" on) */
+  deletable: string[]
 }
 /** the pages of a search or of an artist's albums loaded so far (kept on the display: back and again ask nothing) */
 export interface WishPages {
@@ -158,11 +160,20 @@ export class SearchFlowService {
   /** the open wishes ("kind:id"): marked "gewünscht", not wished again */
   readonly wished = signal<Set<string>>(new Set())
   /** (fork "wishes") playlists in the search: the tile, new ones, the child's own playlists on the start page */
-  readonly playlists = signal<PlaylistsInfo>({ on: false, create: false, tracks: false, left: 0, targets: [] })
+  readonly playlists = signal<PlaylistsInfo>({
+    on: false,
+    create: false,
+    tracks: false,
+    left: 0,
+    targets: [],
+    deletable: [],
+  })
   // the pages loaded on this display (a search by its text, an artist by its id) - kept until the display reloads
   private readonly searchPages = new Map<string, WishPages>()
   private readonly artistPages = new Map<string, WishPages>()
   private readonly albumPages = new Map<string, WishItem[]>()
+  // (albums asked whether they have explicit songs: the answer)
+  private readonly albumChecks = new Map<string, boolean>()
   private readonly asking = new Set<string>()
   /** what the search says when it is shown again (added, already there, failed) */
   private note = ''
@@ -265,7 +276,7 @@ export class SearchFlowService {
   async wish(item: WishItem, category: CategoryType, playlist?: TargetPlaylist): Promise<void> {
     try {
       const r = await firstValueFrom(
-        this.http.post<{ ok: boolean; result: 'wished' | 'already' | 'there' | 'allowed' }>(`${this.api}/wishes`, {
+        this.http.post<{ ok: boolean; result: 'wished' | 'already' | 'there' | 'allowed' | 'explicit' }>(`${this.api}/wishes`, {
           kind: item.kind,
           id: item.id,
           category,
@@ -273,7 +284,9 @@ export class SearchFlowService {
         }),
       )
       this.note =
-        r?.result === 'there'
+        r?.result === 'explicit'
+          ? this.texts.text('wishAdultNote', { n: item.name })
+          : r?.result === 'there'
           ? this.texts.text('wishThere', { n: item.name })
           : r?.result === 'allowed'
             ? this.texts.text('wishAllowed', { n: item.name })
@@ -282,7 +295,7 @@ export class SearchFlowService {
               : playlist
                 ? this.texts.text('wishSentTo', { n: item.name, p: playlist.name })
                 : this.texts.text('wishSent', { n: item.name })
-      if (r?.result !== 'allowed') this.wished.update((s) => new Set([...s, `${item.kind}:${item.id}`]))
+      if (r?.result !== 'allowed' && r?.result !== 'explicit') this.wished.update((s) => new Set([...s, `${item.kind}:${item.id}`]))
     } catch {
       this.note = this.texts.text('searchFailed')
     }
@@ -301,6 +314,7 @@ export class SearchFlowService {
           tracks: r?.tracks === true,
           left: Number(r?.left) || 0,
           targets: Array.isArray(r?.targets) ? r.targets : [],
+          deletable: Array.isArray(r?.deletable) ? r.deletable : [],
         }),
       error: () => {},
     })
@@ -358,6 +372,25 @@ export class SearchFlowService {
     }
   }
 
+  /**
+   * An album of Spotify with explicit songs: not for children (the box asks its songs once, kept a day); false when it
+   * could not be asked - the parents decide then
+   */
+  async albumExplicit(albumId: string): Promise<boolean> {
+    const have = this.albumChecks.get(albumId)
+    if (have !== undefined) return have
+    try {
+      const r = await firstValueFrom(
+        this.http.get<{ explicit: boolean }>(`${this.api}/wishes/album-check`, { params: { id: albumId } }),
+      )
+      const explicit = r?.explicit === true
+      this.albumChecks.set(albumId, explicit)
+      return explicit
+    } catch {
+      return false
+    }
+  }
+
   /** the child's playlists a song is in already (their ids; none when it could not be asked) */
   async trackIn(trackId: string): Promise<Set<string>> {
     try {
@@ -393,6 +426,21 @@ export class SearchFlowService {
     } catch {
       this.note = this.texts.text('searchFailed')
     }
+    void this.navController.navigateBack(['/search'])
+  }
+
+  /** "Ganz löschen": a playlist the child made itself, off the start page, the search and its library */
+  async deletePlaylist(own: OwnEntry): Promise<void> {
+    try {
+      await firstValueFrom(
+        this.http.post(`${this.api}/search-playlists/delete`, { id: own.ident.slice('playlist:'.length) }),
+      )
+      this.note = this.texts.text('plDeleted', { n: own.name })
+      this.changed = true
+    } catch {
+      this.note = this.texts.text('searchFailed')
+    }
+    this.loadPlaylists()
     void this.navController.navigateBack(['/search'])
   }
 

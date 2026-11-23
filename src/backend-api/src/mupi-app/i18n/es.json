@@ -3230,7 +3230,6 @@
  "Wünsche aus Spotify an": "Deseos de Spotify activados",
  "Wünsche aus Spotify aus": "Deseos de Spotify desactivados",
  "In der Suche am Display sucht eine Kachel „Bei Spotify suchen“ nach Alben, Künstlern und Podcasts. Das Kind kann sich etwas wünschen und den Reiter wählen; du gibst es in der App frei (Bibliothek › Wünsche), Home Assistant bekommt eine Nachricht mit Link. Spotify wird erst beim Tippen auf die Kachel gefragt, jeweils 10 Treffer, weitere erst beim Weiterblättern; jede Seite merkt sich die Box einen Tag. Aus: keine Spotify-Suche am Display, alles andere bleibt.": "En la búsqueda de la pantalla, un mosaico «Buscar en Spotify» busca álbumes, artistas y pódcasts. El niño puede pedir algo y elegir la pestaña; tú lo autorizas en la app (Biblioteca › Deseos) y Home Assistant recibe un mensaje con un enlace. A Spotify solo se le pregunta al tocar el mosaico, 10 resultados cada vez, más solo al desplazarse; la caja guarda cada página un día. Desactivado: sin búsqueda de Spotify en la pantalla, todo lo demás sigue igual.",
- "Wünsche sind ausgeschaltet: Display & Bedienung › Suche › „Wünsche aus Spotify“.": "Los deseos están desactivados: Pantalla y manejo › Búsqueda › «Deseos de Spotify».",
  "Offene Wünsche": "Deseos pendientes",
  "Keine offenen Wünsche.": "No hay deseos pendientes.",
  "Entschieden": "Decididos",
@@ -3302,5 +3301,12 @@
  "Wünsche, Songs, Playlists – Recht vorhanden": "Deseos, canciones, playlists – permiso concedido",
  "Recht für Playlists fehlt – neu anmelden": "Falta el permiso para playlists – iniciar sesión de nuevo",
  "Wünsche, Songs und Playlists für das Kind": "Deseos, canciones y playlists para el niño",
- "Die Suche am Display braucht zusätzlich das Recht, private Playlists zu ändern – dafür neu anmelden.": "La búsqueda en la pantalla también necesita permiso para cambiar playlists privadas: vuelve a iniciar sesión para ello."
+ "Die Suche am Display braucht zusätzlich das Recht, private Playlists zu ändern – dafür neu anmelden.": "La búsqueda en la pantalla también necesita permiso para cambiar playlists privadas: vuelve a iniciar sesión para ello.",
+ "Wünsche sind ausgeschaltet: Display & Bedienung › Suche am Display › „Wünsche aus Spotify“.": "Los deseos están desactivados: Pantalla y manejo › Búsqueda en la pantalla › «Deseos de Spotify».",
+ "Kind darf eigene Playlists löschen": "El niño puede borrar sus propias playlists",
+ "Kind kann eigene Playlists nur von der Startseite nehmen": "El niño solo puede quitar sus playlists de la página de inicio",
+ "Nur Playlists, die das Kind am Display selbst angelegt hat: Unter „Einträge verwalten“ gibt es dann „Ganz löschen“ (einmal nachgefragt). Die Playlist verschwindet von der Startseite, aus der Suche und aus seiner Spotify-Bibliothek – Spotify selbst löscht Playlists nie, sie ist für das Kind nur nicht mehr zu finden. Braucht ein weiteres Recht bei Spotify. Aus: das Kind kann sie nur von der Startseite nehmen.": "Solo playlists que el niño creó en la pantalla: en «Gestionar entradas» aparece «Borrar del todo» (con confirmación). La playlist desaparece de la página de inicio, de la búsqueda y de su biblioteca de Spotify; Spotify nunca borra playlists del todo, el niño simplemente ya no la encuentra. Necesita un permiso más de Spotify. Desactivado: el niño solo puede quitarla de la página de inicio.",
+ "„{}“ verschwindet aus den Playlists des Kindes – außer sein Album oder der ganze Künstler ist freigegeben. Das Kind kann es sich danach wieder wünschen.": "«{}» desaparece de las playlists del niño, salvo que su álbum o el artista entero esté autorizado. Después el niño puede volver a pedirla.",
+ "Zurückgenommen: {} – bleibt, weil Album oder Künstler freigegeben ist": "Retirado: {} – se queda, porque el álbum o el artista está autorizado",
+ "Zurückgenommen: {} – aus „{}“ genommen": "Retirado: {} – quitado de «{}»"
 }

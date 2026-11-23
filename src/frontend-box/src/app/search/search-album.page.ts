@@ -42,6 +42,7 @@ type Act =
   | 'wish'
   | 'wished'
   | 'onbox'
+  | 'adult'
   | 'move'
   | 'remove'
   | 'removeYes'
@@ -49,6 +50,8 @@ type Act =
   | 'songs'
   | 'takeOutYes'
   | 'albumSongs'
+  | 'deletePl'
+  | 'deletePlYes'
 type Tile =
   | { t: 'item' }
   | { t: 'act'; a: Act }
@@ -63,6 +66,7 @@ const ACT_TEXT = {
   wish: 'wishButton',
   wished: 'wishWished',
   onbox: 'wishOnBox',
+  adult: 'wishAdult',
   move: 'searchMove',
   remove: 'searchRemove',
   removeYes: 'searchRemoveYes',
@@ -70,6 +74,8 @@ const ACT_TEXT = {
   songs: 'plSongs',
   takeOutYes: 'plTakeOutYes',
   albumSongs: 'trackSongs',
+  deletePl: 'plDelete',
+  deletePlYes: 'plDeleteYes',
 } as const
 const ACT_ICON: Record<Act, string> = {
   play: TILE_ICON.play,
@@ -77,6 +83,7 @@ const ACT_ICON: Record<Act, string> = {
   wish: TILE_ICON.star,
   wished: TILE_ICON.star,
   onbox: TILE_ICON.check,
+  adult: TILE_ICON.cross,
   move: TILE_ICON.move,
   remove: TILE_ICON.cross,
   removeYes: TILE_ICON.cross,
@@ -84,14 +91,19 @@ const ACT_ICON: Record<Act, string> = {
   songs: TILE_ICON.music,
   takeOutYes: TILE_ICON.cross,
   albumSongs: TILE_ICON.music,
+  deletePl: TILE_ICON.cross,
+  deletePlYes: TILE_ICON.cross,
 }
 // (the star's yellow for wishing, the tick's green on the box, red for the last word on removing)
 const ACT_COLOURS: Partial<Record<Act, { bg: string; ink: string }>> = {
   wish: { bg: '#f5b301', ink: '#2a1d00' },
   wished: { bg: '#f5b301', ink: '#2a1d00' },
   onbox: { bg: '#2fb36b', ink: '#ffffff' },
+  adult: { bg: '#7a7a7a', ink: '#ffffff' },
   removeYes: { bg: '#d94848', ink: '#ffffff' },
   takeOutYes: { bg: '#d94848', ink: '#ffffff' },
+  deletePl: { bg: '#d94848', ink: '#ffffff' },
+  deletePlYes: { bg: '#d94848', ink: '#ffffff' },
 }
 
 // (fork "wishes") One thing of the search pool - an album (of a pool artist), a playlist, a podcast, or a whole artist
@@ -150,6 +162,8 @@ export class SearchAlbumPage extends SwiperIonicEventsHelper {
   protected readonly own = signal<OwnEntry | null>(null)
   /** "Entfernen" tapped: asked once more */
   protected readonly removing = signal(false)
+  /** "Ganz löschen" tapped (a playlist the child made): asked once more */
+  protected readonly deleting = signal(false)
   /** the tabs an own entry may go to: the shown ones but its own */
   protected readonly elsewhere = computed(() => this.flow.categories().filter((c) => c !== this.own()?.category))
   protected readonly album = signal<PoolAlbum | undefined>(undefined)
@@ -158,6 +172,8 @@ export class SearchAlbumPage extends SwiperIonicEventsHelper {
   /** "Auf die Startseite" tapped: the tabs are asked */
   protected readonly choosing = signal(false)
   protected readonly busy = signal(false)
+  /** (fork "wishes") an album of Spotify with explicit songs: "Nicht für Kinder" instead of "Wünschen" */
+  protected readonly adult = signal(false)
   /** (fork "wishes") a new playlist's name (typed in the search) */
   protected readonly newPlaylist = signal<string | null>(null)
   /** a single song of the Spotify search */
@@ -201,13 +217,15 @@ export class SearchAlbumPage extends SwiperIonicEventsHelper {
       ? this.texts.text(this.track() ? 'trackWhich' : 'searchWhere')
       : this.removing()
         ? this.texts.text('searchRemoveQ')
-        : this.albumTracks()
-          ? this.texts.text('trackSongs')
-          : this.songPick()
-            ? this.texts.text('plTakeOutQ')
-            : this.songs()
-              ? this.texts.text('plSongs')
-              : this.title(),
+        : this.deleting()
+          ? this.texts.text('plDeleteQ')
+          : this.albumTracks()
+            ? this.texts.text('trackSongs')
+            : this.songPick()
+              ? this.texts.text('plTakeOutQ')
+              : this.songs()
+                ? this.texts.text('plSongs')
+                : this.title(),
   )
   protected readonly cover = computed(() =>
     localizeCoverUrl(
@@ -250,6 +268,7 @@ export class SearchAlbumPage extends SwiperIonicEventsHelper {
       if (songs) return songs.map((x): Tile => ({ t: 'song', s: x }))
       if (this.choosing()) return cats(this.elsewhere())
       if (this.removing()) return [{ t: 'item' }, act('removeYes')]
+      if (this.deleting()) return [{ t: 'item' }, act('deletePlYes')]
       // (a playlist of its own account: its songs too)
       const ownList = o.kind === 'playlist' && o.own === true && this.flow.playlists().tracks
       return [
@@ -257,6 +276,10 @@ export class SearchAlbumPage extends SwiperIonicEventsHelper {
         ...(this.elsewhere().length ? [act('move')] : []),
         ...(ownList ? [act('songs')] : []),
         act('remove'),
+        // (a playlist it made itself, with "Kind darf eigene Playlists löschen" on: gone completely)
+        ...(o.kind === 'playlist' && this.flow.playlists().deletable.includes(o.ident.slice('playlist:'.length))
+          ? [act('deletePl')]
+          : []),
       ]
     }
     const albumTracks = this.albumTracks()
@@ -267,7 +290,8 @@ export class SearchAlbumPage extends SwiperIonicEventsHelper {
     if (this.playable()) out.push(act('play'))
     // (wished: the parents decide in the app; on the box already: nothing to wish or fetch)
     const w = this.wish()
-    if (w) out.push(act(w.there ? 'onbox' : this.wished() ? 'wished' : 'wish'))
+    // (an album with explicit songs: not for children - nothing to wish)
+    if (w) out.push(act(w.there ? 'onbox' : this.wished() ? 'wished' : this.adult() ? 'adult' : 'wish'))
     else out.push(act('start'))
     // (an album of Spotify with single songs on: its songs - one goes into a playlist of the child's own)
     if (this.albumId() && this.flow.playlists().tracks) out.push(act('albumSongs'))
@@ -318,7 +342,7 @@ export class SearchAlbumPage extends SwiperIonicEventsHelper {
         imgSrc: of(tilePicture(this.host.nativeElement, ACT_ICON[tile.a], ACT_COLOURS[tile.a])),
         data: tile,
         // (wished already: nothing to tap; Spotify blocks the box: "Abspielen" grey - a tap tells why)
-        dim: tile.a === 'wished' || (tile.a === 'play' && this.spotifyBlock.player()),
+        dim: tile.a === 'wished' || tile.a === 'adult' || (tile.a === 'play' && this.spotifyBlock.player()),
       }
     }),
   )
@@ -330,7 +354,7 @@ export class SearchAlbumPage extends SwiperIonicEventsHelper {
   /** the list's position kept per step: the tabs start at their first, back to the buttons where they were */
   protected readonly listKey = computed(
     () =>
-      `search-album|${this.choosing() ? 'tabs' : this.removing() ? 'remove' : this.albumTracks() ? 'tracks' : this.songPick() ? 'song' : this.songs() ? 'songs' : 'acts'}|${this.title()}`,
+      `search-album|${this.choosing() ? 'tabs' : this.removing() ? 'remove' : this.deleting() ? 'delete' : this.albumTracks() ? 'tracks' : this.songPick() ? 'song' : this.songs() ? 'songs' : 'acts'}|${this.title()}`,
   )
 
   constructor() {
@@ -356,6 +380,9 @@ export class SearchAlbumPage extends SwiperIonicEventsHelper {
     }
     this.own.set(state?.own ?? null)
     this.wish.set(state?.wish ?? null)
+    // (an album of Spotify: asked whether it has explicit songs - its songs, one request, kept a day)
+    const w = state?.wish
+    if (w?.kind === 'album' && !w.there) void this.flow.albumExplicit(w.id).then((x) => this.adult.set(x))
     this.album.set(state?.album)
     this.whole.set(state?.whole === true)
   }
@@ -420,6 +447,12 @@ export class SearchAlbumPage extends SwiperIonicEventsHelper {
       case 'albumSongs':
         void this.showAlbumSongs()
         return
+      case 'deletePl':
+        this.deleting.set(true)
+        return
+      case 'deletePlYes':
+        void this.deleteOwn()
+        return
     }
   }
 
@@ -437,9 +470,13 @@ export class SearchAlbumPage extends SwiperIonicEventsHelper {
       return
     }
     // (a new playlist: its tabs came first - back is back to the search)
-    if ((this.choosing() || this.removing()) && !(this.newPlaylist() !== null && this.flow.categories().length > 1)) {
+    if (
+      (this.choosing() || this.removing() || this.deleting()) &&
+      !(this.newPlaylist() !== null && this.flow.categories().length > 1)
+    ) {
       this.choosing.set(false)
       this.removing.set(false)
+      this.deleting.set(false)
       return
     }
     // (a song of the album's list: the list again)
@@ -512,6 +549,14 @@ export class SearchAlbumPage extends SwiperIonicEventsHelper {
     if (!songs) return this.flow.noteBack(this.texts.text('searchFailed'))
     if (!songs.length) return this.flow.noteBack(this.texts.text('plSongsNone'))
     this.songs.set(songs)
+  }
+
+  /** "Ja, ganz löschen": the playlist the child made, off the start page, the search and its Spotify library */
+  private async deleteOwn(): Promise<void> {
+    const o = this.own()
+    if (!o || this.busy()) return
+    this.busy.set(true)
+    await this.flow.deletePlaylist(o)
   }
 
   /** "Ja, herausnehmen": the song out of the playlist */

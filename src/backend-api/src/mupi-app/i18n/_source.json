@@ -3152,7 +3152,7 @@
  "Wünsche aus Spotify aus",
  "In der Suche am Display sucht eine Kachel „Bei Spotify suchen“ nach Alben, Künstlern und Podcasts. Das Kind kann sich etwas wünschen und den Reiter wählen; du gibst es in der App frei (Bibliothek › Wünsche), Home Assistant bekommt eine Nachricht mit Link. Spotify wird erst beim Tippen auf die Kachel gefragt, jeweils 10 Treffer, weitere erst beim Weiterblättern; jede Seite merkt sich die Box einen Tag. Aus: keine Spotify-Suche am Display, alles andere bleibt.",
  "Was das Kind in der Suche am Display bei Spotify gefunden und sich gewünscht hat. Freigegeben kommt es auf die Startseite – unter den Reiter, den das Kind gewählt hat. Die Freigabe bleibt: Das Kind kann es selbst entfernen und über die Suche wieder holen, bis du sie widerrufst.",
- "Wünsche sind ausgeschaltet: Display & Bedienung › Suche › „Wünsche aus Spotify“.",
+ "Wünsche sind ausgeschaltet: Display & Bedienung › Suche am Display › „Wünsche aus Spotify“.",
  "Offene Wünsche",
  "Keine offenen Wünsche.",
  "Entschieden",
@@ -3221,5 +3221,11 @@
  "Wünsche, Songs, Playlists – Recht vorhanden",
  "Recht für Playlists fehlt – neu anmelden",
  "Wünsche, Songs und Playlists für das Kind",
- "Die Suche am Display braucht zusätzlich das Recht, private Playlists zu ändern – dafür neu anmelden."
+ "Die Suche am Display braucht zusätzlich das Recht, private Playlists zu ändern – dafür neu anmelden.",
+ "Kind darf eigene Playlists löschen",
+ "Kind kann eigene Playlists nur von der Startseite nehmen",
+ "Nur Playlists, die das Kind am Display selbst angelegt hat: Unter „Einträge verwalten“ gibt es dann „Ganz löschen“ (einmal nachgefragt). Die Playlist verschwindet von der Startseite, aus der Suche und aus seiner Spotify-Bibliothek – Spotify selbst löscht Playlists nie, sie ist für das Kind nur nicht mehr zu finden. Braucht ein weiteres Recht bei Spotify. Aus: das Kind kann sie nur von der Startseite nehmen.",
+ "„{}“ verschwindet aus den Playlists des Kindes – außer sein Album oder der ganze Künstler ist freigegeben. Das Kind kann es sich danach wieder wünschen.",
+ "Zurückgenommen: {} – bleibt, weil Album oder Künstler freigegeben ist",
+ "Zurückgenommen: {} – aus „{}“ genommen"
 ]

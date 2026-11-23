@@ -114,6 +114,8 @@ export const DEFAULT_DISPLAY_TEXTS = {
   wishButton: 'Wish for it',
   wishWhole: 'Wish for everything by {n}',
   wishWished: 'Wished',
+  wishAdult: 'Not for children',
+  wishAdultNote: '{n} is not for children.',
   wishSent: 'Wish sent: {n}',
   wishAlready: 'You have wished for {n} already.',
   wishThere: '{n} is on the box already.',
@@ -151,6 +153,10 @@ export const DEFAULT_DISPLAY_TEXTS = {
   searchKindAlbum: 'Album',
   searchKindSong: 'Song',
   wishSentTo: 'Wish sent: {n} – for {p}',
+  plDelete: 'Delete completely',
+  plDeleteQ: 'Delete it completely?',
+  plDeleteYes: 'Yes, delete completely',
+  plDeleted: '{n} is deleted.',
 }
 export type DisplayTextKey = keyof typeof DEFAULT_DISPLAY_TEXTS
 type TextSet = Partial<Record<DisplayTextKey, string>>

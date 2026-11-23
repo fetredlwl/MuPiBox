@@ -79,28 +79,33 @@ export class SpotifyMediaInfo {
 
       if (!response.ok) {
         // ((fork "wishes") a private playlist - the child's own: from the Web API instead)
-        if (response.status === 404 && this.privatePlaylist) {
-          const own = await this.privatePlaylist(playlistId).catch((err) => {
-            console.warn(`${logPrefix} Private playlist ${playlistId} not read: ${err instanceof Error ? err.message : String(err)}`)
-            return undefined
-          })
-          if (own) {
-            await this.saveToCache(playlistId, own)
-            return own
-          }
-        }
+        const own = await this.fromWebApi(playlistId, logPrefix)
+        if (own) return own
         throw new Error(`Spotify Embed API error: ${response.status}`)
       }
 
-      const html = await response.text()
-      const match = html.match(/<script id="__NEXT_DATA__" type="application\/json">([\s\S]*?)<\/script>/)
+      let playlistData: SpotifyPlaylistData
+      try {
+        const html = await response.text()
+        const match = html.match(/<script id="__NEXT_DATA__" type="application\/json">([\s\S]*?)<\/script>/)
 
-      if (!match) {
-        throw new Error('Could not find __NEXT_DATA__ script tag in Spotify Embed HTML')
+        if (!match) {
+          throw new Error('Could not find __NEXT_DATA__ script tag in Spotify Embed HTML')
+        }
+
+        const nextData = JSON.parse(match[1])
+        playlistData = this.transformEmbedData(nextData)
+      } catch (error) {
+        // ((fork "wishes") an embed page without the playlist - a private one may come so too: the Web API)
+        const own = await this.fromWebApi(playlistId, logPrefix)
+        if (own) return own
+        throw error
       }
-
-      const nextData = JSON.parse(match[1])
-      const playlistData = this.transformEmbedData(nextData)
+      // ((fork "wishes") an embed page without tracks: a private playlist may show so - the Web API knows its tracks)
+      if (playlistData.tracks.length === 0) {
+        const own = await this.fromWebApi(playlistId, logPrefix)
+        if (own && own.tracks.length > 0) return own
+      }
 
       // The embed page lists 100 tracks at most: a playlist of 340 showed 100 (and "Track 5/100"). Such a list is
       // completed from the Web API; without a Spotify login or when that fails, the 100 stay - or the full list read
@@ -197,6 +202,20 @@ export class SpotifyMediaInfo {
     if (!fs.existsSync(this.cacheDir)) {
       fs.mkdirSync(this.cacheDir, { recursive: true })
     }
+  }
+
+  /**
+   * (fork "wishes") A playlist from the Web API with the Spotify login (privatePlaylist), kept as the embed's would be;
+   * undefined: no login, not readable (another account's private playlist), Spotify blocks.
+   */
+  private async fromWebApi(playlistId: string, logPrefix: string): Promise<SpotifyPlaylistData | undefined> {
+    if (!this.privatePlaylist) return undefined
+    const own = await this.privatePlaylist(playlistId).catch((err) => {
+      console.warn(`${logPrefix} Playlist ${playlistId} not read from the Web API: ${err instanceof Error ? err.message : String(err)}`)
+      return undefined
+    })
+    if (own) await this.saveToCache(playlistId, own)
+    return own
   }
 
   /** (fork "wishes") the kept list of a playlist forgotten - a song was put in or taken out: read anew next time */

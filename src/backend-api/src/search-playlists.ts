@@ -26,14 +26,16 @@ type Category = (typeof LIBRARY_CATEGORIES)[number]
 export interface PlaylistsApi {
   /** a new private playlist in the child's account */
   create(name: string): Promise<{ id: string }>
-  /** songs into a playlist (at its end) */
-  add(playlistId: string, uris: string[]): Promise<void>
-  /** songs out of a playlist */
-  remove(playlistId: string, uris: string[]): Promise<void>
+  /** songs into a playlist (at its end); answer: the playlist's new version (Spotify's snapshot_id), if it gave one */
+  add(playlistId: string, uris: string[]): Promise<string | undefined>
+  /** songs out of a playlist; answer as add */
+  remove(playlistId: string, uris: string[]): Promise<string | undefined>
   /** the songs of a playlist of the account (200 at most) */
   items(playlistId: string): Promise<PlaylistSong[]>
   /** a playlist's picture as Spotify has it now ('' none yet) */
   cover(playlistId: string): Promise<string>
+  /** out of the account's library (Spotify has no deleting: its owner just does not follow it any more) */
+  unlist(playlistId: string): Promise<void>
 }
 
 export interface PlaylistSong {
@@ -58,6 +60,7 @@ export interface TargetPlaylist {
   id: string
   name: string
   cover: string
+  /** the start page's tab; '' - only allowed for the search, not on the start page */
   category: string
   /** put there by the child itself: it may take songs out of it */
   kidAdded: boolean
@@ -88,7 +91,19 @@ export interface SearchPlaylistsDeps {
   accountPlaylists?: () => Promise<Set<string>>
   /** the pictures of the account's playlists as Spotify has them now (one request for all - /me/playlists) */
   accountCovers?: () => Promise<Map<string, string>>
+  /**
+   * the versions of the account's playlists (Spotify's snapshot_id, from the same /me/playlists answer, kept a while) and
+   * when they were read - a song list kept with the same version is still right (the ✓ asks nobody then)
+   */
+  accountSnapshots?: () => Promise<{ at: number; snapshots: Map<string, string> }>
   now?: () => number
+}
+
+/** the songs of a playlist (their ids, in order) as Spotify had them in one version of it */
+interface KeptSongs {
+  snapshot: string
+  ids: string[]
+  at: number
 }
 
 const SPOTIFY_ID = /^[A-Za-z0-9]{22}$/
@@ -118,6 +133,17 @@ export const tracksOn = (cfg: Record<string, unknown> | undefined): boolean =>
   mupibox(cfg).displayWishes === true &&
   mupibox(cfg).displayTracks === true &&
   writeScope(cfg)
+/** "Kind darf eigene Playlists löschen" - and the right to take them out of the child's Spotify library */
+export const LIBRARY_WRITE_SCOPE = 'user-library-modify'
+export const deleteOn = (cfg: Record<string, unknown> | undefined): boolean => {
+  const scopes = (cfg?.spotify as Record<string, unknown> | undefined)?.tokenScopes
+  return (
+    createOn(cfg) &&
+    mupibox(cfg).displayPlaylistDelete === true &&
+    Array.isArray(scopes) &&
+    scopes.includes(LIBRARY_WRITE_SCOPE)
+  )
+}
 export const perDay = (cfg: Record<string, unknown> | undefined): number => {
   const n = Number(mupibox(cfg).playlistsPerDay)
   return Number.isInteger(n) && n >= 1 && n <= 20 ? n : 5
@@ -158,14 +184,18 @@ export class SearchPlaylists {
   private readonly file: string
   private readonly now: () => number
   private queue: Promise<unknown> = Promise.resolve()
-  // the songs of the child's playlists as read last (2 minutes; a song put in or taken out: read anew) - for the ✓ at
-  // "In welche Playlist?"
-  private readonly songsKept = new Map<string, { at: number; ids: Set<string> }>()
+  // the songs of the child's playlists as read last - for the ✓ at "In welche Playlist?": kept with the playlist's
+  // version (search-playlists-songs.json, read anew only when Spotify has another); without a version 2 minutes
+  private readonly songsKept = new Map<string, { at: number; ids: string[] }>()
+  private readonly indexFile: string
+  private index?: Record<string, KeptSongs>
+  private indexQueue: Promise<unknown> = Promise.resolve()
   // when a playlist's picture was asked last (one without a picture: at most every 10 minutes)
   private readonly coverAsked = new Map<string, number>()
 
   constructor(private readonly deps: SearchPlaylistsDeps) {
     this.file = path.join(deps.configDir, 'search-playlists.json')
+    this.indexFile = path.join(deps.configDir, 'search-playlists-songs.json')
     this.now = deps.now ?? Date.now
   }
 
@@ -204,9 +234,15 @@ export class SearchPlaylists {
   /** the playlists of the child's account on the start page (songs may go into them) */
   async targets(): Promise<TargetPlaylist[]> {
     const rows = await this.deps.pool.ownPlaylists()
+    // the account's playlists allowed for the search but not on the start page: songs may go there too
+    const onPage = new Set(rows.map((r) => r.id))
+    const pooled = (await this.deps.pool.entries())
+      .filter((e) => e.kind === 'playlist' && SPOTIFY_ID.test(e.spotifyId) && !onPage.has(e.spotifyId))
+      .map((e) => ({ id: e.spotifyId, name: e.name, cover: e.cover, category: '', kidAdded: false, own: e.own === true }))
+    const all = [...rows, ...pooled]
     // (only asked when there is one without the mark; no answer - no login, a block: the marked ones only)
-    const account = rows.some((r) => !r.own) ? await this.deps.accountPlaylists?.().catch(() => undefined) : undefined
-    const targets = rows.filter((r) => r.own || account?.has(r.id)).map(({ own: _own, ...r }) => r)
+    const account = all.some((r) => !r.own) ? await this.deps.accountPlaylists?.().catch(() => undefined) : undefined
+    const targets = all.filter((r) => r.own || account?.has(r.id)).map(({ own: _own, ...r }) => r)
     // (one without a picture - made by the child, empty then: asked again in the background, at most every 10 minutes)
     for (const t of targets) if (!t.cover) this.refreshCover(t.id, false)
     return targets
@@ -231,6 +267,25 @@ export class SearchPlaylists {
     }
     if (later) setTimeout(() => void run(), MOSAIC_DELAY_MS).unref?.()
     else void run()
+  }
+
+  /** the playlists the child made itself (only these it may delete) */
+  async made(): Promise<string[]> {
+    return [...new Set((await this.state()).created.map((c) => c.id))]
+  }
+
+  /**
+   * "Ganz löschen": a playlist the child made itself off the start page, out of the search and out of its Spotify
+   * library (Spotify keeps it, unfollowed - it is not shown to the child any more). Answer: deleted, not_made.
+   */
+  async remove(playlistId: string): Promise<'deleted' | 'not_made' | 'locked'> {
+    if (!(await this.made()).includes(playlistId)) return 'not_made'
+    await this.api().unlist(playlistId)
+    await this.keepSongs(playlistId, undefined)
+    const ident = `playlist:${playlistId}`
+    const off = await this.deps.pool.removeOwn(ident)
+    await this.deps.pool.removeByIdent(ident)
+    return off === 'locked' ? 'locked' : 'deleted'
   }
 
   /** how many playlists the child may still make today */
@@ -282,11 +337,10 @@ export class SearchPlaylists {
   async put(t: TrackRef, playlistId: string, told = true): Promise<'added' | 'already' | 'no_target'> {
     const target = (await this.targets()).find((p) => p.id === playlistId)
     if (!target) return 'no_target'
-    const api = this.api()
-    this.songsKept.delete(playlistId)
-    const before = await api.items(playlistId)
-    if (before.some((s) => s.id === t.id)) return 'already'
-    await api.add(playlistId, [`spotify:track:${t.id}`])
+    const before = await this.songIds(playlistId, true)
+    if (before.includes(t.id)) return 'already'
+    const snapshot = await this.api().add(playlistId, [`spotify:track:${t.id}`])
+    await this.keepSongs(playlistId, [...before, t.id], snapshot)
     // (its picture: Spotify's mosaic of the first songs' covers - a song at the end changes it only while there are few)
     if (before.length < MOSAIC_SONGS) this.refreshCover(playlistId, true)
     if (told)
@@ -301,19 +355,67 @@ export class SearchPlaylists {
     return 'added'
   }
 
-  /** the songs of a playlist (their ids), kept 2 minutes */
-  private async songIds(playlistId: string): Promise<Set<string>> {
-    const have = this.songsKept.get(playlistId)
-    if (have && this.now() - have.at < 120_000) return have.ids
-    const ids = new Set((await this.api().items(playlistId)).map((s) => s.id))
-    this.songsKept.set(playlistId, { at: this.now(), ids })
+  private async songIndex(): Promise<Record<string, KeptSongs>> {
+    if (!this.index) {
+      try {
+        const read = JSON.parse(await fsp.readFile(this.indexFile, 'utf8')) as Record<string, KeptSongs>
+        this.index = {}
+        for (const [id, k] of Object.entries(read ?? {}))
+          if (SPOTIFY_ID.test(id) && typeof k?.snapshot === 'string' && Array.isArray(k.ids) && typeof k.at === 'number')
+            this.index[id] = { snapshot: k.snapshot, ids: k.ids.filter((x) => typeof x === 'string'), at: k.at }
+      } catch {
+        this.index = {}
+      }
+    }
+    return this.index
+  }
+
+  /**
+   * a playlist's songs as they are now: kept with its version (snapshot) - none: kept 2 minutes only; undefined:
+   * forgotten (read anew next time)
+   */
+  private async keepSongs(playlistId: string, ids: string[] | undefined, snapshot?: string): Promise<void> {
+    const index = await this.songIndex()
+    if (ids) this.songsKept.set(playlistId, { at: this.now(), ids })
+    else this.songsKept.delete(playlistId)
+    const had = playlistId in index
+    if (ids && snapshot) index[playlistId] = { snapshot, ids, at: this.now() }
+    else if (had) delete index[playlistId]
+    else return
+    // (a cache, not in the backup: lost, the songs are read anew)
+    const run = this.indexQueue.then(async () => {
+      const tmp = `${this.indexFile}.tmp.${process.pid}.${Date.now()}`
+      await fsp.writeFile(tmp, JSON.stringify(index))
+      await fsp.rename(tmp, this.indexFile)
+    })
+    this.indexQueue = run.catch(() => undefined)
+    await run.catch(() => undefined)
+  }
+
+  /**
+   * The songs of a playlist (their ids, in order): as kept while Spotify has the same version of it (asked with the
+   * account's playlists, one request for all, kept a while) - or the box changed it itself since that answer. Only
+   * another version - a song put in or out in the Spotify app - reads the songs anew. fresh: read now (before a song
+   * goes in: the account's answer may be minutes old, and a song twice in it is no good)
+   */
+  private async songIds(playlistId: string, fresh = false): Promise<string[]> {
+    const account = await this.deps.accountSnapshots?.().catch(() => undefined)
+    const snapshot = account?.snapshots.get(playlistId)
+    const kept = (await this.songIndex())[playlistId]
+    if (!fresh && account && snapshot && kept && (kept.snapshot === snapshot || kept.at > account.at)) return kept.ids
+    if (!fresh && !snapshot) {
+      const have = this.songsKept.get(playlistId)
+      if (have && this.now() - have.at < 120_000) return have.ids
+    }
+    const ids = (await this.api().items(playlistId)).map((s) => s.id)
+    await this.keepSongs(playlistId, ids, snapshot)
     return ids
   }
 
-  /** the child's playlists on the start page the song is in already (the ✓ at "In welche Playlist?") */
+  /** the child's playlists the song is in already (the ✓ at "In welche Playlist?") */
   async containing(trackId: string): Promise<string[]> {
     const out: string[] = []
-    for (const p of await this.targets()) if ((await this.songIds(p.id)).has(trackId)) out.push(p.id)
+    for (const p of await this.targets()) if ((await this.songIds(p.id)).includes(trackId)) out.push(p.id)
     return out
   }
 
@@ -333,7 +435,37 @@ export class SearchPlaylists {
     return r
   }
 
-  /** an approval of a song taken back: not at once any more (it stays in the playlist it went into) */
+  /**
+   * An approval of a song taken back: out of the playlist it went into (target) and out of the child's own playlists -
+   * unless another approval lets the child play it still (its album or its whole artist on the box or allowed). Answer:
+   * the playlists it was taken out of; still: it stays allowed.
+   */
+  async revoke(t: TrackRef, target?: string): Promise<{ removed: string[]; still: boolean }> {
+    const approved = await this.approved()
+    approved.delete(t.id)
+    const still = trackAllowed(t, await this.deps.pool.onBox(), await this.deps.pool.entries(), approved)
+    const removed: string[] = []
+    if (!still) {
+      for (const p of await this.targets()) {
+        // (the parents' own playlists only where the approval put it - what they put there themselves stays)
+        if (!p.kidAdded && p.id !== target) continue
+        const ids = await this.songIds(p.id)
+        if (!ids.includes(t.id)) continue
+        const snapshot = await this.api().remove(p.id, [`spotify:track:${t.id}`])
+        await this.keepSongs(
+          p.id,
+          ids.filter((x) => x !== t.id),
+          snapshot,
+        )
+        this.refreshCover(p.id, true)
+        removed.push(p.name)
+      }
+    }
+    await this.forget(t.id)
+    return { removed, still }
+  }
+
+  /** the approval of a song forgotten (it is not allowed at once any more) */
   async forget(trackId: string): Promise<void> {
     await this.serial(async () => {
       const s = await this.state()
@@ -346,7 +478,15 @@ export class SearchPlaylists {
   async songs(playlistId: string): Promise<PlaylistSong[] | 'not_own'> {
     const target = (await this.targets()).find((p) => p.id === playlistId && p.kidAdded)
     if (!target) return 'not_own'
-    return this.api().items(playlistId)
+    const songs = await this.api().items(playlistId)
+    // (read anyway: kept for the ✓ with the version Spotify has now)
+    const account = await this.deps.accountSnapshots?.().catch(() => undefined)
+    await this.keepSongs(
+      playlistId,
+      songs.map((s) => s.id),
+      account?.snapshots.get(playlistId),
+    )
+    return songs
   }
 
   /**
@@ -366,10 +506,15 @@ export class SearchPlaylists {
   async takeOut(playlistId: string, song: { id: string; name: string }): Promise<'removed' | 'not_own'> {
     const target = (await this.targets()).find((p) => p.id === playlistId && p.kidAdded)
     if (!target) return 'not_own'
-    this.songsKept.delete(playlistId)
     // (its picture changes when one of the first songs goes - they make the mosaic)
-    const at = (await this.api().items(playlistId)).findIndex((s) => s.id === song.id)
-    await this.api().remove(playlistId, [`spotify:track:${song.id}`])
+    const ids = await this.songIds(playlistId)
+    const at = ids.indexOf(song.id)
+    const snapshot = await this.api().remove(playlistId, [`spotify:track:${song.id}`])
+    await this.keepSongs(
+      playlistId,
+      ids.filter((x) => x !== song.id),
+      snapshot,
+    )
     if (at >= 0 && at < MOSAIC_SONGS) this.refreshCover(playlistId, true)
     await this.deps.pool.announce({
       what: 'removed',
@@ -412,7 +557,24 @@ export function registerSearchPlaylistsRoutes(app: Express, deps: SearchPlaylist
       tracks,
       left: createOn(cfg()) ? await playlists.left() : 0,
       targets: await playlists.targets(),
+      // (the ones the child may delete: those it made itself, with "Kind darf eigene Playlists löschen" on)
+      deletable: deleteOn(cfg()) ? await playlists.made() : [],
     })
+  })
+
+  /** POST /api/search-playlists/delete {id} - "Ganz löschen" of a playlist the child made itself */
+  app.post('/api/search-playlists/delete', localOnly, async (req, res) => {
+    if (!deleteOn(cfg())) return fail(res, 403, 'off')
+    const id = String(req.body?.id ?? '')
+    if (!SPOTIFY_ID.test(id)) return fail(res, 400, 'invalid_request')
+    try {
+      const r = await playlists.remove(id)
+      if (r === 'not_made') return fail(res, 403, 'not_made')
+      if (r === 'locked') return fail(res, 409, 'library_busy')
+      res.json({ ok: true })
+    } catch (err) {
+      failed(res, err, 'delete')
+    }
   })
 
   /** POST /api/search-playlists/create {name, category} - "Neue Playlist" (private, in the child's account) */

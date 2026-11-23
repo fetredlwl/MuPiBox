@@ -34,7 +34,23 @@ Bedienung › Suche am Display*; aus = wie bisher)
 - Für Anlegen und Songs braucht die Box das Recht, private Playlists zu ändern: Beim Einschalten fragt die App gleich nach der
   Spotify-Anmeldung und kommt danach auf die Seite zurück. Die Spotify-Seite und der Einrichtungs-Assistent kennen das Recht
   (der Assistent sagt nicht mehr „Alles eingerichtet“, solange es fehlt).
-- „In welche Playlist?“ zeigt mit ✓, in welcher Playlist der Song schon steckt.
+- „In welche Playlist?“ zeigt mit ✓, in welcher Playlist der Song schon steckt. Die Box merkt sich die Songs jeder eigenen
+  Playlist samt Spotifys Versionskennung (`snapshot_id`) und liest sie nur neu, wenn Spotify eine andere Version meldet –
+  der ✓ kostet meist keine Anfrage mehr (die Versionen kommen mit derselben Anfrage wie die Playlist-Bilder).
+- Zur Auswahl stehen alle Playlists des eigenen Kontos, die für die Suche freigegeben sind – nicht nur die auf der Startseite.
+- Titelliste einer Playlist, die das Kind über die Suche abspielt: kommt jetzt auch, wenn die Box die Playlist noch nicht
+  kannte (bisher „Spotify antwortet gerade nicht“).
+- Künstler in der Trefferliste (Tastatur zugeklappt) sind jetzt wirklich rund – bisher ein rundes Bild in einem eckigen Rahmen,
+  weil die Themes jede Kachel einer Liste eckig erzwingen.
+- **Alben mit expliziten Songs:** Spotify markiert nur Songs, nicht Alben. Öffnet das Kind ein Spotify-Album, fragt die Box
+  einmal dessen Songs ab (einen Tag gemerkt); ist einer explizit, steht dort grau „Nicht für Kinder“ statt „Wünschen“.
+  Zusätzlich empfohlen: im Spotify-Konto des Kindes (Family-Verwaltung) „Explizite Inhalte“ sperren.
+- **Kind darf eigene Playlists löschen** (neuer Schalter, aus): Playlists, die das Kind selbst angelegt hat, lassen sich unter
+  „Einträge verwalten“ ganz löschen (einmal nachgefragt) – weg von der Startseite, aus der Suche und aus seiner
+  Spotify-Bibliothek (Spotify selbst löscht Playlists nie). Braucht das Spotify-Recht `user-library-modify` (die App fragt).
+- **Widerrufene Song-Freigabe:** Der Song verschwindet aus den Playlists des Kindes (aus der Ziel-Playlist und seinen eigenen),
+  außer sein Album oder der ganze Künstler ist anders freigegeben.
+- Titelliste privater Playlists: der Weg über den Spotify-Login greift jetzt bei jedem Fehler der öffentlichen Seite.
 - Bild der Playlists des Kindes: Spotify bildet es aus den Covern der ersten vier Songs. Die Box holt es eine Minute nach
   einer Änderung, die es betrifft (ein Song kommt in eine Playlist mit weniger als vier Songs, einer der ersten vier geht), dazu
   alle 6 Stunden für alle auf einmal (auch Änderungen aus der Spotify-App) und für Playlists ohne Bild beim Öffnen der Suche –

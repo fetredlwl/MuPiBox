@@ -1303,14 +1303,21 @@ const playlistsApi: PlaylistsApi = {
       description: 'MuPiBox',
     }),
   add: async (id, uris) => {
-    await spotifySend('POST', `/playlists/${encodeURIComponent(id)}/items`, await playlistsToken(), { uris })
+    const r = await spotifySend<{ snapshot_id?: string }>('POST', `/playlists/${encodeURIComponent(id)}/items`, await playlistsToken(), { uris })
     // (the player's list of it: read anew - the song shows at once)
     spotifyMediaInfo.forget(id)
+    return typeof r?.snapshot_id === 'string' ? r.snapshot_id : undefined
   },
   remove: async (id, uris) => {
-    await spotifySend('DELETE', `/playlists/${encodeURIComponent(id)}/items`, await playlistsToken(), {
+    const r = await spotifySend<{ snapshot_id?: string }>('DELETE', `/playlists/${encodeURIComponent(id)}/items`, await playlistsToken(), {
       items: uris.map((uri) => ({ uri })),
     })
+    spotifyMediaInfo.forget(id)
+    return typeof r?.snapshot_id === 'string' ? r.snapshot_id : undefined
+  },
+  unlist: async (id) => {
+    // (Spotify has no deleting since 2026: out of the library - the URI in the query, as its reference shows it)
+    await spotifySend('DELETE', `/me/library?uris=${encodeURIComponent(`spotify:playlist:${id}`)}`, await playlistsToken(), undefined)
     spotifyMediaInfo.forget(id)
   },
   cover: async (id) => {
@@ -1358,37 +1365,53 @@ const playlistsFixture: PlaylistsApi = {
     const list = fixtureSongs.get(id) ?? []
     for (const uri of uris) list.push({ id: uri.split(':').pop() ?? '', name: uri, artist: '', cover: '' })
     fixtureSongs.set(id, list)
+    return undefined
   },
   remove: async (id, uris) => {
     fixtureLog(`playlist remove ${id} ${uris.join(',')}`)
     fixtureSongs.set(id, (fixtureSongs.get(id) ?? []).filter((s) => !uris.includes(`spotify:track:${s.id}`)))
+    return undefined
   },
   cover: async () => '',
+  unlist: async (id) => {
+    fixtureLog(`playlist unlist ${id}`)
+    fixtureSongs.delete(id)
+  },
   items: async (id) => {
     fixtureLog(`playlist items ${id}`)
     return fixtureSongs.get(id) ?? []
   },
 }
 // (the account's own playlists - and those it collaborates on: songs may go into them; kept 10 minutes)
-// (and their pictures - the routine of search-playlists.ts takes them from the same answer)
-let accountPlaylistsKept: { at: number; ids: Set<string>; covers: Map<string, string> } | null = null
-const accountInfo = async (fresh = false): Promise<{ ids: Set<string>; covers: Map<string, string> }> => {
-  if (spotifyFixture) return { ids: new Set(), covers: new Map() }
+// (and their pictures - the routine of search-playlists.ts takes them from the same answer; and their versions - a song
+// list kept with the same one is still right)
+type AccountInfo = { at: number; ids: Set<string>; covers: Map<string, string>; snapshots: Map<string, string> }
+let accountPlaylistsKept: AccountInfo | null = null
+const accountInfo = async (fresh = false): Promise<AccountInfo> => {
+  if (spotifyFixture) return { at: Date.now(), ids: new Set(), covers: new Map(), snapshots: new Map() }
   if (!fresh && accountPlaylistsKept && Date.now() - accountPlaylistsKept.at < 600_000) return accountPlaylistsKept
   const token = await playlistsToken()
   const me = await spotifyGet<{ id?: string }>('/me', token, 'display')
   const ids = new Set<string>()
   const covers = new Map<string, string>()
+  const snapshots = new Map<string, string>()
   let offset = 0
   for (let page = 0; page < 10; page++) {
     const d = await spotifyGet<{
-      items?: ({ id?: string; owner?: { id?: string }; collaborative?: boolean; images?: { url?: string; width?: number | null }[] | null } | null)[]
+      items?: ({
+        id?: string
+        owner?: { id?: string }
+        collaborative?: boolean
+        snapshot_id?: string
+        images?: { url?: string; width?: number | null }[] | null
+      } | null)[]
       next?: string | null
     }>(`/me/playlists?limit=50&offset=${offset}`, token, 'display')
     const items = d.items ?? []
     for (const p of items) {
       if (!p?.id || !((!!me.id && p.owner?.id === me.id) || p.collaborative === true)) continue
       ids.add(p.id)
+      if (typeof p.snapshot_id === 'string') snapshots.set(p.id, p.snapshot_id)
       const images = (p.images ?? []).filter((i) => i.url)
       const url = images.find((i) => (i.width ?? 0) >= 250 && (i.width ?? 0) <= 400)?.url ?? images[0]?.url
       if (url) covers.set(p.id, url)
@@ -1396,7 +1419,7 @@ const accountInfo = async (fresh = false): Promise<{ ids: Set<string>; covers: M
     offset += items.length
     if (!d.next || !items.length) break
   }
-  accountPlaylistsKept = { at: Date.now(), ids, covers }
+  accountPlaylistsKept = { at: Date.now(), ids, covers, snapshots }
   return accountPlaylistsKept
 }
 const accountPlaylists = async (): Promise<Set<string>> => (await accountInfo()).ids
@@ -1407,6 +1430,7 @@ const searchPlaylists = registerSearchPlaylistsRoutes(app, {
   api: () => (spotifyFixture ? playlistsFixture : playlistsApi),
   accountPlaylists,
   accountCovers: async () => (await accountInfo(true)).covers,
+  accountSnapshots: () => accountInfo(),
 })
 
 registerWishesRoutes(app, {
@@ -4588,6 +4612,15 @@ app.get('/api/spotify/playlist/:playlistId', async (req, res) => {
 
     // Try API first (fast for public/accessible playlists)
     const apiData = await spotifyApiService.getPlaylist(playlistId, forceRefresh)
+    // ((fork "wishes") the API gives a playlist without its tracks: a list not kept yet - one the child plays from the
+    // search, a private one - read now (embed page, else the Web API with the login) instead of an empty list)
+    if (!apiData.tracks?.items?.length) {
+      const read = await spotifyMediaInfo.fetchPlaylistData(playlistId).catch(() => undefined)
+      if (read?.tracks?.length) {
+        res.status(200).json(read)
+        return
+      }
+    }
     res.status(200).json(apiData)
 
     console.log(

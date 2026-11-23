@@ -3230,7 +3230,6 @@
  "Wünsche aus Spotify an": "Önskningar från Spotify på",
  "Wünsche aus Spotify aus": "Önskningar från Spotify av",
  "In der Suche am Display sucht eine Kachel „Bei Spotify suchen“ nach Alben, Künstlern und Podcasts. Das Kind kann sich etwas wünschen und den Reiter wählen; du gibst es in der App frei (Bibliothek › Wünsche), Home Assistant bekommt eine Nachricht mit Link. Spotify wird erst beim Tippen auf die Kachel gefragt, jeweils 10 Treffer, weitere erst beim Weiterblättern; jede Seite merkt sich die Box einen Tag. Aus: keine Spotify-Suche am Display, alles andere bleibt.": "I sökningen på displayen söker en ruta ”Sök på Spotify” efter album, artister och poddar. Barnet kan önska något och välja flik; du godkänner det i appen (Bibliotek › Önskningar), Home Assistant får ett meddelande med länk. Spotify tillfrågas först när rutan trycks, 10 träffar åt gången, fler först när man bläddrar vidare; boxen sparar varje sida en dag. Av: ingen Spotify-sökning på displayen, allt annat är kvar.",
- "Wünsche sind ausgeschaltet: Display & Bedienung › Suche › „Wünsche aus Spotify“.": "Önskningar är avstängda: Display & manövrering › Sök › ”Önskningar från Spotify”.",
  "Offene Wünsche": "Öppna önskningar",
  "Keine offenen Wünsche.": "Inga öppna önskningar.",
  "Entschieden": "Avgjorda",
@@ -3302,5 +3301,12 @@
  "Wünsche, Songs, Playlists – Recht vorhanden": "Önskningar, låtar, spellistor – rätt finns",
  "Recht für Playlists fehlt – neu anmelden": "Rätt för spellistor saknas – logga in igen",
  "Wünsche, Songs und Playlists für das Kind": "Önskningar, låtar och spellistor för barnet",
- "Die Suche am Display braucht zusätzlich das Recht, private Playlists zu ändern – dafür neu anmelden.": "Sökningen på displayen behöver också rätt att ändra privata spellistor – logga in igen för det."
+ "Die Suche am Display braucht zusätzlich das Recht, private Playlists zu ändern – dafür neu anmelden.": "Sökningen på displayen behöver också rätt att ändra privata spellistor – logga in igen för det.",
+ "Wünsche sind ausgeschaltet: Display & Bedienung › Suche am Display › „Wünsche aus Spotify“.": "Önskningar är avstängda: Display & manövrering › Sökning på displayen › ”Önskningar från Spotify”.",
+ "Kind darf eigene Playlists löschen": "Barnet får ta bort egna spellistor",
+ "Kind kann eigene Playlists nur von der Startseite nehmen": "Barnet kan bara ta bort egna spellistor från startsidan",
+ "Nur Playlists, die das Kind am Display selbst angelegt hat: Unter „Einträge verwalten“ gibt es dann „Ganz löschen“ (einmal nachgefragt). Die Playlist verschwindet von der Startseite, aus der Suche und aus seiner Spotify-Bibliothek – Spotify selbst löscht Playlists nie, sie ist für das Kind nur nicht mehr zu finden. Braucht ein weiteres Recht bei Spotify. Aus: das Kind kann sie nur von der Startseite nehmen.": "Bara spellistor som barnet själv skapat på displayen: under ”Hantera poster” finns då ”Ta bort helt” (frågas en gång till). Spellistan försvinner från startsidan, sökningen och dess Spotify-bibliotek – Spotify tar aldrig bort spellistor helt, barnet hittar den bara inte längre. Kräver ytterligare en rätt hos Spotify. Av: barnet kan bara ta bort den från startsidan.",
+ "„{}“ verschwindet aus den Playlists des Kindes – außer sein Album oder der ganze Künstler ist freigegeben. Das Kind kann es sich danach wieder wünschen.": "”{}” försvinner från barnets spellistor – om inte albumet eller hela artisten är godkänd. Barnet kan sedan önska sig den igen.",
+ "Zurückgenommen: {} – bleibt, weil Album oder Künstler freigegeben ist": "Återkallad: {} – blir kvar, eftersom albumet eller artisten är godkänd",
+ "Zurückgenommen: {} – aus „{}“ genommen": "Återkallad: {} – borttagen ur ”{}”"
 }

@@ -3230,7 +3230,6 @@
  "Wünsche aus Spotify an": "Přání ze Spotify zapnuta",
  "Wünsche aus Spotify aus": "Přání ze Spotify vypnuta",
  "In der Suche am Display sucht eine Kachel „Bei Spotify suchen“ nach Alben, Künstlern und Podcasts. Das Kind kann sich etwas wünschen und den Reiter wählen; du gibst es in der App frei (Bibliothek › Wünsche), Home Assistant bekommt eine Nachricht mit Link. Spotify wird erst beim Tippen auf die Kachel gefragt, jeweils 10 Treffer, weitere erst beim Weiterblättern; jede Seite merkt sich die Box einen Tag. Aus: keine Spotify-Suche am Display, alles andere bleibt.": "Ve vyhledávání na displeji hledá dlaždice „Hledat na Spotify“ alba, interprety a podcasty. Dítě si může něco přát a vybrat kartu; ty to schválíš v aplikaci (Knihovna › Přání), Home Assistant dostane zprávu s odkazem. Spotify se ptá až po klepnutí na dlaždici, po 10 výsledcích, další až při posouvání; box si každou stránku pamatuje den. Vypnuto: žádné hledání na Spotify na displeji, vše ostatní zůstává.",
- "Wünsche sind ausgeschaltet: Display & Bedienung › Suche › „Wünsche aus Spotify“.": "Přání jsou vypnuta: Displej a ovládání › Hledání › „Přání ze Spotify“.",
  "Offene Wünsche": "Otevřená přání",
  "Keine offenen Wünsche.": "Žádná otevřená přání.",
  "Entschieden": "Rozhodnuto",
@@ -3302,5 +3301,12 @@
  "Wünsche, Songs, Playlists – Recht vorhanden": "Přání, skladby, playlisty – oprávnění uděleno",
  "Recht für Playlists fehlt – neu anmelden": "Chybí oprávnění pro playlisty – přihlásit znovu",
  "Wünsche, Songs und Playlists für das Kind": "Přání, skladby a playlisty pro dítě",
- "Die Suche am Display braucht zusätzlich das Recht, private Playlists zu ändern – dafür neu anmelden.": "Vyhledávání na displeji potřebuje navíc oprávnění měnit soukromé playlisty – kvůli tomu se přihlas znovu."
+ "Die Suche am Display braucht zusätzlich das Recht, private Playlists zu ändern – dafür neu anmelden.": "Vyhledávání na displeji potřebuje navíc oprávnění měnit soukromé playlisty – kvůli tomu se přihlas znovu.",
+ "Wünsche sind ausgeschaltet: Display & Bedienung › Suche am Display › „Wünsche aus Spotify“.": "Přání jsou vypnuta: Displej a ovládání › Vyhledávání na displeji › „Přání ze Spotify“.",
+ "Kind darf eigene Playlists löschen": "Dítě smí mazat vlastní playlisty",
+ "Kind kann eigene Playlists nur von der Startseite nehmen": "Dítě může vlastní playlisty jen odebrat z úvodní stránky",
+ "Nur Playlists, die das Kind am Display selbst angelegt hat: Unter „Einträge verwalten“ gibt es dann „Ganz löschen“ (einmal nachgefragt). Die Playlist verschwindet von der Startseite, aus der Suche und aus seiner Spotify-Bibliothek – Spotify selbst löscht Playlists nie, sie ist für das Kind nur nicht mehr zu finden. Braucht ein weiteres Recht bei Spotify. Aus: das Kind kann sie nur von der Startseite nehmen.": "Jen playlisty, které dítě samo vytvořilo na displeji: v „Spravovat položky“ je pak „Smazat úplně“ (s dotazem navíc). Playlist zmizí z úvodní stránky, z vyhledávání a z jeho knihovny Spotify – Spotify playlisty nikdy úplně nemaže, dítě ho jen už nenajde. Vyžaduje další oprávnění Spotify. Vypnuto: dítě ho může jen odebrat z úvodní stránky.",
+ "„{}“ verschwindet aus den Playlists des Kindes – außer sein Album oder der ganze Künstler ist freigegeben. Das Kind kann es sich danach wieder wünschen.": "„{}“ zmizí z playlistů dítěte – pokud jeho album nebo celý interpret není schválen. Dítě si ho pak může znovu přát.",
+ "Zurückgenommen: {} – bleibt, weil Album oder Künstler freigegeben ist": "Odvoláno: {} – zůstává, protože album nebo interpret je schválen",
+ "Zurückgenommen: {} – aus „{}“ genommen": "Odvoláno: {} – odebráno z „{}“"
 }

@@ -3230,7 +3230,6 @@
  "Wünsche aus Spotify an": "Wishes from Spotify on",
  "Wünsche aus Spotify aus": "Wishes from Spotify off",
  "In der Suche am Display sucht eine Kachel „Bei Spotify suchen“ nach Alben, Künstlern und Podcasts. Das Kind kann sich etwas wünschen und den Reiter wählen; du gibst es in der App frei (Bibliothek › Wünsche), Home Assistant bekommt eine Nachricht mit Link. Spotify wird erst beim Tippen auf die Kachel gefragt, jeweils 10 Treffer, weitere erst beim Weiterblättern; jede Seite merkt sich die Box einen Tag. Aus: keine Spotify-Suche am Display, alles andere bleibt.": "In the search on the display a tile “Search Spotify” looks for albums, artists and podcasts. The child can wish for something and choose the tab; you approve it in the app (Library › Wishes), Home Assistant gets a message with a link. Spotify is asked only when the tile is tapped, 10 hits at a time, more only when scrolling on; the box keeps every page for a day. Off: no Spotify search on the display, everything else stays.",
- "Wünsche sind ausgeschaltet: Display & Bedienung › Suche › „Wünsche aus Spotify“.": "Wishes are switched off: Display & controls › Search › “Wishes from Spotify”.",
  "Offene Wünsche": "Open wishes",
  "Keine offenen Wünsche.": "No open wishes.",
  "Entschieden": "Decided",
@@ -3302,5 +3301,12 @@
  "Wünsche, Songs, Playlists – Recht vorhanden": "Wishes, songs, playlists – right given",
  "Recht für Playlists fehlt – neu anmelden": "Right for playlists missing – sign in again",
  "Wünsche, Songs und Playlists für das Kind": "Wishes, songs and playlists for the child",
- "Die Suche am Display braucht zusätzlich das Recht, private Playlists zu ändern – dafür neu anmelden.": "The search on the display also needs the right to change private playlists – sign in again for it."
+ "Die Suche am Display braucht zusätzlich das Recht, private Playlists zu ändern – dafür neu anmelden.": "The search on the display also needs the right to change private playlists – sign in again for it.",
+ "Wünsche sind ausgeschaltet: Display & Bedienung › Suche am Display › „Wünsche aus Spotify“.": "Wishes are switched off: Display & controls › Search on the display › “Wishes from Spotify”.",
+ "Kind darf eigene Playlists löschen": "Child may delete its own playlists",
+ "Kind kann eigene Playlists nur von der Startseite nehmen": "Child can only take its own playlists off the start page",
+ "Nur Playlists, die das Kind am Display selbst angelegt hat: Unter „Einträge verwalten“ gibt es dann „Ganz löschen“ (einmal nachgefragt). Die Playlist verschwindet von der Startseite, aus der Suche und aus seiner Spotify-Bibliothek – Spotify selbst löscht Playlists nie, sie ist für das Kind nur nicht mehr zu finden. Braucht ein weiteres Recht bei Spotify. Aus: das Kind kann sie nur von der Startseite nehmen.": "Only playlists the child made itself on the display: under “Manage entries” there is then “Delete completely” (asked once more). The playlist goes from the start page, the search and its Spotify library – Spotify itself never deletes playlists, the child just cannot find it any more. Needs one more right from Spotify. Off: the child can only take them off the start page.",
+ "„{}“ verschwindet aus den Playlists des Kindes – außer sein Album oder der ganze Künstler ist freigegeben. Das Kind kann es sich danach wieder wünschen.": "“{}” goes from the child’s playlists – unless its album or the whole artist is allowed. The child can wish for it again afterwards.",
+ "Zurückgenommen: {} – bleibt, weil Album oder Künstler freigegeben ist": "Taken back: {} – stays, as its album or artist is allowed",
+ "Zurückgenommen: {} – aus „{}“ genommen": "Taken back: {} – taken out of “{}”"
 }

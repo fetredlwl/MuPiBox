@@ -19,6 +19,11 @@ if ! node tools/display-check/check.mjs src/deploy/www; then
   echo "Display-Prüfung nicht bestanden - deploy.zip NICHT gebaut"
   exit 1
 fi
+# (once more in a theme of the children: the boxes use km themes - einhorn, light, with the cover stage)
+if ! node tools/display-check/check.mjs src/deploy/www --theme einhorn; then
+  echo "Display-Prüfung (Einhorn) nicht bestanden - deploy.zip NICHT gebaut"
+  exit 1
+fi
 cd src
 python -I ../tools/mkzip.py deploy ../bin/nodejs/deploy.zip
 rm -rf deploy

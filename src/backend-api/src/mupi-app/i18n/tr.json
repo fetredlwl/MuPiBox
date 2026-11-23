@@ -3230,7 +3230,6 @@
  "Wünsche aus Spotify an": "Spotify’dan dilekler açık",
  "Wünsche aus Spotify aus": "Spotify’dan dilekler kapalı",
  "In der Suche am Display sucht eine Kachel „Bei Spotify suchen“ nach Alben, Künstlern und Podcasts. Das Kind kann sich etwas wünschen und den Reiter wählen; du gibst es in der App frei (Bibliothek › Wünsche), Home Assistant bekommt eine Nachricht mit Link. Spotify wird erst beim Tippen auf die Kachel gefragt, jeweils 10 Treffer, weitere erst beim Weiterblättern; jede Seite merkt sich die Box einen Tag. Aus: keine Spotify-Suche am Display, alles andere bleibt.": "Ekrandaki aramada „Spotify’da ara“ kutucuğu albüm, sanatçı ve podcast arar. Çocuk bir şey dileyip sekmeyi seçebilir; sen uygulamada onaylarsın (Kütüphane › Dilekler), Home Assistant bağlantılı bir mesaj alır. Spotify’a yalnızca kutucuğa dokunulunca sorulur, her seferinde 10 sonuç, fazlası yalnızca kaydırınca; kutu her sayfayı bir gün saklar. Kapalı: ekranda Spotify araması yok, gerisi aynı kalır.",
- "Wünsche sind ausgeschaltet: Display & Bedienung › Suche › „Wünsche aus Spotify“.": "Dilekler kapalı: Ekran & Kullanım › Ara › „Spotify’dan dilekler“.",
  "Offene Wünsche": "Bekleyen dilekler",
  "Keine offenen Wünsche.": "Bekleyen dilek yok.",
  "Entschieden": "Karar verilenler",
@@ -3302,5 +3301,12 @@
  "Wünsche, Songs, Playlists – Recht vorhanden": "Dilekler, şarkılar, çalma listeleri – izin var",
  "Recht für Playlists fehlt – neu anmelden": "Çalma listesi izni eksik – yeniden giriş yap",
  "Wünsche, Songs und Playlists für das Kind": "Çocuk için dilekler, şarkılar ve çalma listeleri",
- "Die Suche am Display braucht zusätzlich das Recht, private Playlists zu ändern – dafür neu anmelden.": "Ekrandaki arama ayrıca özel çalma listelerini değiştirme izni ister – bunun için yeniden giriş yap."
+ "Die Suche am Display braucht zusätzlich das Recht, private Playlists zu ändern – dafür neu anmelden.": "Ekrandaki arama ayrıca özel çalma listelerini değiştirme izni ister – bunun için yeniden giriş yap.",
+ "Wünsche sind ausgeschaltet: Display & Bedienung › Suche am Display › „Wünsche aus Spotify“.": "Dilekler kapalı: Ekran & Kullanım › Ekranda arama › „Spotify’dan dilekler“.",
+ "Kind darf eigene Playlists löschen": "Çocuk kendi çalma listelerini silebilir",
+ "Kind kann eigene Playlists nur von der Startseite nehmen": "Çocuk kendi çalma listelerini yalnızca başlangıç sayfasından kaldırabilir",
+ "Nur Playlists, die das Kind am Display selbst angelegt hat: Unter „Einträge verwalten“ gibt es dann „Ganz löschen“ (einmal nachgefragt). Die Playlist verschwindet von der Startseite, aus der Suche und aus seiner Spotify-Bibliothek – Spotify selbst löscht Playlists nie, sie ist für das Kind nur nicht mehr zu finden. Braucht ein weiteres Recht bei Spotify. Aus: das Kind kann sie nur von der Startseite nehmen.": "Yalnızca çocuğun ekranda kendisinin oluşturduğu çalma listeleri: „Girişleri yönet“ altında o zaman „Tamamen sil“ çıkar (bir kez daha sorulur). Çalma listesi başlangıç sayfasından, aramadan ve Spotify kitaplığından kaybolur – Spotify çalma listelerini asla tamamen silmez, çocuk onu yalnızca artık bulamaz. Spotify’da bir izin daha gerekir. Kapalı: çocuk onu yalnızca başlangıç sayfasından kaldırabilir.",
+ "„{}“ verschwindet aus den Playlists des Kindes – außer sein Album oder der ganze Künstler ist freigegeben. Das Kind kann es sich danach wieder wünschen.": "“{}” çocuğun çalma listelerinden kalkar – albümü ya da sanatçının tamamı onaylı değilse. Çocuk sonra onu yeniden dileyebilir.",
+ "Zurückgenommen: {} – bleibt, weil Album oder Künstler freigegeben ist": "Geri alındı: {} – kalıyor, çünkü albüm ya da sanatçı onaylı",
+ "Zurückgenommen: {} – aus „{}“ genommen": "Geri alındı: {} – “{}” içinden çıkarıldı"
 }

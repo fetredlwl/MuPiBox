@@ -208,6 +208,12 @@ function makeConfigDir() {
             { id: sid('wt', 5), name: 'Grober Albumsong', artist: 'Wunsch Künstler', explicit: true },
           ],
         },
+        // (R17: an album of Spotify with an explicit song - not for children)
+        [sid('wa', 1)]: {
+          artistId: sid('wk', 9),
+          cover: '',
+          tracks: [{ id: sid('wt', 6), name: 'Grob', artist: 'Wunsch Künstler', explicit: true }],
+        },
       },
     }),
   )
@@ -886,7 +892,9 @@ async function wishes(page, tag, dir) {
   // (the podcast part ended with an empty search: the text again)
   await type(page, ['F', 'R', 'I'])
   const before = spotifyCalls(dir).length
-  const calls = () => spotifyCalls(dir).slice(before)
+  // (an album's songs - asked once whether it has explicit ones, R17 - apart)
+  const albumCalls = () => spotifyCalls(dir).slice(before).filter((c) => c.startsWith('album '))
+  const calls = () => spotifyCalls(dir).slice(before).filter((c) => !c.startsWith('album '))
   // the first run asks Spotify; the second (another display size, the display started afresh) finds every page kept on
   // the box: nothing asked at all
   const first = before === 0
@@ -1021,6 +1029,11 @@ async function wishes(page, tag, dir) {
     await wait(900)
     rule('R8', (await topTag(page)) === 'app-search', `${tag}: back to the search`)
   }
+  rule(
+    'R17',
+    albumCalls().length === want(1),
+    `${tag}: the album asked once whether it has explicit songs${kept} (${albumCalls().length} calls)`,
+  )
   const list = JSON.parse(fs.readFileSync(path.join(dir, 'config', 'wishes.json'), 'utf8'))
   rule(
     'R8',
@@ -1186,8 +1199,17 @@ async function playlistsPass(browser, dir) {
   const file = path.join(dir, 'config', 'mupiboxconfig.json')
   const switches = (on) => {
     const box = JSON.parse(fs.readFileSync(file, 'utf8'))
-    Object.assign(box.mupibox, { displayPlaylists: on, displayPlaylistCreate: on, displayTracks: on, playlistsPerDay: 1 })
-    box.spotify = { ...(box.spotify ?? {}), tokenScopes: on ? ['playlist-read-private', 'playlist-modify-private'] : [] }
+    Object.assign(box.mupibox, {
+      displayPlaylists: on,
+      displayPlaylistCreate: on,
+      displayTracks: on,
+      displayPlaylistDelete: on,
+      playlistsPerDay: 1,
+    })
+    box.spotify = {
+      ...(box.spotify ?? {}),
+      tokenScopes: on ? ['playlist-read-private', 'playlist-modify-private', 'user-library-modify'] : [],
+    }
     fs.writeFileSync(file, JSON.stringify(box, null, 2))
   }
   switches(true)
@@ -1288,13 +1310,18 @@ async function playlistsPass(browser, dir) {
       const artist = [...(list?.querySelectorAll('swiper-slide') ?? [])].find(
         (sl) => sl.querySelector('.title-row')?.textContent.trim() === 'Wunsch Künstler',
       )
-      const round = !!artist?.querySelector('.img-row ion-card.circle-card') || !!list?.querySelector('.km-stage-card.km-round')
-      return { subs, round }
+      // (round as drawn, not only the class: the themes' list cards are square with !important - the artist was a circle
+      // in a square frame)
+      const card = artist?.querySelector('.img-row ion-card.circle-card')
+      const r = card ? getComputedStyle(card).borderTopLeftRadius : ''
+      const drawnRound = !!card && (r.endsWith('%') ? parseFloat(r) >= 50 : parseFloat(r) >= card.offsetWidth / 2 - 1)
+      const round = drawnRound || !!list?.querySelector('.km-stage-card.km-round')
+      return { subs, round, radius: r }
     }, TOP)
     rule(
       'R16',
       kinds.subs.includes('Song · Wunsch Künstler') && kinds.subs.includes('Album · Wunsch Künstler') && kinds.subs.includes('Artist') && kinds.round,
-      `songs: each hit says what it is (${[...new Set(kinds.subs)].slice(0, 4).join(', ')}), the artist round`,
+      `songs: each hit says what it is (${[...new Set(kinds.subs)].slice(0, 4).join(', ')}), the artist round (${kinds.radius})`,
     )
     if (!(await tapListed(page, 'Erlaubter Song')) || (await topTag(page)) !== 'app-search-album')
       throw new Error('no page for the song')
@@ -1371,6 +1398,17 @@ async function playlistsPass(browser, dir) {
     await topBack()
     await topBack()
     await topBack()
+    // an album with an explicit song: "Not for children" instead of "Wish for it"
+    if (!(await tapListed(page, 'Wunschalbum 2')) || (await topTag(page)) !== 'app-search-album')
+      throw new Error('no page for the explicit album')
+    await wait(1200)
+    const adultActs = await listNames(page)
+    rule(
+      'R17',
+      adultActs.includes('Not for children') && !adultActs.includes('Wish for it'),
+      `explicit album: not for children, nothing to wish (${adultActs.join(', ')})`,
+    )
+    await topBack()
     await back(page)
     await tapListed(page, 'Manage entries')
     await wait(400)
@@ -1389,6 +1427,24 @@ async function playlistsPass(browser, dir) {
       'R16',
       (await topTag(page)) === 'app-search' && calls().some((c) => c.startsWith(`playlist remove ${made?.playlistid}`)),
       'songs: taken out of the playlist',
+    )
+    // a playlist it made itself, deleted completely ("Kind darf eigene Playlists löschen" on): asked once more
+    if (!(await listNames(page)).includes('LIED')) {
+      await back(page)
+      await tapListed(page, 'Manage entries')
+      await wait(400)
+    }
+    if (!(await tapListed(page, 'LIED')) || (await topTag(page)) !== 'app-search-album') throw new Error('no page for LIED')
+    rule('R15', (await listNames(page)).includes('Delete completely'), 'new playlist: one the child made can be deleted completely')
+    await tapListed(page, 'Delete completely')
+    await wait(400)
+    rule('R15', (await listNames(page)).includes('Yes, delete completely'), 'new playlist: deleting is asked once more')
+    await tapListed(page, 'Yes, delete completely')
+    await wait(1200)
+    rule(
+      'R15',
+      calls().some((c) => c === `playlist unlist ${made?.playlistid}`) && !lib().some((r) => r.playlistid === made?.playlistid),
+      'new playlist: deleted - off the start page and out of its Spotify library',
     )
   } finally {
     switches(false)

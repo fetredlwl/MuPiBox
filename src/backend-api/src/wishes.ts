@@ -72,6 +72,8 @@ export interface Wish {
 export interface WishPage {
   items: WishItem[]
   more: boolean
+  /** (an album's songs) some of them explicit - left out; the album is not for children then */
+  explicit?: boolean
 }
 
 export interface WishesDeps {
@@ -269,10 +271,12 @@ export class Wishes {
       pool.some((e) => (e.kind === 'album' && e.spotifyId === albumId) || e.albums?.some((a) => a.id === albumId)) ||
       (await this.deps.pool.onBox()).idents.has(`album:${albumId}`)
     if (!known) return 'unknown'
-    return this.page(`album|${albumId}`, async () => {
+    // (album2: kept with the mark whether some are explicit - one kept from before without it does not do)
+    return this.page(`album2|${albumId}`, async () => {
       if (spotifyBlock()) throw Object.assign(new Error('spotify_blocked'), { status: 503 })
       const r = await ask(albumId)
       return {
+        explicit: r.tracks.some((t) => t.explicit === true),
         items: r.tracks
           .filter((t) => t.explicit !== true && SPOTIFY_ID.test(t.id) && t.name)
           .map((t) => ({
@@ -287,6 +291,15 @@ export class Wishes {
         more: false,
       }
     })
+  }
+
+  /**
+   * An album with explicit songs is not for children (Spotify marks songs only, not albums): asked with its songs - one
+   * request, kept a day as they are; the display shows "Nicht für Kinder" instead of "Wünschen".
+   */
+  async albumExplicit(albumId: string): Promise<boolean | 'unknown'> {
+    const r = await this.albumSongs(albumId)
+    return r === 'unknown' ? r : r.page.explicit === true
   }
 
   /** a song handed out with a page of the last day (only those may go into a playlist or be wished) */
@@ -358,7 +371,7 @@ export class Wishes {
     id: string,
     category: Category,
     target?: string,
-  ): Promise<'wished' | 'already' | 'there' | 'allowed' | 'unknown' | 'no_target'> {
+  ): Promise<'wished' | 'already' | 'there' | 'allowed' | 'unknown' | 'no_target' | 'explicit'> {
     const item = await this.offered(kind, id)
     if (!item) return 'unknown'
     let playlist: { id: string; name: string } | undefined
@@ -370,6 +383,10 @@ export class Wishes {
     } else {
       if (onTheBox(await this.deps.pool.onBox(), item)) return 'there'
       if ((await this.deps.pool.entries()).some((e) => e.kind === kind && e.spotifyId === id)) return 'allowed'
+      // (an album with explicit songs: not wished - the display said so already; Spotify not answering: the parents
+      // decide as before)
+      if (kind === 'album' && this.deps.albumTracks && (await this.albumExplicit(id).catch(() => false)) === true)
+        return 'explicit'
     }
     const result = await this.serial(async () => {
       const list = await this.list()
@@ -454,17 +471,29 @@ export class Wishes {
    * The parents take an approval back ("Freigabe widerrufen"): out of the search pool, and off the start page when the
    * child has it there (only what it has as its own). The wish stays in the list as revoked.
    */
-  async revoke(id: string): Promise<'revoked' | 'unknown' | 'locked'> {
+  async revoke(
+    id: string,
+  ): Promise<'revoked' | 'unknown' | 'locked' | { result: 'revoked'; removed: string[]; still: boolean }> {
     const wish = (await this.list()).find((w) => w.id === id && w.status === 'approved')
     if (!wish) return 'unknown'
     if (wish.kind === 'track') {
-      // (a song: not at once any more - it stays in the playlist it went into)
-      await this.deps.playlists?.forget(wish.spotifyId)
+      // (a song: out of the child's playlists again - unless its album or artist is allowed otherwise)
+      const out = (await this.deps.playlists?.revoke(
+        {
+          id: wish.spotifyId,
+          name: wish.name,
+          artist: wish.artist,
+          cover: wish.cover,
+          albumId: wish.albumId,
+          artistId: wish.artistId,
+        },
+        wish.target?.id,
+      )) ?? { removed: [], still: false }
       for (const w of (await this.list()).filter(
         (x) => x.status === 'approved' && x.kind === 'track' && x.spotifyId === wish.spotifyId,
       ))
         await this.change(w.id, { status: 'revoked', decidedAt: new Date(this.now()).toISOString() })
-      return 'revoked'
+      return { result: 'revoked', ...out }
     }
     const ident = identOfWish(wish.kind, wish.spotifyId)
     // (Home Assistant is not told: the parents did it themselves)
@@ -595,6 +624,20 @@ export function registerWishesRoutes(app: Express, deps: WishesDeps): Wishes {
     }
   })
 
+  /** GET /api/wishes/album-check?id=… - {explicit}: an album with explicit songs is not for children (kept a day) */
+  app.get('/api/wishes/album-check', localOnly, async (req, res) => {
+    if (!on() || !deps.albumTracks) return fail(res, 403, 'off')
+    const id = text(req.query.id, 40)
+    if (!SPOTIFY_ID.test(id)) return fail(res, 400, 'invalid_request')
+    try {
+      const r = await wishes.albumExplicit(id)
+      if (r === 'unknown') return fail(res, 403, 'not_offered')
+      res.json({ explicit: r })
+    } catch (err) {
+      failed(res, err, 'album check')
+    }
+  })
+
   /** GET /api/wishes/mine - the open wishes (the display marks them "gewünscht") */
   app.get('/api/wishes/mine', localOnly, async (_req, res) => {
     if (!on()) return void res.json({ wishes: [] })
@@ -683,7 +726,8 @@ export function registerWishesRoutes(app: Express, deps: WishesDeps): Wishes {
       const result = await wishes.revoke(id)
       if (result === 'unknown') return fail(res, 404, 'not_approved')
       if (result === 'locked') return fail(res, 409, 'library_busy')
-      res.json({ ok: true, result })
+      // (a song: the playlists it was taken out of, or that it stays allowed)
+      res.json(typeof result === 'string' ? { ok: true, result } : { ok: true, ...result })
     } catch (err) {
       console.error(`${new Date().toLocaleString()}: [wishes] revoke:`, err)
       fail(res, 500, 'could_not_revoke')

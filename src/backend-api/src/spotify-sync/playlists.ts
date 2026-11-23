@@ -150,8 +150,8 @@ export async function spotifySend<T>(method: 'POST' | 'PUT' | 'DELETE', path: st
       lastRequestAt = Date.now()
       return fetch(`${API_BASE}${path}`, {
         method,
-        headers: { Authorization: `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify(body),
+        headers: { Authorization: `Bearer ${accessToken}`, ...(body === undefined ? {} : { 'Content-Type': 'application/json' }) },
+        ...(body === undefined ? {} : { body: JSON.stringify(body) }),
         signal: AbortSignal.timeout(HTTP_TIMEOUT_MS),
       })
     })

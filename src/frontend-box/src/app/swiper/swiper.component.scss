@@ -260,7 +260,9 @@ swiper-container.coverflow {
                 margin: 0 auto !important;
                 box-sizing: border-box;
                 border: 6px solid var(--km-ring);
-                border-radius: 50%;
+                // (fork "wishes") !important: the themes (themes/*.css) draw every card of a list square with !important -
+                // a round one in a list (an artist among the search's hits) was a circle in a square frame
+                border-radius: 50% !important;
                 overflow: hidden;
 
                 img {

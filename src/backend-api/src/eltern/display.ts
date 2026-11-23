@@ -12,6 +12,7 @@ import type { Router } from 'express'
 import type { MupiboxConfig } from '../models/mupibox-config.model'
 import { imageSize } from './covers'
 import { requireCsrf, requireSession } from './middleware'
+import { searchScopesGiven } from './oauth'
 import { episodeStateSettings } from '../episode-state'
 import { applyNightDim, nightDimmed, nightDimOf, parseNightDim } from './night-dim'
 import { CUSTOM_THEME_CSS, customThemeCss, customThemeOf } from './custom-theme'
@@ -117,7 +118,9 @@ export function registerDisplayRoutes(router: Router, deps: DisplayDeps): void {
       displayPlaylistCreate: mb.displayPlaylistCreate === true,
       displayTracks: mb.displayTracks === true,
       playlistsPerDay: num(mb.playlistsPerDay, 1, 20) ?? 5,
-      playlistScope: Array.isArray(cfg?.spotify?.tokenScopes) && (cfg.spotify.tokenScopes as unknown[]).includes('playlist-modify-private'),
+      displayPlaylistDelete: mb.displayPlaylistDelete === true,
+      // (all the rights the search's switches need, given at the last login - see oauth.ts searchScopes)
+      playlistScope: searchScopesGiven(cfg as unknown as MupiboxConfig),
       resume: num(mb.resume, 1, 99) ?? 9,
       listviewTimer: num(mb.listviewTimer, 0.5, 5, 0.5) ?? 2.5,
       settingsAccessTimer: num(mb.settingsAccessTimer, 1, 10, 0.5) ?? 3,
@@ -150,7 +153,7 @@ export function registerDisplayRoutes(router: Router, deps: DisplayDeps): void {
     const mb: Record<string, unknown> = {}
     const chromium: Record<string, unknown> = {}
     const bad = (what: string) => res.status(400).json({ error: `invalid ${what}` })
-    for (const key of ['coverflowShowNames', 'hideScrollbar', 'episodeResume', 'newEpisodes', 'episodeProgress', 'outputPicker', 'displaySearch', 'appSearchPool', 'displayPodcasts', 'displayRadio', 'displayWishes', 'displayPlaylists', 'displayPlaylistCreate', 'displayTracks']) {
+    for (const key of ['coverflowShowNames', 'hideScrollbar', 'episodeResume', 'newEpisodes', 'episodeProgress', 'outputPicker', 'displaySearch', 'appSearchPool', 'displayPodcasts', 'displayRadio', 'displayWishes', 'displayPlaylists', 'displayPlaylistCreate', 'displayTracks', 'displayPlaylistDelete']) {
       if (body[key] === undefined) continue
       if (typeof body[key] !== 'boolean') return bad(key)
       mb[key] = body[key]

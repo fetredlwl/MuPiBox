@@ -3230,7 +3230,6 @@
  "Wünsche aus Spotify an": "Бажання зі Spotify увімкнено",
  "Wünsche aus Spotify aus": "Бажання зі Spotify вимкнено",
  "In der Suche am Display sucht eine Kachel „Bei Spotify suchen“ nach Alben, Künstlern und Podcasts. Das Kind kann sich etwas wünschen und den Reiter wählen; du gibst es in der App frei (Bibliothek › Wünsche), Home Assistant bekommt eine Nachricht mit Link. Spotify wird erst beim Tippen auf die Kachel gefragt, jeweils 10 Treffer, weitere erst beim Weiterblättern; jede Seite merkt sich die Box einen Tag. Aus: keine Spotify-Suche am Display, alles andere bleibt.": "У пошуку на дисплеї плитка «Шукати в Spotify» шукає альбоми, виконавців і подкасти. Дитина може щось побажати й вибрати вкладку; ти схвалюєш це в застосунку (Бібліотека › Бажання), Home Assistant отримує повідомлення з посиланням. Spotify запитують лише після торкання плитки, по 10 результатів, наступні — лише при гортанні; бокс пам’ятає кожну сторінку добу. Вимк.: немає пошуку Spotify на дисплеї, решта лишається.",
- "Wünsche sind ausgeschaltet: Display & Bedienung › Suche › „Wünsche aus Spotify“.": "Бажання вимкнено: Дисплей і керування › Пошук › «Бажання зі Spotify».",
  "Offene Wünsche": "Відкриті бажання",
  "Keine offenen Wünsche.": "Немає відкритих бажань.",
  "Entschieden": "Вирішено",
@@ -3302,5 +3301,12 @@
  "Wünsche, Songs, Playlists – Recht vorhanden": "Бажання, пісні, плейлисти – право надано",
  "Recht für Playlists fehlt – neu anmelden": "Бракує права на плейлисти – увійти знову",
  "Wünsche, Songs und Playlists für das Kind": "Бажання, пісні й плейлисти для дитини",
- "Die Suche am Display braucht zusätzlich das Recht, private Playlists zu ändern – dafür neu anmelden.": "Пошуку на дисплеї потрібне ще право змінювати приватні плейлисти – для цього увійди знову."
+ "Die Suche am Display braucht zusätzlich das Recht, private Playlists zu ändern – dafür neu anmelden.": "Пошуку на дисплеї потрібне ще право змінювати приватні плейлисти – для цього увійди знову.",
+ "Wünsche sind ausgeschaltet: Display & Bedienung › Suche am Display › „Wünsche aus Spotify“.": "Бажання вимкнено: Дисплей і керування › Пошук на дисплеї › «Бажання зі Spotify».",
+ "Kind darf eigene Playlists löschen": "Дитина може видаляти власні плейлисти",
+ "Kind kann eigene Playlists nur von der Startseite nehmen": "Дитина може лише прибрати свої плейлисти зі стартової сторінки",
+ "Nur Playlists, die das Kind am Display selbst angelegt hat: Unter „Einträge verwalten“ gibt es dann „Ganz löschen“ (einmal nachgefragt). Die Playlist verschwindet von der Startseite, aus der Suche und aus seiner Spotify-Bibliothek – Spotify selbst löscht Playlists nie, sie ist für das Kind nur nicht mehr zu finden. Braucht ein weiteres Recht bei Spotify. Aus: das Kind kann sie nur von der Startseite nehmen.": "Лише плейлисти, які дитина сама створила на дисплеї: у «Керувати записами» тоді є «Видалити повністю» (з ще одним питанням). Плейлист зникає зі стартової сторінки, з пошуку та з її бібліотеки Spotify – Spotify ніколи не видаляє плейлисти повністю, дитина просто більше його не знайде. Потрібне ще одне право Spotify. Вимкнено: дитина може лише прибрати його зі стартової сторінки.",
+ "„{}“ verschwindet aus den Playlists des Kindes – außer sein Album oder der ganze Künstler ist freigegeben. Das Kind kann es sich danach wieder wünschen.": "«{}» зникає з плейлистів дитини – хіба що її альбом або весь виконавець схвалений. Дитина потім може знову її побажати.",
+ "Zurückgenommen: {} – bleibt, weil Album oder Künstler freigegeben ist": "Скасовано: {} – лишається, бо альбом або виконавець схвалений",
+ "Zurückgenommen: {} – aus „{}“ genommen": "Скасовано: {} – прибрано з «{}»"
 }
