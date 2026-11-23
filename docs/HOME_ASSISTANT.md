@@ -314,7 +314,8 @@ Home Assistant neu starten.
 Von vorn nach hinten prüfen:
 
 1. **Läuft die Box mit dem Fork?** *App › Einstellungen › System › Updates*: bei „Installiert“ muss `FORK …` stehen.
-2. **Ist „Wünsche aus Spotify“ an?** *App › Einstellungen › Display & Bedienung › Suche*.
+2. **Sind „Suche auf dem Display“ und „Wünsche aus Spotify“ an?** *App › Einstellungen › Display & Bedienung › Suche*.
+   Ohne den ersten Schalter gibt es am Display keine Lupe.
 3. **Ist Home Assistant gekoppelt?** *App › Einstellungen › Dienste › Home Assistant*: unter „Gekoppelt“ muss er stehen, „Bereit unter …“ grün.
 4. **Liegen die drei Dateien richtig?** Teil C, `ls -l` im Ordner. Und wurde Home Assistant danach **neu gestartet**?
 5. **Fehler im Protokoll?** *Einstellungen › System › Protokolle*, Suchwort `mupibox`.

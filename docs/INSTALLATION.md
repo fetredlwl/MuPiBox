@@ -71,34 +71,62 @@ Es kommt z. B. `5.0.17 stable` (oder `DEV …`). Merke dir die Zeile.
 
 ## 4 Den Fork installieren
 
-Ein einziger Befehl lädt das Installationsskript des Forks und installiert den gewünschten **Stand**.
-Stände heißen *Tags* (feste, getestete Stände); die Liste steht in den [Release-Notes](../RELEASE_NOTES.md).
+Die Installation läuft **als eigener Systemdienst** auf der Box. Das ist wichtig: Sie dauert 10 bis 30 Minuten und hält dabei
+den Server der Box an. Startet man das Skript direkt im Terminal, **beendet ein Verbindungsabbruch** (WLAN-Aussetzer, Laptop
+zugeklappt, Fenster zu) die Installation mitten drin. Als Dienst läuft sie unabhängig vom Fenster weiter.
 
-**Empfohlen: der letzte getestete Stand** `fork-2026-11-23-spotify-live-suche`. Den ganzen Block auf einmal einfügen
-(zwei Zeilen, sie gehören zusammen):
+Stände heißen *Tags* (feste, getestete Stände); die Liste steht in den [Release-Notes](../RELEASE_NOTES.md).
+**Empfohlen: der letzte getestete Stand** `fork-2026-11-23-spotify-live-suche`. Die zwei Befehle **einzeln, nacheinander** einfügen.
+
+**Schritt 1 – das Installationsskript des Forks laden** (es wird nur gespeichert, noch nicht ausgeführt):
 
 ```shell
-cd; curl -fL https://raw.githubusercontent.com/fetredlwl/MuPiBox/fork-2026-11-23-spotify-live-suche/update/start_mupibox_update.sh \
-| sudo bash -s -- branch fork-2026-11-23-spotify-live-suche fetredlwl/MuPiBox "FORK 5.0.17 fork-2026-11-23-spotify-live-suche 77aa80a"
+cd; curl -fsSL -o fork-update.sh https://raw.githubusercontent.com/fetredlwl/MuPiBox/fork-2026-11-23-spotify-live-suche/update/start_mupibox_update.sh
 ```
 
-Was die Teile bedeuten, falls du später einen **anderen Stand** nehmen willst:
+Kontrolle: `ls -l fork-update.sh` zeigt eine Datei mit einigen zehntausend Byte (nicht 0 und keine Fehlermeldung).
+
+**Schritt 2 – als Dienst starten:**
+
+```shell
+sudo systemd-run --unit=mupibox-fork-install --collect --setenv=TERM=xterm --working-directory=/home/dietpi /bin/bash -c 'script -qfec "bash /home/dietpi/fork-update.sh branch fork-2026-11-23-spotify-live-suche fetredlwl/MuPiBox \"FORK 5.0.17 fork-2026-11-23-spotify-live-suche 77aa80a\"" /home/dietpi/fork-install.log && systemctl reboot'
+```
+
+Es kommt nur eine Zeile wie `Running as unit: mupibox-fork-install.service`. Dann läuft die Installation im Hintergrund.
+
+**Nicht** stattdessen `curl … | sudo bash` oder `sudo bash fork-update.sh …` direkt im Terminal einfügen – aus dem oben genannten Grund.
+
+Was die Teile des zweiten Befehls bedeuten, falls du später einen **anderen Stand** nehmen willst:
 
 | Teil | Bedeutung |
 |---|---|
+| `mupibox-fork-install` | Name des Dienstes (zum Nachsehen, siehe unten) |
+| `fork-2026-11-23-spotify-live-suche` (in Schritt 1 und 2) | der Tag. Steht ein Zweigname wie `wishes` dort, bekommst du den **laufenden Entwicklungsstand** – der kann Fehler haben |
 | `fetredlwl/MuPiBox` | das Repository des Forks (`<Besitzer>/<Name>`) |
-| `fork-2026-11-23-spotify-live-suche` (zweimal) | der Tag. Steht ein Zweigname wie `wishes` dort, bekommst du den **laufenden Entwicklungsstand** – der kann Fehler haben |
-| `"FORK 5.0.17 … 77aa80a"` | die Versionsbezeichnung, die die Box danach anzeigt: `FORK`, die Basis-Version von splitti, der Tag, die ersten 7 Zeichen der Kennung. Das Wort `FORK` am Anfang muss stehen bleiben, sonst hält die Box den Fork für eine offizielle Entwicklerversion. Die Angaben zu jedem Tag stehen in den Release-Notes |
+| `"FORK 5.0.17 … 77aa80a"` | die Versionsbezeichnung, die die Box danach anzeigt: `FORK`, die Basis-Version von splitti, der Tag, die ersten 7 Zeichen der Kennung. `FORK` am Anfang muss stehen bleiben, sonst hält die Box den Fork für eine offizielle Entwicklerversion. Die Angaben zu jedem Tag stehen in den Release-Notes |
+| `script -qfec … /home/dietpi/fork-install.log` | gibt dem Skript ein Terminal (es braucht eins für die Fortschrittsanzeige) und schreibt alles in die Datei `fork-install.log` |
+| `&& systemctl reboot` | startet die Box neu, **wenn** die Installation ohne Fehler fertig wurde |
+
+**Mitlesen (optional)** – das geht auch nach einem Verbindungsabbruch und einer neuen SSH-Anmeldung:
+
+```shell
+tail -f /boot/mupibox_update.log
+```
+
+Mit Strg + C hörst du auf zu lesen; die Installation läuft weiter. Ob der Dienst noch läuft:
+`systemctl is-active mupibox-fork-install` zeigt `active`, solange sie arbeitet.
 
 **Was dann passiert**
 
 1. Das Skript sichert deine Einstellungen und die Bibliothek, lädt den Fork herunter und ersetzt Programm, App und Display.
-2. Das **Display zeigt eine Wartungsanzeige**; im Terminal läuft ein Fortschritt. Das dauert **10 bis 30 Minuten**.
+2. Das **Display zeigt eine Wartungsanzeige**. Das dauert **10 bis 30 Minuten**.
 3. Am Ende **startet die Box von selbst neu**. Danach läuft der Fork.
 
-**Wichtig:** Das Terminal-Fenster offen lassen und die Box **nicht ausschalten**, bis sie neu gestartet ist. Bricht die
-Verbindung doch ab, warte 10 Minuten und schau, ob die Box von selbst neu startet; wenn nicht, melde dich wieder per SSH und
-führe den Befehl noch einmal aus. Er ist wiederholbar.
+Die Box in dieser Zeit am Netzteil lassen und **nicht ausschalten**. Das SSH-Fenster darfst du schließen.
+
+**Bricht die Installation doch ab** (Stromausfall, Fehler): die Box **neu starten** (Netzteil kurz ab und wieder an). Der Dienst
+`mupi_update_recover` stellt dann **vor allem anderen die vorherige Installation wieder her**; die Box läuft wie vorher.
+Danach Schritt 1 und 2 noch einmal; sie sind wiederholbar. Die Ursache steht am Ende von `/boot/mupibox_update.log`.
 
 ---
 
@@ -122,13 +150,18 @@ Alles Neue hat **Schalter in der App**; solange ein Schalter aus ist, verhält s
    führt dich durch das Anlegen deiner **eigenen** Spotify-Entwickler-App (kostenlos auf
    [developer.spotify.com](https://developer.spotify.com/dashboard)) und das Eintragen von **Client-ID** und **Client-Secret**.
    Diese beiden Werte sind persönlich – nicht weitergeben, nicht in Issues oder Bildschirmfotos zeigen.
-2. **Schalter für die Suche:** *Einstellungen › Display & Bedienung › Suche*:
+2. **Schalter für die Suche:** *Einstellungen › Display & Bedienung › Suche*. Zuerst der Hauptschalter, **ohne den es am Display
+   gar keine Suche gibt**:
+   - **Suche auf dem Display** – eine Lupe oben links auf der Startseite öffnet die Suche mit Bildschirmtastatur. Nach der
+     Installation ist sie **aus**, die Startseite sieht also genauso aus wie vorher.
+
+   Dann, je nachdem was das Kind können soll:
    - **Wünsche aus Spotify** – die Kachel „Bei Spotify suchen“ am Display; Wünsche gibst du in der App frei.
    - **Podcasts für Kinder in der Suche** – Kachel „Podcasts“ (Apple-Verzeichnis, bei Deutsch auch ARD Audiothek).
    - **Radio für Kinder in der Suche** – Kachel „Radio“ (radio-browser.info, nur als Kinderradio markierte Sender).
 3. **Wünsche freigeben:** *Bibliothek › Wünsche*. Dort erscheinen die Wünsche des Kindes zum Freigeben oder Ablehnen; was du
    freigibst, merkt sich die Box (*Bibliothek › Für die Suche freigegeben*), das Kind kann es dann selbst holen und wieder entfernen.
-4. **Testen:** Am Display die **Suche** öffnen (das Suchsymbol auf der Startseite). Du siehst runde Kacheln: „Bei Spotify suchen“, „Podcasts“, „Radio“ und
+4. **Testen:** Am Display auf die **Lupe** oben links auf der Startseite tippen. Du siehst runde Kacheln: „Bei Spotify suchen“, „Podcasts“, „Radio“ und
    „Einträge verwalten“.
 5. **Home Assistant (optional):** Meldung aufs Handy, wenn sich das Kind etwas wünscht – [HOME_ASSISTANT.md](HOME_ASSISTANT.md).
 
@@ -140,7 +173,8 @@ Jede Box wird **einzeln** installiert – gehe für jede die Teile 2 bis 6 durch
 
 1. Sicherung der Box (Teil 2).
 2. `ssh dietpi@<Adresse-dieser-Box>` (Teil 3). Jede Box hat ihre eigene Adresse.
-3. Denselben Installationsbefehl wie bei der ersten Box (Teil 4), mit **demselben Tag** – dann haben alle Boxen denselben Stand.
+3. Dieselben **zwei Befehle** wie bei der ersten Box (Teil 4), mit **demselben Tag** – dann haben alle Boxen denselben Stand.
+   Die Installation läuft auf jeder Box als eigener Dienst; auch mehrere Boxen gleichzeitig sind möglich, jede in ihrem SSH-Fenster.
 4. Prüfen (Teil 5) und die Funktionen einrichten (Teil 6). Die Schalter und Spotify-Daten gelten **je Box**; Spotify-Entwickler-App
    kannst du für mehrere Boxen dieselbe verwenden.
 5. Home Assistant: jede Box einzeln koppeln; Erweiterung und Automationen bleiben einmalig ([HOME_ASSISTANT.md, Teil F](HOME_ASSISTANT.md#teil-f--mehrere-boxen-updates-und-fehlersuche)).
@@ -176,6 +210,8 @@ Neue Stände erkennst du in den [Release-Notes](../RELEASE_NOTES.md) und auf der
 | `curl: (22) … 404` | Tag falsch geschrieben. Den Namen genau aus den [Release-Notes](../RELEASE_NOTES.md) kopieren |
 | `Error: Branch or tag '…' does not exist on GitHub repo` | dasselbe: Tag/Zweig oder Repository falsch geschrieben |
 | Skript meldet, ein **anderes Update läuft** | warten, bis es fertig ist (und die Box neu gestartet hat), dann noch einmal |
+| `Failed to start transient service unit … already exists` | die Installation läuft schon (oder ist hängen geblieben): `systemctl is-active mupibox-fork-install` – steht dort `active`, mit `tail -f /boot/mupibox_update.log` zusehen; ist sie nicht aktiv: `sudo systemctl reset-failed mupibox-fork-install` und Schritt 2 noch einmal |
+| Nach Schritt 2 passiert nichts | `tail -n 30 /home/dietpi/fork-install.log` und `tail -n 30 /boot/mupibox_update.log` ansehen; die letzten Zeilen nennen den Fehler |
 | Nach dem Update sieht die App wie vorher aus | Seite neu laden (Strg + F5); in *Updates* prüfen, was „Installiert“ zeigt |
 | Das Display bleibt auf der Wartungsanzeige | 30 Minuten warten (ältere Raspberry Pis sind langsam); danach die Box vom Netz nehmen und neu starten |
 | Fehler im Backend ansehen | per SSH: `pm2 logs server --lines 50 --nostream` |

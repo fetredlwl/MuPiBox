@@ -48,7 +48,8 @@ splitti weiter übernehmen lassen.
 
 ## Installation und Update
 
-Die **erste Installation** auf einer laufenden Standard-MuPiBox geht per SSH mit einem Befehl:
+Die **erste Installation** auf einer laufenden Standard-MuPiBox geht per SSH, mit zwei Befehlen, als Systemdienst (ein
+Verbindungsabbruch stört sie nicht):
 [docs/INSTALLATION.md](docs/INSTALLATION.md). Danach laufen alle Updates in der Eltern-App unter Einstellungen › System ›
 Updates: „Fork · Letzter Tag“ (der letzte benannte Stand) oder „Fork · Entwicklungsstand“; vorher legt die Box ein Backup an.
 Eine neue MuPiBox richtest du zuerst nach der Anleitung des Originals ein
