@@ -72,8 +72,14 @@ Es kommt z. B. `5.0.17 stable` (oder `DEV …`). Merke dir die Zeile.
 ## 4 Den Fork installieren
 
 Die Installation läuft **als eigener Systemdienst** auf der Box. Das ist wichtig: Sie dauert 10 bis 30 Minuten und hält dabei
-den Server der Box an. Startet man das Skript direkt im Terminal, **beendet ein Verbindungsabbruch** (WLAN-Aussetzer, Laptop
-zugeklappt, Fenster zu) die Installation mitten drin. Als Dienst läuft sie unabhängig vom Fenster weiter.
+den Server der Box an (über ihn läuft auch das DietPi-Dashboard) und startet das Dashboard neu. Startet man das Skript direkt
+in einem Terminal, wird es **mitten drin beendet**:
+
+- im **Terminal des DietPi-Dashboards**, weil das Dashboard dabei neu startet und sein Terminal mitnimmt;
+- per **SSH**, wenn die Verbindung abbricht (WLAN-Aussetzer, Laptop zugeklappt, Fenster zu).
+
+Als Dienst läuft die Installation unabhängig von jedem Fenster weiter. Mit den zwei Befehlen unten ist es deshalb egal, ob du
+sie per SSH oder im Dashboard-Terminal eingibst; nur **direkt** darfst du das Skript in keinem von beiden starten.
 
 Stände heißen *Tags* (feste, getestete Stände); die Liste steht in den [Release-Notes](../RELEASE_NOTES.md).
 **Empfohlen: der letzte getestete Stand** `fork-2026-11-23-spotify-live-suche`. Die zwei Befehle **einzeln, nacheinander** einfügen.
