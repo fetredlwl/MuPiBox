@@ -403,6 +403,33 @@ export class SearchPool {
       .filter((p) => SPOTIFY_ID.test(p.id))
   }
 
+  /**
+   * (fork "wishes") A playlist's picture as Spotify has it now - a new one has none until songs are in it (then a mosaic
+   * of their covers): into the library (the child's and the account's own rows) and the pool, where it differs.
+   */
+  async setPlaylistCover(playlistId: string, cover: string): Promise<void> {
+    if (!SPOTIFY_ID.test(playlistId) || !/^https:\/\//.test(cover)) return
+    await withLock(this.deps.dataLock, 'search pool cover', async () => {
+      const data = await this.readLibrary()
+      if (!data) return
+      let changed = false
+      for (const row of data) {
+        if (row?.playlistid === playlistId && (row.own === true || row.kidAdded === true) && row.cover !== cover) {
+          row.cover = cover
+          changed = true
+        }
+      }
+      if (changed) await this.deps.writeLibrary(data)
+    })
+    await this.serial(async () => {
+      const list = await this.entries()
+      const at = list.findIndex((e) => e.kind === 'playlist' && e.spotifyId === playlistId && e.cover !== cover)
+      if (at < 0) return
+      list[at] = { ...list[at], cover }
+      await this.writePool(list)
+    })
+  }
+
   /** the rows the child put in (newest first) */
   async own(): Promise<
     {

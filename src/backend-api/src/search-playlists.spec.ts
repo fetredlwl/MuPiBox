@@ -58,6 +58,7 @@ const api: PlaylistsApi = {
     )
   },
   items: async (id) => songs.get(id) ?? [],
+  cover: async () => 'https://i.scdn.co/image/mosaic',
 }
 
 beforeEach(() => {
@@ -99,6 +100,7 @@ beforeEach(() => {
     getMupiboxConfig: () => cfg,
     api: () => api,
     accountPlaylists: async () => new Set([ACCOUNT_PL]),
+    accountCovers: async () => new Map([[ACCOUNT_PL, 'https://i.scdn.co/image/account']]),
     now: () => day,
   })
   registerWishesRoutes(app, {
@@ -222,6 +224,47 @@ describe('songs', () => {
         [SONG, true],
         [OTHER_SONG, false],
       ],
+    )
+  })
+
+  it('a playlist made by the child gets its picture from Spotify, into the library and the pool', async () => {
+    const id = String(
+      (await request(app).post('/api/search-playlists/create').send({ name: 'Bild', category: 'music' })).body.id,
+    )
+    assert.equal(library().find((x) => x.playlistid === id)?.cover, '')
+    // (asked when the search shows its playlists - in the background)
+    await request(app).get('/api/search-playlists')
+    for (let i = 0; i < 40 && !library().find((x) => x.playlistid === id)?.cover; i++)
+      await new Promise((r) => setTimeout(r, 50))
+    assert.equal(library().find((x) => x.playlistid === id)?.cover, 'https://i.scdn.co/image/mosaic')
+    assert.equal((await pool.entries()).find((e) => e.spotifyId === id)?.cover, 'https://i.scdn.co/image/mosaic')
+  })
+
+  it('the routine takes the pictures of the playlists of the child from one answer of Spotify, not those of the parents', async () => {
+    const lib = library()
+    lib.push({
+      type: 'spotify',
+      category: 'music',
+      playlistid: ACCOUNT_PL,
+      title: 'Kind',
+      cover: '',
+      kidAdded: true,
+      index: lib.length,
+    })
+    lib.push({
+      type: 'spotify',
+      category: 'music',
+      playlistid: ACCOUNT_PL,
+      title: 'Eltern',
+      cover: 'https://alt',
+      index: lib.length,
+    })
+    writeFileSync(dataFile, JSON.stringify(lib))
+    await playlists.refreshAllCovers()
+    const rows = library().filter((x) => x.playlistid === ACCOUNT_PL)
+    assert.deepEqual(
+      rows.map((r) => r.cover),
+      ['https://i.scdn.co/image/account', 'https://alt'],
     )
   })
 

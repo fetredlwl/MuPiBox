@@ -35,6 +35,10 @@ Bedienung › Suche am Display*; aus = wie bisher)
   Spotify-Anmeldung und kommt danach auf die Seite zurück. Die Spotify-Seite und der Einrichtungs-Assistent kennen das Recht
   (der Assistent sagt nicht mehr „Alles eingerichtet“, solange es fehlt).
 - „In welche Playlist?“ zeigt mit ✓, in welcher Playlist der Song schon steckt.
+- Bild der Playlists des Kindes: Spotify bildet es aus den Covern der ersten vier Songs. Die Box holt es eine Minute nach
+  einer Änderung, die es betrifft (ein Song kommt in eine Playlist mit weniger als vier Songs, einer der ersten vier geht), dazu
+  alle 6 Stunden für alle auf einmal (auch Änderungen aus der Spotify-App) und für Playlists ohne Bild beim Öffnen der Suche –
+  vorher blieb eine am Display angelegte Playlist beim Platzhalterbild.
 - Home Assistant: Ereignisse für neue Playlists (`created`) und Songs (`kind: "track"`, mit `playlist`); die Wünsche-Erweiterung
   (`search_events.py`) ist dafür aktualisiert. Backup und Wiederherstellung sichern die neue Datei `search-playlists.json` mit.
 - Display-Prüfung: Regeln R14–R16; alle neuen Texte in allen Sprachen.

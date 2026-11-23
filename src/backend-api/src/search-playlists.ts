@@ -32,6 +32,8 @@ export interface PlaylistsApi {
   remove(playlistId: string, uris: string[]): Promise<void>
   /** the songs of a playlist of the account (200 at most) */
   items(playlistId: string): Promise<PlaylistSong[]>
+  /** a playlist's picture as Spotify has it now ('' none yet) */
+  cover(playlistId: string): Promise<string>
 }
 
 export interface PlaylistSong {
@@ -84,10 +86,18 @@ export interface SearchPlaylistsDeps {
    * parents put on the start page themselves has no mark of its own
    */
   accountPlaylists?: () => Promise<Set<string>>
+  /** the pictures of the account's playlists as Spotify has them now (one request for all - /me/playlists) */
+  accountCovers?: () => Promise<Map<string, string>>
   now?: () => number
 }
 
 const SPOTIFY_ID = /^[A-Za-z0-9]{22}$/
+// Spotify's picture of a playlist: a mosaic of the covers of its first four songs, made a moment after a change
+const MOSAIC_SONGS = 4
+const MOSAIC_DELAY_MS = 60_000
+// the routine for all pictures: every 6 hours, the first 10 minutes after the start
+const COVERS_EVERY_MS = 6 * 3600_000
+const COVERS_FIRST_MS = 10 * 60_000
 const CREATED_KEPT = 200
 const APPROVED_KEPT = 2000
 export const PLAYLIST_WRITE_SCOPE = 'playlist-modify-private'
@@ -151,6 +161,8 @@ export class SearchPlaylists {
   // the songs of the child's playlists as read last (2 minutes; a song put in or taken out: read anew) - for the ✓ at
   // "In welche Playlist?"
   private readonly songsKept = new Map<string, { at: number; ids: Set<string> }>()
+  // when a playlist's picture was asked last (one without a picture: at most every 10 minutes)
+  private readonly coverAsked = new Map<string, number>()
 
   constructor(private readonly deps: SearchPlaylistsDeps) {
     this.file = path.join(deps.configDir, 'search-playlists.json')
@@ -194,7 +206,31 @@ export class SearchPlaylists {
     const rows = await this.deps.pool.ownPlaylists()
     // (only asked when there is one without the mark; no answer - no login, a block: the marked ones only)
     const account = rows.some((r) => !r.own) ? await this.deps.accountPlaylists?.().catch(() => undefined) : undefined
-    return rows.filter((r) => r.own || account?.has(r.id)).map(({ own: _own, ...r }) => r)
+    const targets = rows.filter((r) => r.own || account?.has(r.id)).map(({ own: _own, ...r }) => r)
+    // (one without a picture - made by the child, empty then: asked again in the background, at most every 10 minutes)
+    for (const t of targets) if (!t.cover) this.refreshCover(t.id, false)
+    return targets
+  }
+
+  /**
+   * A playlist's picture from Spotify into the library and the pool. Spotify makes the mosaic a moment after a song
+   * went in or out: asked after a minute then (later); otherwise at most every 10 minutes per playlist.
+   */
+  refreshCover(playlistId: string, later: boolean): void {
+    const run = async () => {
+      if (!later) {
+        const last = this.coverAsked.get(playlistId) ?? 0
+        if (this.now() - last < 600_000) return
+      }
+      this.coverAsked.set(playlistId, this.now())
+      const url = await this.deps
+        .api()
+        ?.cover(playlistId)
+        .catch(() => '')
+      if (url) await this.deps.pool.setPlaylistCover(playlistId, url).catch(() => undefined)
+    }
+    if (later) setTimeout(() => void run(), MOSAIC_DELAY_MS).unref?.()
+    else void run()
   }
 
   /** how many playlists the child may still make today */
@@ -248,8 +284,11 @@ export class SearchPlaylists {
     if (!target) return 'no_target'
     const api = this.api()
     this.songsKept.delete(playlistId)
-    if ((await api.items(playlistId)).some((s) => s.id === t.id)) return 'already'
+    const before = await api.items(playlistId)
+    if (before.some((s) => s.id === t.id)) return 'already'
     await api.add(playlistId, [`spotify:track:${t.id}`])
+    // (its picture: Spotify's mosaic of the first songs' covers - a song at the end changes it only while there are few)
+    if (before.length < MOSAIC_SONGS) this.refreshCover(playlistId, true)
     if (told)
       await this.deps.pool.announce({
         what: 'added',
@@ -310,12 +349,28 @@ export class SearchPlaylists {
     return this.api().items(playlistId)
   }
 
+  /**
+   * The routine: the pictures of the account's playlists on the start page (the child's and its own) as Spotify has them
+   * now - also what was changed in the Spotify app. One request for all of them.
+   */
+  async refreshAllCovers(): Promise<void> {
+    const covers = await this.deps.accountCovers?.().catch(() => undefined)
+    if (!covers) return
+    for (const p of await this.deps.pool.ownPlaylists()) {
+      const url = covers.get(p.id)
+      if (url && url !== p.cover) await this.deps.pool.setPlaylistCover(p.id, url).catch(() => undefined)
+    }
+  }
+
   /** a song out of a playlist the child put on the start page itself */
   async takeOut(playlistId: string, song: { id: string; name: string }): Promise<'removed' | 'not_own'> {
     const target = (await this.targets()).find((p) => p.id === playlistId && p.kidAdded)
     if (!target) return 'not_own'
     this.songsKept.delete(playlistId)
+    // (its picture changes when one of the first songs goes - they make the mosaic)
+    const at = (await this.api().items(playlistId)).findIndex((s) => s.id === song.id)
     await this.api().remove(playlistId, [`spotify:track:${song.id}`])
+    if (at >= 0 && at < MOSAIC_SONGS) this.refreshCover(playlistId, true)
     await this.deps.pool.announce({
       what: 'removed',
       kind: 'track',
@@ -418,6 +473,13 @@ export function registerSearchPlaylistsRoutes(app: Express, deps: SearchPlaylist
       failed(res, err, 'take out')
     }
   })
+
+  // the pictures of the child's playlists: a routine every 6 hours (only with the playlists' switches on)
+  const covers = () => {
+    if (playlistsOn(cfg()) || tracksOn(cfg())) void playlists.refreshAllCovers()
+  }
+  setTimeout(covers, COVERS_FIRST_MS).unref?.()
+  setInterval(covers, COVERS_EVERY_MS).unref?.()
 
   return playlists
 }

@@ -1313,6 +1313,16 @@ const playlistsApi: PlaylistsApi = {
     })
     spotifyMediaInfo.forget(id)
   },
+  cover: async (id) => {
+    const p = await spotifyGet<{ images?: { url?: string; width?: number | null }[] | null }>(
+      `/playlists/${encodeURIComponent(id)}?fields=images`,
+      await playlistsToken(),
+      'display',
+    )
+    // (the middle size when Spotify gives several - 300 px; a mosaic comes as one picture)
+    const images = (p.images ?? []).filter((i) => i.url)
+    return images.find((i) => (i.width ?? 0) >= 250 && (i.width ?? 0) <= 400)?.url ?? images[0]?.url ?? ''
+  },
   items: async (id) => {
     const token = await playlistsToken()
     const fields = encodeURIComponent('items(item(id,name,artists(name),album(images))),next')
@@ -1353,40 +1363,50 @@ const playlistsFixture: PlaylistsApi = {
     fixtureLog(`playlist remove ${id} ${uris.join(',')}`)
     fixtureSongs.set(id, (fixtureSongs.get(id) ?? []).filter((s) => !uris.includes(`spotify:track:${s.id}`)))
   },
+  cover: async () => '',
   items: async (id) => {
     fixtureLog(`playlist items ${id}`)
     return fixtureSongs.get(id) ?? []
   },
 }
 // (the account's own playlists - and those it collaborates on: songs may go into them; kept 10 minutes)
-let accountPlaylistsKept: { at: number; ids: Set<string> } | null = null
-const accountPlaylists = async (): Promise<Set<string>> => {
-  if (spotifyFixture) return new Set()
-  if (accountPlaylistsKept && Date.now() - accountPlaylistsKept.at < 600_000) return accountPlaylistsKept.ids
+// (and their pictures - the routine of search-playlists.ts takes them from the same answer)
+let accountPlaylistsKept: { at: number; ids: Set<string>; covers: Map<string, string> } | null = null
+const accountInfo = async (fresh = false): Promise<{ ids: Set<string>; covers: Map<string, string> }> => {
+  if (spotifyFixture) return { ids: new Set(), covers: new Map() }
+  if (!fresh && accountPlaylistsKept && Date.now() - accountPlaylistsKept.at < 600_000) return accountPlaylistsKept
   const token = await playlistsToken()
   const me = await spotifyGet<{ id?: string }>('/me', token, 'display')
   const ids = new Set<string>()
+  const covers = new Map<string, string>()
   let offset = 0
   for (let page = 0; page < 10; page++) {
-    const d = await spotifyGet<{ items?: ({ id?: string; owner?: { id?: string }; collaborative?: boolean } | null)[]; next?: string | null }>(
-      `/me/playlists?limit=50&offset=${offset}`,
-      token,
-      'display',
-    )
+    const d = await spotifyGet<{
+      items?: ({ id?: string; owner?: { id?: string }; collaborative?: boolean; images?: { url?: string; width?: number | null }[] | null } | null)[]
+      next?: string | null
+    }>(`/me/playlists?limit=50&offset=${offset}`, token, 'display')
     const items = d.items ?? []
-    for (const p of items) if (p?.id && ((!!me.id && p.owner?.id === me.id) || p.collaborative === true)) ids.add(p.id)
+    for (const p of items) {
+      if (!p?.id || !((!!me.id && p.owner?.id === me.id) || p.collaborative === true)) continue
+      ids.add(p.id)
+      const images = (p.images ?? []).filter((i) => i.url)
+      const url = images.find((i) => (i.width ?? 0) >= 250 && (i.width ?? 0) <= 400)?.url ?? images[0]?.url
+      if (url) covers.set(p.id, url)
+    }
     offset += items.length
     if (!d.next || !items.length) break
   }
-  accountPlaylistsKept = { at: Date.now(), ids }
-  return ids
+  accountPlaylistsKept = { at: Date.now(), ids, covers }
+  return accountPlaylistsKept
 }
+const accountPlaylists = async (): Promise<Set<string>> => (await accountInfo()).ids
 const searchPlaylists = registerSearchPlaylistsRoutes(app, {
   configDir: configBasePath,
   pool: searchPool,
   getMupiboxConfig: () => getMupiboxConfigSync() as unknown as Record<string, unknown> | undefined,
   api: () => (spotifyFixture ? playlistsFixture : playlistsApi),
   accountPlaylists,
+  accountCovers: async () => (await accountInfo(true)).covers,
 })
 
 registerWishesRoutes(app, {
