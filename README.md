@@ -34,7 +34,7 @@ splitti weiter übernehmen lassen.
 ## Anleitungen
 
 - **[Den Fork auf einer MuPiBox installieren](docs/INSTALLATION.md)** – von der laufenden Standard-MuPiBox aus, per SSH, Schritt für
-  Schritt; auch für jede weitere Box.
+  Schritt; auch für jede weitere Box. Die Installation läuft als Systemdienst und übersteht einen Verbindungsabbruch.
 - **[Home Assistant](docs/HOME_ASSISTANT.md)** – Integration von splitti, Koppeln, die Wünsche-Erweiterung (drei Dateien),
   Helfer, Automationen und Dashboard-Karten mit Beispielen. Die Dateien dazu:
   [homeassistant/wishes-extension](homeassistant/wishes-extension/README.md).
