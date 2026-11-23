@@ -1,0 +1,46 @@
+# MuPiBox (Fork mit Spotify-Live-Suche) – Dashboard-Karten für die Wünsche
+# Einfügen: Dashboard bearbeiten > Karte hinzufügen > "Manuell" > den Text unten einfügen.
+# (Anleitung: docs/HOME_ASSISTANT.md, Teil E.) Nichts Persönliches darin - EINTRAGEN siehst du an zwei Stellen.
+#
+# Voraussetzung: die Helfer aus mupibox_wuensche_package.yaml gibt es schon.
+
+type: vertical-stack
+cards:
+  # --- Karte 1: Was ist neu? -------------------------------------------------
+  - type: entities
+    title: MuPiBox - Wünsche
+    show_header_toggle: false
+    entities:
+      - entity: counter.mupibox_neue_wuensche
+        name: Neue Wünsche seit dem letzten Zurücksetzen
+      - entity: input_datetime.mupibox_letzter_wunsch_zeit
+        name: Letzter Wunsch am
+      - entity: input_boolean.mupibox_wunsch_meldung
+        name: Meldungen
+      - type: button
+        name: Zähler zurücksetzen
+        icon: mdi:counter
+        action_name: Zurücksetzen
+        tap_action:
+          action: perform-action
+          perform_action: counter.reset
+          target:
+            entity_id: counter.mupibox_neue_wuensche
+      - type: weblink
+        name: Wünsche in der MuPiBox-App öffnen
+        icon: mdi:open-in-new
+        # EINTRAGEN: die Adresse deiner Box, die du auch im Browser benutzt (nicht den Port 8443)
+        url: https://ADRESSE-DER-BOX/app/#/wuensche
+
+  # --- Karte 2: der letzte Wunsch im Klartext ----------------------------------
+  - type: markdown
+    title: Letzter Wunsch
+    content: >-
+      {{ states('input_text.mupibox_letzter_wunsch') }}
+
+  # --- Karte 3: die Box selbst (aus der Integration von splitti) -----------------
+  # EINTRAGEN: media_player.DEINE_BOX = der Player deiner Box
+  # (Einstellungen > Geräte & Dienste > MuPiBox > deine Box > "Player" - dort steht die Entity-ID)
+  - type: media-control
+    entity: media_player.DEINE_BOX
+    name: Wiedergabe

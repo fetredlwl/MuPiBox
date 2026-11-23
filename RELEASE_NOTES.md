@@ -11,9 +11,20 @@ die Box ein Backup an.
 
 ---
 
+## Seit dem letzten Tag (nur Anleitungen, noch ohne Tag)
+
+- [docs/INSTALLATION.md](docs/INSTALLATION.md): Erstinstallation des Forks auf einer laufenden Standard-MuPiBox per SSH, Prüfen,
+  Einrichten, weitere Boxen, Updates, Fehlersuche.
+- [docs/HOME_ASSISTANT.md](docs/HOME_ASSISTANT.md): Home Assistant mit dem Fork – Integration von splitti, Koppeln, die
+  Wünsche-Erweiterung (`homeassistant/wishes-extension/`, drei Dateien für Version 0.5.3 der Integration), Beispiele für Helfer,
+  Automationen und Dashboard.
+
+---
+
 ## `fork-2026-11-23-spotify-live-suche` – Spotify-Live-Suche
 
-Basis: splitti/MuPiBox 5.0.17.
+Basis: splitti/MuPiBox 5.0.17. Version auf der Box: `FORK 5.0.17 fork-2026-11-23-spotify-live-suche 77aa80a`
+(Installationsbefehl: [docs/INSTALLATION.md](docs/INSTALLATION.md)).
 
 **Neu**
 - **Suche am Display, aufgebaut wie die Startseite.** Beim Öffnen kommen runde Kacheln „Bei Spotify suchen“, „Podcasts“,

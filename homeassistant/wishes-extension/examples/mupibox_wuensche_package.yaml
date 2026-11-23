@@ -1,0 +1,124 @@
+# MuPiBox (Fork mit Spotify-Live-Suche) – Wünsche in Home Assistant
+# Ein "Paket": die Helfer und die Automationen in einer Datei.
+# Ablegen als  /config/packages/mupibox_wuensche.yaml   (Anleitung: docs/HOME_ASSISTANT.md, Teil E)
+#
+# Hier steht nichts Persönliches. Wo du etwas eintragen musst, steht EINTRAGEN dabei.
+
+# ---------------------------------------------------------------- Helfer ----
+input_boolean:
+  mupibox_wunsch_meldung:
+    name: MuPiBox Wunsch-Meldungen
+    icon: mdi:bell-ring
+    # Aus: Wünsche werden weiter gezählt und gemerkt, es kommt nur keine Meldung.
+
+counter:
+  mupibox_neue_wuensche:
+    name: Neue Wünsche
+    icon: mdi:star
+    initial: 0
+    step: 1
+    restore: true
+    # Zählt die Wünsche seit dem letzten Zurücksetzen (Knopf im Dashboard).
+    # Home Assistant weiß nicht, ob du in der MuPiBox-App schon freigegeben hast.
+
+input_text:
+  mupibox_letzter_wunsch:
+    name: Letzter Wunsch
+    icon: mdi:star-circle
+    max: 255
+
+input_datetime:
+  mupibox_letzter_wunsch_zeit:
+    name: Letzter Wunsch (Zeit)
+    icon: mdi:clock-outline
+    has_date: true
+    has_time: true
+
+# ----------------------------------------------------------- Automationen ----
+automation:
+  # 1) Das Kind wünscht sich etwas bei Spotify -> zählen, merken, melden
+  - id: mupibox_wunsch_neu
+    alias: MuPiBox - neuer Wunsch
+    description: Zählt den Wunsch, merkt ihn sich und meldet ihn in Home Assistant.
+    mode: queued
+    triggers:
+      - trigger: event
+        event_type: mupibox_search_event
+        event_data:
+          what: wish
+    actions:
+      - action: counter.increment
+        target:
+          entity_id: counter.mupibox_neue_wuensche
+      - action: input_text.set_value
+        target:
+          entity_id: input_text.mupibox_letzter_wunsch
+        data:
+          value: "{{ trigger.event.data.message | truncate(250) }}"
+      - action: input_datetime.set_datetime
+        target:
+          entity_id: input_datetime.mupibox_letzter_wunsch_zeit
+        data:
+          datetime: "{{ now().strftime('%Y-%m-%d %H:%M:%S') }}"
+      # ab hier nur, wenn die Meldungen an sind
+      - condition: state
+        entity_id: input_boolean.mupibox_wunsch_meldung
+        state: "on"
+      - action: persistent_notification.create
+        data:
+          title: "MuPiBox ({{ trigger.event.data.box }}): neuer Wunsch"
+          message: "{{ trigger.event.data.message }}"
+          notification_id: "mupibox_wunsch_{{ trigger.event.data.config_entry_id }}_{{ trigger.event.data.id }}"
+      # Meldung aufs Handy: den Block unten einkommentieren (das "#" vorne weg) und
+      # mobile_app_DEIN_HANDY gegen den Namen deines Handys tauschen (EINTRAGEN).
+      # Den Namen zeigt  Entwicklerwerkzeuge > Aktionen > "notify."  in der Liste.
+      # - action: notify.mobile_app_DEIN_HANDY
+      #   data:
+      #     title: "MuPiBox: neuer Wunsch"
+      #     message: "{{ trigger.event.data.message }}"
+      #     data:
+      #       url: "{{ trigger.event.data.url }}"        # iPhone: Tipp auf die Meldung öffnet die Freigabe
+      #       clickAction: "{{ trigger.event.data.url }}" # Android: dasselbe
+
+  # 2) Das Kind holt etwas auf die Startseite oder nimmt es weg -> ins Logbuch
+  - id: mupibox_kind_holt_oder_entfernt
+    alias: MuPiBox - Kind holt oder entfernt etwas
+    description: Schreibt ins Logbuch, was das Kind selbst auf die Startseite geholt oder entfernt hat.
+    mode: queued
+    triggers:
+      - trigger: event
+        event_type: mupibox_search_event
+    conditions:
+      - condition: template
+        value_template: "{{ trigger.event.data.what in ['added', 'removed'] }}"
+    actions:
+      - action: logbook.log
+        data:
+          name: "MuPiBox ({{ trigger.event.data.box }})"
+          message: "{{ trigger.event.data.message }}"
+          domain: mupibox
+
+  # 3) Abends erinnern, wenn noch Wünsche offen sind
+  - id: mupibox_wunsch_erinnerung
+    alias: MuPiBox - Erinnerung an Wünsche
+    description: Erinnert um 18:00 Uhr, wenn seit dem Zurücksetzen Wünsche gekommen sind.
+    mode: single
+    triggers:
+      - trigger: time
+        at: "18:00:00"
+    conditions:
+      - condition: numeric_state
+        entity_id: counter.mupibox_neue_wuensche
+        above: 0
+      - condition: state
+        entity_id: input_boolean.mupibox_wunsch_meldung
+        state: "on"
+    actions:
+      - action: persistent_notification.create
+        data:
+          title: "MuPiBox: Wünsche warten"
+          message: >-
+            {{ states('counter.mupibox_neue_wuensche') }} neue Wünsche seit dem letzten Zurücksetzen.
+            Letzter Wunsch: {{ states('input_text.mupibox_letzter_wunsch') }}
+            In der MuPiBox-App unter Bibliothek > Wünsche freigeben oder ablehnen.
+          notification_id: mupibox_wunsch_erinnerung

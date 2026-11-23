@@ -16,7 +16,8 @@ Alles Eigene sitzt hinter Schaltern in der Eltern-App; **ist ein Schalter aus, v
   „Podcasts“, „Radio“ und „Einträge verwalten“, die Tastatur kommt erst nach einem Tipp auf das Suchfeld.
 - **Spotify live suchen und wünschen** – das Kind findet Alben und Künstler bei Spotify und wünscht sie sich; die Eltern
   geben sie in der App frei (Bibliothek › Wünsche), widerrufen sie wieder oder räumen die Liste auf. Freigegebenes merkt
-  sich die Box, das Kind holt es danach selbst auf die Startseite. Meldung an Home Assistant bei einem neuen Wunsch.
+  sich die Box, das Kind holt es danach selbst auf die Startseite. Meldung an Home Assistant bei einem neuen Wunsch
+  ([Anleitung](docs/HOME_ASSISTANT.md)).
 - **Podcasts und Radio für Kinder** – Sendungen und Sender aus Verzeichnissen, die das Kind ohne Freigabe hinzufügen darf;
   was schon auf der Box ist, wird markiert und nicht doppelt angeboten.
 - **Eigene Einträge verwalten** – was das Kind selbst geholt hat, kann es verschieben oder entfernen; die Eltern sehen
@@ -30,6 +31,13 @@ Jede Änderung berücksichtigt Backup und Wiederherstellung sowie die Übersetzu
 Der Code des Originals wird nur dort angefasst, wo es für diese Funktionen nötig ist, damit sich Änderungen von
 splitti weiter übernehmen lassen.
 
+## Anleitungen
+
+- **[Den Fork auf einer MuPiBox installieren](docs/INSTALLATION.md)** – von der laufenden Standard-MuPiBox aus, per SSH, Schritt für
+  Schritt; auch für jede weitere Box.
+- **[Home Assistant](docs/HOME_ASSISTANT.md)** – Integration von splitti, Koppeln, die Wünsche-Erweiterung (drei Dateien),
+  Helfer, Automationen und Dashboard-Karten mit Beispielen.
+
 ## Versionen und Release-Notes
 
 - Benannte Stände sind **Tags** der Form `fork-<Datum>-<Name>`, zum Beispiel `fork-2026-11-23-spotify-live-suche`.
@@ -39,9 +47,11 @@ splitti weiter übernehmen lassen.
 
 ## Installation und Update
 
-Auf einer vorhandenen MuPiBox: Eltern-App › Einstellungen › Updates › „Fork · Letzter Tag“ installieren. Vorher legt die Box
-ein Backup an. Neu installieren: die Anleitung des Originals ([mupibox.de](https://mupibox.de/anleitungen/installationsanleitung/einfache-installation/)),
-danach wie oben auf den Fork wechseln.
+Die **erste Installation** auf einer laufenden Standard-MuPiBox geht per SSH mit einem Befehl:
+[docs/INSTALLATION.md](docs/INSTALLATION.md). Danach laufen alle Updates in der Eltern-App unter Einstellungen › System ›
+Updates: „Fork · Letzter Tag“ (der letzte benannte Stand) oder „Fork · Entwicklungsstand“; vorher legt die Box ein Backup an.
+Eine neue MuPiBox richtest du zuerst nach der Anleitung des Originals ein
+([mupibox.de](https://mupibox.de/anleitungen/installationsanleitung/einfache-installation/)).
 
 ## Hilfe, Fehler und Datenschutz
 
