@@ -49,7 +49,7 @@
       <div class="km-stage" (pointerdown)="stageDown($event)" (pointermove)="stageMove($event)" (pointerup)="stageUp()" (pointerleave)="stageUp()" (pointercancel)="stageUp()">
         @for (it of stageItems(); track it.index) {
           @let src = it.data.imgSrc | async;
-          <button class="km-stage-item" [class.mupi-dim]="it.data.dim" [class.km-folder]="it.data.kind === 'folder'" [class.km-own]="it.data.kind === 'own'" [style.transform]="it.transform" [style.opacity]="it.opacity" [style.z-index]="it.z" (click)="kmStageTap(it.index, it.data)">
+          <button class="km-stage-item" [class.mupi-dim]="it.data.dim" [class.km-folder]="it.data.kind === 'folder'" [class.km-own]="it.data.kind === 'own'" [class.mupi-sorting]="sorting()" [style.transform]="it.transform" [style.opacity]="it.opacity" [style.z-index]="it.z" (click)="kmStageTap(it.index, it.data)" (pointerdown)="pressDown($event, it.index)" (pointermove)="pressMove($event)" (pointerup)="pressUp()" (pointercancel)="pressUp()">
             @if (it.data.kind === 'folder') {
               <span class="km-stack"></span><span class="km-stack"></span>
             }
@@ -89,6 +89,11 @@
           </button>
         }
       </div>
+      @if (sorting() && cur) {
+        <!-- (fork "wishes") sorting on the stage: the cover in the middle one place to the left or right -->
+        <button class="mupi-sort-arrow mupi-sort-left" type="button" aria-label="Nach links" (click)="stageShift(-1)"><ion-icon name="chevron-back"></ion-icon></button>
+        <button class="mupi-sort-arrow mupi-sort-right" type="button" aria-label="Nach rechts" (click)="stageShift(1)"><ion-icon name="chevron-forward"></ion-icon></button>
+      }
       @if (cur) {
         <button class="km-stage-name" [class.km-speaking]="speakingName() === cur.name" (click)="readText(cur.name)"><span>{{ cur.name }}</span></button>
       }
@@ -101,11 +106,11 @@
     speed="900" touch-ratio="0.5" slides-per-group="1" resistance="true" resistance-ratio="0.85"
     (swiperslidechange)="onSlideChange($event)">
       @for (currentData of shownData(); track currentData.trackKey) {
-        <swiper-slide>
+        <swiper-slide [class.mupi-drop]="dropAt() === $index">
           <ion-grid>
             <ion-row class="img-row">
               <ion-col size="12">
-                <ion-card class="ep-anchor" [class.circle-card]="roundImages() || currentData.round" [class.km-folder]="km() && currentData.kind === 'folder'" [class.km-own]="km() && currentData.kind === 'own'" (click)="this.elementClicked.emit(currentData)">
+                <ion-card class="ep-anchor" [class.circle-card]="roundImages() || currentData.round" [class.km-folder]="km() && currentData.kind === 'folder'" [class.km-own]="km() && currentData.kind === 'own'" [class.mupi-sorting]="sorting()" (click)="cardClicked(currentData)" (pointerdown)="pressDown($event, $index)" (pointermove)="pressMove($event)" (pointerup)="pressUp()" (pointercancel)="pressUp()">
                   @if (km()) {
                     <!-- km themes: folder = card stack + badge, the folder's own titles, Spotify sync, missing cover = mascot -->
                     @let src = currentData.imgSrc | async;
@@ -148,6 +153,9 @@
                     <span class="ep-done" aria-hidden="true"><ion-icon name="checkmark"></ion-icon></span>
                   } @else if (currentData.progress) {
                     <span class="ep-progress" aria-hidden="true"><i [style.width.%]="currentData.progress"></i></span>
+                  }
+                  @if (sorting()) {
+                    <span class="mupi-move" aria-hidden="true"><ion-icon name="move"></ion-icon></span>
                   }
                 </ion-card>
               </ion-col>

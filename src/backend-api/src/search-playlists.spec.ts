@@ -39,6 +39,8 @@ let day = 0
 // (the versions of the account's playlists as Spotify gives them with /me/playlists - none: unknown)
 let snaps: Map<string, string>
 let snapsAt = 0
+// (the ids of the account's playlists in Spotify's answer - undefined: not asked / not all of them)
+let accIds: Set<string> | undefined
 
 const library = () => JSON.parse(readFileSync(dataFile, 'utf8')) as Record<string, unknown>[]
 
@@ -82,6 +84,7 @@ beforeEach(() => {
   calls = []
   songs = new Map()
   snaps = new Map()
+  accIds = undefined
   day = Date.parse('2026-11-23T10:00:00')
   snapsAt = day
   cfg = {
@@ -114,7 +117,7 @@ beforeEach(() => {
     api: () => api,
     accountPlaylists: async () => new Set([ACCOUNT_PL]),
     accountCovers: async () => new Map([[ACCOUNT_PL, 'https://i.scdn.co/image/account']]),
-    accountSnapshots: async () => ({ at: snapsAt, snapshots: snaps }),
+    accountSnapshots: async () => ({ at: snapsAt, snapshots: snaps, ids: accIds, complete: accIds !== undefined }),
     now: () => day,
   })
   registerWishesRoutes(app, {
@@ -438,6 +441,26 @@ describe('songs', () => {
     // (kept on the SD card: a restart of the box reads nothing either)
     const kept = JSON.parse(readFileSync(path.join(dir, 'search-playlists-songs.json'), 'utf8'))
     assert.deepEqual(kept[id].ids, [SONG])
+  })
+
+  it('a playlist deleted in the Spotify app goes out of the search and off the start page - not one made just now', async () => {
+    const id = await target()
+    assert.ok(library().some((r) => r.playlistid === id))
+    day += 60_000
+    snapsAt = day
+    accIds = new Set([ACCOUNT_PL])
+    assert.deepEqual(await playlists.pruneGone(true), [id])
+    assert.ok(!library().some((r) => r.playlistid === id))
+    assert.ok(!(await pool.entries()).some((e) => e.spotifyId === id))
+    // (made after Spotify's answer: not in it yet - it stays)
+    const r = await request(app).post('/api/search-playlists/create').send({ name: 'Neu', category: 'music' })
+    assert.deepEqual(await playlists.pruneGone(true), [])
+    assert.ok(library().some((x) => x.playlistid === r.body.id))
+    // (no complete answer from Spotify: nothing taken out)
+    accIds = undefined
+    day += 60_000
+    snapsAt = day
+    assert.deepEqual(await playlists.pruneGone(true), [])
   })
 
   it('cannot go into a playlist that is not one of the child account on the start page', async () => {

@@ -95,6 +95,8 @@
 					'home/dietpi/.mupibox/Sonos-Kids-Controller-master/server/config/search-pool.json',
 					'home/dietpi/.mupibox/Sonos-Kids-Controller-master/server/config/wishes.json',
 					'home/dietpi/.mupibox/Sonos-Kids-Controller-master/server/config/search-playlists.json',
+					'home/dietpi/.mupibox/Sonos-Kids-Controller-master/server/config/wishes-archive.json',
+					'home/dietpi/.mupibox/Sonos-Kids-Controller-master/server/config/start-order.json',
 				];
 				$allowedExactDirs = ['etc/', 'etc/mupibox/', 'home/', 'home/dietpi/', 'home/dietpi/MuPiBox/', 'home/dietpi/MuPiBox/themes/',
 					'home/dietpi/MuPiBox/sysmedia/', 'home/dietpi/MuPiBox/sysmedia/images/',

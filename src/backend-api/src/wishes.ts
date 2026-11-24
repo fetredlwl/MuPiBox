@@ -127,7 +127,31 @@ const SPOTIFY_ID = /^[A-Za-z0-9]{22}$/
 const PAGE = 10
 const KEEP_MS = 24 * 60 * 60 * 1000
 const MAX_PAGES = 400
-const DECIDED_KEPT = 50
+// the decided wishes in the list - more: the oldest approvals go into the archive, the rest is forgotten (the list is
+// tidied up every quarter anyway)
+const DECIDED_KEPT = 1000
+// the archive of approvals (searchable, revocable in the app): the oldest go beyond this
+const ARCHIVE_KEPT = 5000
+// (the archive tidied when a new quarter began - looked at once a day)
+const TIDY_EVERY_MS = 24 * 3600_000
+
+/** the quarter a time is in (local time): '2026-Q4' */
+export const quarterOf = (ms: number): string => {
+  const d = new Date(ms)
+  return `${d.getFullYear()}-Q${Math.floor(d.getMonth() / 3) + 1}`
+}
+/** when the quarter of a time began (local time) */
+export const quarterStart = (ms: number): number => {
+  const d = new Date(ms)
+  return new Date(d.getFullYear(), Math.floor(d.getMonth() / 3) * 3, 1).getTime()
+}
+
+/** the archive: approvals out of the list (tidied, or taken out by the parents) - still revocable */
+interface Archive {
+  /** the quarter the list was tidied up last */
+  tidied?: string
+  wishes: Wish[]
+}
 
 export function wishesOn(cfg: Record<string, unknown> | undefined): boolean {
   const mb = (cfg?.mupibox ?? {}) as Record<string, unknown>
@@ -163,6 +187,7 @@ async function writeJson(file: string, data: unknown): Promise<void> {
 
 export class Wishes {
   private readonly file: string
+  private readonly archiveFile: string
   private readonly pagesFile: string
   private queue: Promise<unknown> = Promise.resolve()
   // the pages handed out (search and artist pages), kept a day - also on the SD card
@@ -171,6 +196,7 @@ export class Wishes {
 
   constructor(private readonly deps: WishesDeps) {
     this.file = path.join(deps.configDir, 'wishes.json')
+    this.archiveFile = path.join(deps.configDir, 'wishes-archive.json')
     this.pagesFile = path.join(deps.cacheDir, 'wishes-pages.json')
     this.now = deps.now ?? Date.now
   }
@@ -474,7 +500,10 @@ export class Wishes {
   async revoke(
     id: string,
   ): Promise<'revoked' | 'unknown' | 'locked' | { result: 'revoked'; removed: string[]; still: boolean }> {
-    const wish = (await this.list()).find((w) => w.id === id && w.status === 'approved')
+    // (in the list, or in the archive)
+    const wish =
+      (await this.list()).find((w) => w.id === id && w.status === 'approved') ??
+      (await this.archive()).wishes.find((w) => w.id === id && w.status === 'approved')
     if (!wish) return 'unknown'
     if (wish.kind === 'track') {
       // (a song: out of the child's playlists again - unless its album or artist is allowed otherwise)
@@ -493,6 +522,7 @@ export class Wishes {
         (x) => x.status === 'approved' && x.kind === 'track' && x.spotifyId === wish.spotifyId,
       ))
         await this.change(w.id, { status: 'revoked', decidedAt: new Date(this.now()).toISOString() })
+      await this.dropArchived(wish)
       return { result: 'revoked', ...out }
     }
     const ident = identOfWish(wish.kind, wish.spotifyId)
@@ -504,20 +534,94 @@ export class Wishes {
       (x) => x.status === 'approved' && x.kind === wish.kind && x.spotifyId === wish.spotifyId,
     ))
       await this.change(w.id, { status: 'revoked', decidedAt: new Date(this.now()).toISOString(), pooled: false })
+    await this.dropArchived(wish)
     return 'revoked'
   }
 
+  /** the archived approvals of a thing gone - revoked, there is nothing left to take back */
+  private dropArchived(wish: Wish): Promise<void> {
+    return this.serial(async () => {
+      const a = await this.archive()
+      const rest = a.wishes.filter((w) => !(w.kind === wish.kind && w.spotifyId === wish.spotifyId))
+      if (rest.length !== a.wishes.length) await this.saveArchive({ ...a, wishes: rest })
+    })
+  }
+
   /**
-   * Decided wishes out of the list in the app (one, or all decided ones) - an approval stays in the search pool, a
-   * revoked or refused one is only forgotten. Open wishes stay. Answer: how many went.
+   * Decided wishes out of the list in the app (one, all decided ones, or all refused ones) - an approval goes into the
+   * archive (still revocable there), a revoked or refused one is only forgotten. Open wishes stay. Answer: how many went.
    */
-  forget(id: string | null): Promise<number> {
+  forget(id: string | null, which: 'decided' | 'rejected' = 'decided'): Promise<number> {
     return this.serial(async () => {
       const list = await this.list()
-      const rest = list.filter((w) => w.status === 'open' || (id !== null && w.id !== id))
-      if (rest.length !== list.length) await this.save(rest)
-      return list.length - rest.length
+      const goes = (w: Wish) =>
+        w.status !== 'open' && (id !== null ? w.id === id : which === 'decided' || w.status === 'rejected')
+      const gone = list.filter(goes)
+      if (!gone.length) return 0
+      await this.toArchive(gone)
+      await this.save(list.filter((w) => !goes(w)))
+      return gone.length
     })
+  }
+
+  // ---------- the archive ----------
+
+  async archive(): Promise<Archive> {
+    const a = await readJson<Partial<Archive>>(this.archiveFile, {})
+    const wishes = Array.isArray(a?.wishes)
+      ? a.wishes.filter((w) => w && WISH_KINDS.includes(w.kind) && SPOTIFY_ID.test(w.spotifyId))
+      : []
+    return { ...(typeof a?.tidied === 'string' ? { tidied: a.tidied } : {}), wishes }
+  }
+
+  private async saveArchive(a: Archive): Promise<void> {
+    backupBeforeWrite(this.archiveFile)
+    await writeJson(this.archiveFile, a)
+  }
+
+  /** the approvals of these wishes into the archive (the others are only forgotten) */
+  private async toArchive(ws: Wish[], tidied?: string): Promise<void> {
+    const approved = ws.filter((w) => w.status === 'approved')
+    if (!approved.length && tidied === undefined) return
+    const a = await this.archive()
+    const have = new Set(a.wishes.map((w) => w.id))
+    a.wishes = [...a.wishes, ...approved.filter((w) => !have.has(w.id))]
+      .sort((x, y) => (x.decidedAt ?? x.at).localeCompare(y.decidedAt ?? y.at))
+      .slice(-ARCHIVE_KEPT)
+    if (tidied !== undefined) a.tidied = tidied
+    await this.saveArchive(a)
+  }
+
+  /**
+   * Once a quarter (the first look in a new quarter): the wishes decided before it began out of the list - approvals
+   * into the archive, refused and revoked ones forgotten. Open wishes stay. Answer: how many went (null: tidied already).
+   */
+  tidy(): Promise<number | null> {
+    return this.serial(async () => {
+      const quarter = quarterOf(this.now())
+      if ((await this.archive()).tidied === quarter) return null
+      const begun = quarterStart(this.now())
+      const list = await this.list()
+      const old = (w: Wish) => w.status !== 'open' && Date.parse(w.decidedAt ?? w.at) < begun
+      const gone = list.filter(old)
+      await this.toArchive(gone, quarter)
+      if (gone.length) await this.save(list.filter((w) => !old(w)))
+      return gone.length
+    })
+  }
+
+  /** "Alle freigeben": every open wish approved, the oldest first. Answer: approved, and those that did not go */
+  async approveAll(): Promise<{ approved: number; failed: number }> {
+    let approved = 0
+    let failed = 0
+    for (const w of await this.list()) {
+      if (w.status !== 'open') continue
+      // (decided with an earlier one of the same thing already: nothing to do)
+      const r = await this.decide(w.id, true).catch(() => 'failed' as const)
+      if (r === 'approved') approved++
+      else if (r !== 'unknown') failed++
+    }
+    return { approved, failed }
   }
 
   /**
@@ -548,9 +652,11 @@ export class Wishes {
       const at = list.findIndex((w) => w.id === id)
       if (at < 0) return
       list[at] = { ...list[at], ...fields }
-      // (the open ones all, of the decided ones the newest)
+      // (the open ones all, of the decided ones the newest - the approvals beyond into the archive)
       const open = list.filter((w) => w.status === 'open')
-      const decided = list.filter((w) => w.status !== 'open').slice(-DECIDED_KEPT)
+      const all = list.filter((w) => w.status !== 'open')
+      const decided = all.slice(-DECIDED_KEPT)
+      if (all.length > decided.length) await this.toArchive(all.slice(0, all.length - decided.length))
       await this.save([...open, ...decided].sort((a, b) => a.at.localeCompare(b.at)))
     })
   }
@@ -691,14 +797,26 @@ export function registerWishesRoutes(app: Express, deps: WishesDeps): Wishes {
 
   // ---------- the parents' app ----------
 
-  /** GET /api/app/wishes - the open wishes and the decided ones (newest first) */
+  /** GET /api/app/wishes - the open wishes, the decided ones and the archived approvals (newest first) */
   app.get('/api/app/wishes', deps.session, async (_req, res) => {
     const list = (await wishes.list()).reverse()
+    const archive = await wishes.archive()
     res.json({
       on: on(),
       open: list.filter((w) => w.status === 'open'),
       decided: list.filter((w) => w.status !== 'open'),
+      archived: archive.wishes.reverse(),
     })
+  })
+
+  /** POST /api/app/wishes/approve-all - every open wish approved */
+  app.post('/api/app/wishes/approve-all', deps.session, deps.csrf, async (_req, res) => {
+    try {
+      res.json({ ok: true, ...(await wishes.approveAll()) })
+    } catch (err) {
+      console.error(`${new Date().toLocaleString()}: [wishes] approve all:`, err)
+      fail(res, 500, 'could_not_decide')
+    }
   })
 
   /** POST /api/app/wishes/decide {id, approve} - approved: on the start page under the child's tab */
@@ -734,17 +852,30 @@ export function registerWishesRoutes(app: Express, deps: WishesDeps): Wishes {
     }
   })
 
-  /** POST /api/app/wishes/forget {id} | {all: true} - decided wishes out of the list (open ones stay) */
+  /**
+   * POST /api/app/wishes/forget {id} | {all: true} | {rejected: true} - decided wishes out of the list (open ones stay;
+   * approvals into the archive)
+   */
   app.post('/api/app/wishes/forget', deps.session, deps.csrf, async (req, res) => {
     const id = text(req.body?.id, 40)
-    if (!id && req.body?.all !== true) return fail(res, 400, 'invalid_request')
-    res.json({ ok: true, removed: await wishes.forget(id || null) })
+    if (!id && req.body?.all !== true && req.body?.rejected !== true) return fail(res, 400, 'invalid_request')
+    res.json({ ok: true, removed: await wishes.forget(id || null, req.body?.rejected === true ? 'rejected' : 'decided') })
   })
 
   // (the approvals of before into the pool, once - a moment after the start)
   setTimeout(() => {
     wishes.rememberApproved().catch((err) => console.warn(`${new Date().toLocaleString()}: [wishes] remember:`, err))
   }, 5_000).unref()
+  // (the list tidied up once a quarter: looked at after the start and once a day)
+  const tidy = () =>
+    wishes
+      .tidy()
+      .then((n) => {
+        if (n) console.log(`${new Date().toLocaleString()}: [wishes] new quarter: ${n} decided wishes out of the list`)
+      })
+      .catch((err) => console.warn(`${new Date().toLocaleString()}: [wishes] tidy:`, err))
+  setTimeout(tidy, 60_000).unref()
+  setInterval(tidy, TIDY_EVERY_MS).unref()
 
   return wishes
 }

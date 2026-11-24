@@ -34,6 +34,7 @@ import { fetchFullPlaylistTracks } from './services/spotify-playlist-full'
 import { getValidAccessToken } from './spotify-sync/auth'
 import { SpotifyApiException, spotifyGet, spotifySend } from './spotify-sync/playlists'
 import { type PlaylistSong, type PlaylistsApi, registerSearchPlaylistsRoutes, tracksOn } from './search-playlists'
+import { registerStartOrderRoutes } from './start-order'
 import { loadSpotifySyncConfig, loadSpotifyTokenStore } from './spotify-sync/config-loader'
 import { playerUntilOf, spotifyBlock, useQuotaSplit } from './spotify-block'
 import { createSpotifySyncRouter } from './spotify-sync/routes'
@@ -1385,16 +1386,24 @@ const playlistsFixture: PlaylistsApi = {
 // (the account's own playlists - and those it collaborates on: songs may go into them; kept 10 minutes)
 // (and their pictures - the routine of search-playlists.ts takes them from the same answer; and their versions - a song
 // list kept with the same one is still right)
-type AccountInfo = { at: number; ids: Set<string>; covers: Map<string, string>; snapshots: Map<string, string> }
+type AccountInfo = {
+  at: number
+  ids: Set<string>
+  covers: Map<string, string>
+  snapshots: Map<string, string>
+  // all of the account's playlists in it (not cut off after 500): one missing is gone
+  complete: boolean
+}
 let accountPlaylistsKept: AccountInfo | null = null
 const accountInfo = async (fresh = false): Promise<AccountInfo> => {
-  if (spotifyFixture) return { at: Date.now(), ids: new Set(), covers: new Map(), snapshots: new Map() }
+  if (spotifyFixture) return { at: Date.now(), ids: new Set(), covers: new Map(), snapshots: new Map(), complete: false }
   if (!fresh && accountPlaylistsKept && Date.now() - accountPlaylistsKept.at < 600_000) return accountPlaylistsKept
   const token = await playlistsToken()
   const me = await spotifyGet<{ id?: string }>('/me', token, 'display')
   const ids = new Set<string>()
   const covers = new Map<string, string>()
   const snapshots = new Map<string, string>()
+  let complete = false
   let offset = 0
   for (let page = 0; page < 10; page++) {
     const d = await spotifyGet<{
@@ -1417,12 +1426,20 @@ const accountInfo = async (fresh = false): Promise<AccountInfo> => {
       if (url) covers.set(p.id, url)
     }
     offset += items.length
-    if (!d.next || !items.length) break
+    if (!d.next || !items.length) {
+      complete = true
+      break
+    }
   }
-  accountPlaylistsKept = { at: Date.now(), ids, covers, snapshots }
+  accountPlaylistsKept = { at: Date.now(), ids, covers, snapshots, complete }
   return accountPlaylistsKept
 }
 const accountPlaylists = async (): Promise<Set<string>> => (await accountInfo()).ids
+// ((fork "wishes") the start page sorted by the child - start-order.ts)
+registerStartOrderRoutes(app, {
+  configDir: configBasePath,
+  getMupiboxConfig: () => getMupiboxConfigSync() as unknown as Record<string, unknown> | undefined,
+})
 const searchPlaylists = registerSearchPlaylistsRoutes(app, {
   configDir: configBasePath,
   pool: searchPool,

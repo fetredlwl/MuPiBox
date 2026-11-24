@@ -23,6 +23,10 @@ export class SpotifyMediaInfo {
    */
   public privatePlaylist: ((playlistId: string) => Promise<SpotifyPlaylistData | undefined>) | undefined
 
+  // (fork "wishes") when the box changed a playlist itself (a song put in or taken out): a reading begun before that is
+  // not kept, and the playlist is read from the Web API from then on (the embed page lags behind)
+  private readonly changedAt = new Map<string, number>()
+
   private cacheDir = path.join(process.cwd(), 'cache', 'spotify')
   private cacheExpiry = 12 * 60 * 60 * 1000 // 12 hours in milliseconds
 
@@ -60,8 +64,15 @@ export class SpotifyMediaInfo {
    */
   private async fetchPlaylistDataSync(playlistId: string, isBackground = false): Promise<SpotifyPlaylistData> {
     const logPrefix = isBackground ? '[BG]' : '[FG]'
+    const started = Date.now()
 
     try {
+      // ((fork "wishes") a playlist the box changed, or read from the Web API before: from there first - the embed page
+      // showed a song taken out for a while still)
+      if (this.changedAt.has(playlistId) || this.readCache(playlistId)?.webApi) {
+        const own = await this.fromWebApi(playlistId, logPrefix, started)
+        if (own) return own
+      }
       console.debug(`${logPrefix} Fetching playlist data from Spotify Embed: ${playlistId}`)
 
       const embedUrl = `https://open.spotify.com/embed/playlist/${playlistId}`
@@ -79,7 +90,7 @@ export class SpotifyMediaInfo {
 
       if (!response.ok) {
         // ((fork "wishes") a private playlist - the child's own: from the Web API instead)
-        const own = await this.fromWebApi(playlistId, logPrefix)
+        const own = await this.fromWebApi(playlistId, logPrefix, started)
         if (own) return own
         throw new Error(`Spotify Embed API error: ${response.status}`)
       }
@@ -97,13 +108,13 @@ export class SpotifyMediaInfo {
         playlistData = this.transformEmbedData(nextData)
       } catch (error) {
         // ((fork "wishes") an embed page without the playlist - a private one may come so too: the Web API)
-        const own = await this.fromWebApi(playlistId, logPrefix)
+        const own = await this.fromWebApi(playlistId, logPrefix, started)
         if (own) return own
         throw error
       }
       // ((fork "wishes") an embed page without tracks: a private playlist may show so - the Web API knows its tracks)
       if (playlistData.tracks.length === 0) {
-        const own = await this.fromWebApi(playlistId, logPrefix)
+        const own = await this.fromWebApi(playlistId, logPrefix, started)
         if (own && own.tracks.length > 0) return own
       }
 
@@ -139,7 +150,7 @@ export class SpotifyMediaInfo {
         }
       }
 
-      await this.saveToCache(playlistId, playlistData)
+      await this.saveToCache(playlistId, playlistData, started)
       return playlistData
     } catch (error) {
       console.error(`${logPrefix} Error fetching playlist data:`, error)
@@ -208,18 +219,22 @@ export class SpotifyMediaInfo {
    * (fork "wishes") A playlist from the Web API with the Spotify login (privatePlaylist), kept as the embed's would be;
    * undefined: no login, not readable (another account's private playlist), Spotify blocks.
    */
-  private async fromWebApi(playlistId: string, logPrefix: string): Promise<SpotifyPlaylistData | undefined> {
+  private async fromWebApi(playlistId: string, logPrefix: string, started: number): Promise<SpotifyPlaylistData | undefined> {
     if (!this.privatePlaylist) return undefined
     const own = await this.privatePlaylist(playlistId).catch((err) => {
       console.warn(`${logPrefix} Playlist ${playlistId} not read from the Web API: ${err instanceof Error ? err.message : String(err)}`)
       return undefined
     })
-    if (own) await this.saveToCache(playlistId, own)
+    if (own) {
+      own.webApi = true
+      await this.saveToCache(playlistId, own, started)
+    }
     return own
   }
 
   /** (fork "wishes") the kept list of a playlist forgotten - a song was put in or taken out: read anew next time */
   public forget(playlistId: string): void {
+    this.changedAt.set(playlistId, Date.now())
     try {
       fs.rmSync(this.getCacheFilePath(playlistId, 'playlist'), { force: true })
     } catch {
@@ -279,7 +294,9 @@ export class SpotifyMediaInfo {
     }
   }
 
-  private async saveToCache(id: string, data: SpotifyPlaylistData): Promise<void> {
+  private async saveToCache(id: string, data: SpotifyPlaylistData, started?: number): Promise<void> {
+    // ((fork "wishes") read before the box changed the playlist: not kept - the next reading is the right one)
+    if (started !== undefined && (this.changedAt.get(id) ?? 0) >= started) return
     try {
       this.ensureCacheDir()
 

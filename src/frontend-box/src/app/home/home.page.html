@@ -69,5 +69,26 @@
   @if (unavailable()) {
     <mupi-media-unavailable [nas]="category() === 'nas'"></mupi-media-unavailable>
   }
-  <mupi-swiper [data]="swiperData()" [compact]="headerHidden()" roundImages="true" (elementClicked)="this.artistCoverClicked($event.data)"></mupi-swiper>
+  <mupi-swiper [data]="swiperData()" [compact]="headerHidden()" roundImages="true" [sortable]="sortable()" [sorting]="sorting()" (held)="startSorting()" (moved)="moveTile($event)" (elementClicked)="this.artistCoverClicked($event.data)"></mupi-swiper>
 </ion-content>
+@if (sorting()) {
+  <!-- (fork "wishes") sorting: a bar over the header - back to A to Z (asked once more), done -->
+  <div class="mupi-sort-bar" role="toolbar">
+    <button class="mupi-sort-btn" type="button" data-sort-az (click)="askReset.set(true)">{{ texts.text('sortAz') }}</button>
+    <span class="mupi-sort-hint">{{ texts.text('sortHint') }}</span>
+    <button class="mupi-sort-btn mupi-sort-done" type="button" data-sort-done (click)="sortDone()">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5" /></svg>{{ texts.text('sortDone') }}
+    </button>
+  </div>
+  @if (askReset()) {
+    <div class="mupi-sort-ask" role="dialog" (click)="askReset.set(false)">
+      <div class="mupi-sort-card" (click)="$event.stopPropagation()">
+        <p>{{ texts.text('sortAzQ') }}</p>
+        <div class="mupi-sort-row">
+          <button class="mupi-sort-btn" type="button" data-sort-no (click)="askReset.set(false)">{{ texts.text('sortNo') }}</button>
+          <button class="mupi-sort-btn mupi-sort-done" type="button" data-sort-yes (click)="resetOrder()">{{ texts.text('sortYes') }}</button>
+        </div>
+      </div>
+    </div>
+  }
+}

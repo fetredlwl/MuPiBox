@@ -18,7 +18,7 @@ import {
 } from '@angular/core'
 import { IonCard, IonCardHeader, IonCardTitle, IonCol, IonGrid, IonIcon, IonRow } from '@ionic/angular/standalone'
 import { addIcons } from 'ionicons'
-import { checkmark, folder, link, play } from 'ionicons/icons'
+import { checkmark, chevronBack, chevronForward, folder, link, move, play } from 'ionicons/icons'
 import { Observable } from 'rxjs'
 import Swiper from 'swiper'
 import { environment } from '../../environments/environment'
@@ -109,6 +109,26 @@ export class SwiperComponent<T> {
   /** (fork "wishes") the list stands on one of its last three entries: the page loads the next ones (search › wishes) */
   public nearEnd = output<void>()
   private nearEndAt = -1
+
+  // ---------- (fork "wishes") the child sorts the list (the start page: start-order.service.ts) ----------
+  /** a long press on a cover starts sorting (held) - not in the Cover Flow theme */
+  public sortable = input<boolean>(false)
+  /** sorting: the covers wiggle and are dragged to their place (the stage: arrows), nothing opens */
+  public sorting = input<boolean>(false)
+  public held = output<void>()
+  /** a cover moved from one place in the list to another */
+  public moved = output<{ from: number; to: number }>()
+  private static readonly HOLD_MS = 1000
+  private pressTimer = 0
+  private pressAt: { x: number; y: number; index: number } | undefined
+  // the click that follows a long press or a drag is not a tap
+  private swallowClick = false
+  // the cover dragged: where it was taken, the list's scroll then, the card moved
+  private drag: { index: number; x: number; y: number; scroll: number; card: HTMLElement; id: number } | undefined
+  private dragFrame = 0
+  private dragX = 0
+  /** the place the dragged cover would go to (marked) */
+  protected readonly dropAt = signal(-1)
 
   // Track URLs we've already triggered a preload-fetch for, so we don't
   // re-create Image() objects for the same cover on every slide change.
@@ -243,7 +263,7 @@ export class SwiperComponent<T> {
     private coverFlip: CoverFlipService,
     http: HttpClient,
   ) {
-    addIcons({ checkmark, folder, link, play })
+    addIcons({ checkmark, chevronBack, chevronForward, folder, link, move, play })
     // the row is laid out in another width now (or again in the old one): Swiper measures it anew
     effect(() => {
       this.compactActive()
@@ -784,9 +804,150 @@ export class SwiperComponent<T> {
     this.tellNearEnd(c)
   }
 
+  // ---------- (fork "wishes") sorting ----------
+
+  /** a finger on a cover: held long enough (without moving), sorting starts; while sorting, a cover is dragged */
+  protected pressDown(event: PointerEvent, index: number): void {
+    if (this.sorting()) {
+      if (!this.kmStage()) this.dragStart(event, index)
+      return
+    }
+    if (!this.sortable()) return
+    window.clearTimeout(this.pressTimer)
+    this.pressAt = { x: event.clientX, y: event.clientY, index }
+    this.pressTimer = window.setTimeout(() => {
+      this.pressAt = undefined
+      this.swallowClick = true
+      this.held.emit()
+    }, SwiperComponent.HOLD_MS)
+  }
+
+  protected pressMove(event: PointerEvent): void {
+    if (this.drag) {
+      this.dragMoveTo(event)
+      return
+    }
+    if (this.pressAt && Math.hypot(event.clientX - this.pressAt.x, event.clientY - this.pressAt.y) > 12) this.pressEnd()
+  }
+
+  protected pressUp(): void {
+    if (this.drag) {
+      this.dragEnd()
+      return
+    }
+    this.pressEnd()
+  }
+
+  private pressEnd(): void {
+    window.clearTimeout(this.pressTimer)
+    this.pressAt = undefined
+  }
+
+  /** a tap on a cover of the list: opens it - not right after a long press, not while sorting */
+  protected cardClicked(item: SwiperData<T>): void {
+    if (this.swallowClick) {
+      this.swallowClick = false
+      return
+    }
+    if (this.sorting()) return
+    this.elementClicked.emit(item)
+  }
+
+  private wrapper(): HTMLElement | undefined {
+    return (this.swiper() as unknown as { wrapperEl?: HTMLElement } | undefined)?.wrapperEl
+  }
+
+  private dragStart(event: PointerEvent, index: number): void {
+    const card = event.currentTarget as HTMLElement | null
+    if (!card) return
+    event.preventDefault()
+    card.setPointerCapture?.(event.pointerId)
+    this.drag = { index, x: event.clientX, y: event.clientY, scroll: this.wrapper()?.scrollLeft ?? 0, card, id: event.pointerId }
+    this.dragX = event.clientX
+    card.classList.add('mupi-dragged')
+    this.dropAt.set(index)
+    // near the edges the list scrolls along (a cover far away: dragged there in one go)
+    const edge = () => {
+      if (!this.drag) return
+      const w = this.wrapper()
+      const r = this.swiperContainer()?.nativeElement?.getBoundingClientRect?.() as DOMRect | undefined
+      if (w && r) {
+        const step = this.dragX < r.left + 70 ? -14 : this.dragX > r.right - 70 ? 14 : 0
+        if (step) {
+          w.scrollLeft += step
+          this.dragPlace()
+        }
+      }
+      this.dragFrame = requestAnimationFrame(edge)
+    }
+    this.dragFrame = requestAnimationFrame(edge)
+  }
+
+  private dragMoveTo(event: PointerEvent): void {
+    this.dragX = event.clientX
+    const d = this.drag
+    if (!d) return
+    if (Math.abs(event.clientX - d.x) + Math.abs(event.clientY - d.y) > 8) this.swallowClick = true
+    this.dragPlace(event.clientY)
+  }
+
+  /** the card follows the finger (also while the list scrolls under it); the place under the finger marked */
+  private dragPlace(y?: number): void {
+    const d = this.drag
+    if (!d) return
+    const scrolled = (this.wrapper()?.scrollLeft ?? 0) - d.scroll
+    const dy = y === undefined ? Number(d.card.dataset['dy'] ?? 0) : y - d.y
+    d.card.dataset['dy'] = String(dy)
+    d.card.style.transform = `translate(${this.dragX - d.x + scrolled}px, ${dy}px) scale(1.06)`
+    const slides = (this.swiper() as unknown as { slides?: HTMLElement[] } | undefined)?.slides ?? []
+    let to = -1
+    slides.forEach((s, i) => {
+      const r = s.getBoundingClientRect()
+      if (this.dragX >= r.left && this.dragX < r.right) to = i
+    })
+    if (to < 0 && slides.length) {
+      const first = slides[0].getBoundingClientRect()
+      to = this.dragX < first.left ? 0 : slides.length - 1
+    }
+    if (to >= 0) this.dropAt.set(to)
+  }
+
+  private dragEnd(): void {
+    const d = this.drag
+    this.drag = undefined
+    cancelAnimationFrame(this.dragFrame)
+    if (!d) return
+    d.card.releasePointerCapture?.(d.id)
+    d.card.classList.remove('mupi-dragged')
+    d.card.style.transform = ''
+    delete d.card.dataset['dy']
+    const to = this.dropAt()
+    this.dropAt.set(-1)
+    if (to >= 0 && to !== d.index) this.moved.emit({ from: d.index, to })
+  }
+
+  /** the stage: the cover in the middle one place to the left or right - it stays in the middle */
+  protected stageShift(step: -1 | 1): void {
+    const count = this.shownData().length
+    const from = this.stageClamp(this.stageIndex(), count)
+    const to = from + step
+    if (to < 0 || to >= count) return
+    this.moved.emit({ from, to })
+    setTimeout(() => {
+      this.stageIndex.set(to)
+      this.cachedSwiperPosition = to
+    }, 0)
+  }
+
   // The cover in the middle opens, a side cover comes to the middle.
   protected kmStageTap(index: number, item: SwiperData<T>): void {
+    if (this.swallowClick) {
+      this.swallowClick = false
+      return
+    }
     if (this.stageDragged) return
+    // ((fork "wishes") sorting: the one in the middle does not open, a side one still comes to the middle)
+    if (this.sorting() && index === this.stageClamp(this.stageIndex(), this.shownData().length)) return
     if (index === this.stageClamp(this.stageIndex(), this.shownData().length)) {
       this.elementClicked.emit(item)
     } else {

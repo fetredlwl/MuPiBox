@@ -101,7 +101,7 @@ export const DEFAULT_DISPLAY_TEXTS = {
   searchFailed: 'That did not work.',
   searchCatAudiobook: 'Audio books',
   searchCatMusic: 'Music',
-  searchCatRadio: 'Radio',
+  searchCatRadio: 'Radio & podcasts',
   // (fork "wishes") podcasts for children in the search (search-podcasts.ts)
   searchPodcastsButton: 'Podcasts',
   searchPodcastsLoading: 'Searching …',
@@ -116,6 +116,13 @@ export const DEFAULT_DISPLAY_TEXTS = {
   wishWished: 'Wished',
   wishAdult: 'Not for children',
   wishAdultNote: '{n} is not for children.',
+  // (fork "wishes") the child sorts the start page (a long press on a cover)
+  sortAz: 'A–Z',
+  sortHint: 'Drag the covers to their place',
+  sortDone: 'Done',
+  sortAzQ: 'Sort from A to Z again?',
+  sortYes: 'Yes',
+  sortNo: 'No',
   wishSent: 'Wish sent: {n}',
   wishAlready: 'You have wished for {n} already.',
   wishThere: '{n} is on the box already.',

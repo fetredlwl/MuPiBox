@@ -149,15 +149,15 @@
   @if (!keyboardShown()) {
     <!-- the keyboard folded away: the album list of the start page and of "Weiterhören" - the same covers, names on
          their bars (a tap reads them aloud), its scrollbar; the tiles of the start round as the start page's covers -->
+    <!-- (the notes above take their room from the list: the page as high as the screen, nothing scrolls up and down) -->
+    <div class="srch-fold">
     @for (n of listNotes(); track n) {
       <p class="srch-note">{{ texts.text(n) }}</p>
-    }
-    @if (listLabel()) {
-      <p class="srch-label">{{ texts.text('searchTipsLabel') }}</p>
     }
     @if (swiperData().length) {
       <mupi-swiper class="srch-list" [data]="swiperData()" [roundImages]="atStart()" [positionKey]="listKey()" [attr.data-names]="swiperNames()" (elementClicked)="itemClicked($event.data)" (nearEnd)="moreWishes()"></mupi-swiper>
     }
+    </div>
   } @else {
   @switch (mode()) {
     @case ('own') {
@@ -190,7 +190,6 @@
         </div>
       } @else if (tipsShown().length) {
         <!-- podcasts for children to start with (the app's suggestions) -->
-        <p class="srch-label">{{ texts.text('searchTipsLabel') }}</p>
         <div class="srch-hits srch-tips">
           <ng-container *ngTemplateOutlet="podList; context: { $implicit: tipsShown() }"></ng-container>
         </div>
@@ -210,7 +209,6 @@
         </div>
       } @else if (radioTipsShown().length) {
         <!-- children's stations to start with (the app's "Kinderradio") -->
-        <p class="srch-label">{{ texts.text('searchTipsLabel') }}</p>
         <div class="srch-hits srch-tips">
           <ng-container *ngTemplateOutlet="radioList; context: { $implicit: radioTipsShown() }"></ng-container>
         </div>

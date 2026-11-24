@@ -32,7 +32,7 @@ import {
   type TargetPlaylist,
   type WishItem,
 } from './search-flow.service'
-import { CATEGORY_TILE, TILE_ICON, tilePicture } from './search-tiles'
+import { CATEGORY_TILE, ION_ICON, ionPicture, TILE_ICON, tilePicture } from './search-tiles'
 
 // what the page lists: the thing itself (its cover), what can be done with it, the tabs it may go to
 // ((fork "wishes") a song into a playlist of the child's own, its songs taken out of one)
@@ -88,9 +88,9 @@ const ACT_ICON: Record<Act, string> = {
   remove: TILE_ICON.cross,
   removeYes: TILE_ICON.cross,
   toPlaylist: TILE_ICON.plus,
-  songs: TILE_ICON.music,
+  songs: ION_ICON.music,
   takeOutYes: TILE_ICON.cross,
-  albumSongs: TILE_ICON.music,
+  albumSongs: ION_ICON.music,
   deletePl: TILE_ICON.cross,
   deletePlYes: TILE_ICON.cross,
 }
@@ -303,7 +303,7 @@ export class SearchAlbumPage extends SwiperIonicEventsHelper {
       if (tile.t === 'cat') {
         return {
           name: this.flow.catLabel(tile.c),
-          imgSrc: of(tilePicture(this.host.nativeElement, CATEGORY_TILE[tile.c] ?? TILE_ICON.music)),
+          imgSrc: of(ionPicture(this.host.nativeElement, CATEGORY_TILE[tile.c] ?? ION_ICON.music)),
           data: tile,
           dim: this.busy(),
         }
@@ -339,7 +339,12 @@ export class SearchAlbumPage extends SwiperIonicEventsHelper {
         }
       return {
         name: this.texts.text(ACT_TEXT[tile.a]),
-        imgSrc: of(tilePicture(this.host.nativeElement, ACT_ICON[tile.a], ACT_COLOURS[tile.a])),
+        // (the songs: the notes of the music tab, as on the start page)
+        imgSrc: of(
+          tile.a === 'songs' || tile.a === 'albumSongs'
+            ? ionPicture(this.host.nativeElement, ION_ICON.music, ACT_COLOURS[tile.a])
+            : tilePicture(this.host.nativeElement, ACT_ICON[tile.a], ACT_COLOURS[tile.a]),
+        ),
         data: tile,
         // (wished already: nothing to tap; Spotify blocks the box: "Abspielen" grey - a tap tells why)
         dim: tile.a === 'wished' || tile.a === 'adult' || (tile.a === 'play' && this.spotifyBlock.player()),

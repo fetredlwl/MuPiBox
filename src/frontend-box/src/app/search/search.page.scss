@@ -252,6 +252,24 @@ app-search {
     }
   }
 
+  // the keyboard folded away: the notes above, the list in the room left (the km themes draw the list as high as the
+  // page - below a line above it, it reached past the screen and the page got a scrollbar)
+  .srch-fold {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+
+    > p {
+      flex: 0 0 auto;
+    }
+
+    > mupi-swiper {
+      flex: 1 1 0 !important;
+      min-height: 0;
+      height: auto !important;
+    }
+  }
+
   .srch-label {
     width: fit-content;
     margin: 8px 14px 0;

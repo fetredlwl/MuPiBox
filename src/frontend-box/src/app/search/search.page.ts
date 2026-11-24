@@ -550,14 +550,6 @@ export class SearchPage implements AfterViewInit, OnDestroy {
     if ((!m || m === 'spotify') && typed && this.wishesOn() && this.wishShown()?.length === 0) notes.push('wishNone')
     return notes
   })
-  /** the tips' label (podcasts / radio, nothing typed) */
-  protected readonly listLabel = computed(() => {
-    const m = this.mode()
-    return (
-      !this.typed() &&
-      ((m === 'podcasts' && this.tipsShown().length) || (m === 'radio' && this.radioTipsShown().length))
-    )
-  })
 
   protected readonly nothingFound = computed(
     () => !this.loading() && this.query().trim().length >= 2 && this.hits().length === 0,

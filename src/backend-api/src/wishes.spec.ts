@@ -236,6 +236,76 @@ describe('wishes: the list in the app tidied up', () => {
     assert.equal(after.decided.length, 0)
     assert.equal(after.open.length, 1)
     assert.ok((await pool.entries()).some((e) => e.kind === 'album' && e.spotifyId === ALBUM))
+    // (the approval is in the archive: searchable and revocable there)
+    assert.deepEqual(
+      after.archived.map((w: { spotifyId: string }) => w.spotifyId),
+      [ALBUM],
+    )
+  })
+
+  const parents = {
+    get: () => request(app).get('/api/app/wishes').set('x-test-session', 'yes'),
+    post: (url: string, body: object) => request(app).post(url).set('x-test-session', 'yes').send(body),
+  }
+  const wishAll = async () => {
+    await request(app).get('/api/wishes/search?q=peter').expect(200)
+    await request(app).post('/api/wishes').send({ kind: 'album', id: ALBUM, category: 'music' }).expect(200)
+    await request(app).post('/api/wishes').send({ kind: 'artist', id: ARTIST, category: 'music' }).expect(200)
+    await request(app).post('/api/wishes').send({ kind: 'show', id: SHOW, category: 'audiobook' }).expect(200)
+  }
+
+  it('all open wishes approved at once; all refused ones out of the list at once', async () => {
+    await wishAll()
+    const open = (await parents.get()).body.open as { id: string; kind: string }[]
+    await parents.post('/api/app/wishes/decide', { id: open.find((w) => w.kind === 'show')?.id, approve: false }).expect(200)
+    const r = await parents.post('/api/app/wishes/approve-all', {}).expect(200)
+    assert.deepEqual([r.body.approved, r.body.failed], [2, 0])
+    const after = (await parents.get()).body
+    assert.equal(after.open.length, 0)
+    const gone = await parents.post('/api/app/wishes/forget', { rejected: true }).expect(200)
+    assert.equal(gone.body.removed, 1)
+    const left = (await parents.get()).body
+    assert.deepEqual(left.decided.map((w: { status: string }) => w.status), ['approved', 'approved'])
+    assert.equal(left.archived.length, 0)
+  })
+
+  it('an approval in the archive is revoked there: out of the pool, out of the archive', async () => {
+    await wishAll()
+    const open = (await parents.get()).body.open as { id: string; kind: string }[]
+    const albumWish = open.find((w) => w.kind === 'album')?.id
+    await parents.post('/api/app/wishes/decide', { id: albumWish, approve: true }).expect(200)
+    await parents.post('/api/app/wishes/forget', { all: true }).expect(200)
+    assert.ok((await pool.entries()).some((e) => e.spotifyId === ALBUM))
+    const r = await parents.post('/api/app/wishes/revoke', { id: albumWish }).expect(200)
+    assert.equal(r.body.result, 'revoked')
+    assert.ok(!(await pool.entries()).some((e) => e.spotifyId === ALBUM))
+    assert.equal((await parents.get()).body.archived.length, 0)
+  })
+
+  it('once a quarter: decided before it out of the list - approvals into the archive, refused ones forgotten', async () => {
+    await wishAll()
+    const open = (await parents.get()).body.open as { id: string; kind: string }[]
+    await parents.post('/api/app/wishes/decide', { id: open.find((w) => w.kind === 'album')?.id, approve: true }).expect(200)
+    await parents.post('/api/app/wishes/decide', { id: open.find((w) => w.kind === 'artist')?.id, approve: false }).expect(200)
+    const wishes = W.registerWishesRoutes(express(), {
+      configDir: dir,
+      cacheDir: path.join(dir, 'cache'),
+      pool,
+      getMupiboxConfig: () => cfg,
+      now: () => now,
+      session: (_q, _s, next) => next(),
+      csrf: (_q, _s, next) => next(),
+    })
+    // (this quarter: nothing decided before it began - only marked as tidied)
+    assert.equal(await wishes.tidy(), 0)
+    assert.equal(await wishes.tidy(), null)
+    // (the next quarter)
+    now = Date.parse('2027-01-02T10:00:00')
+    assert.equal(await wishes.tidy(), 2)
+    const after = (await parents.get()).body
+    assert.deepEqual(after.open.map((w: { kind: string }) => w.kind), ['show'])
+    assert.equal(after.decided.length, 0)
+    assert.deepEqual(after.archived.map((w: { spotifyId: string }) => w.spotifyId), [ALBUM])
   })
 })
 

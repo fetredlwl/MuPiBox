@@ -42,6 +42,22 @@ Bedienung › Suche am Display*; aus = wie bisher)
   kannte (bisher „Spotify antwortet gerade nicht“).
 - Künstler in der Trefferliste (Tastatur zugeklappt) sind jetzt wirklich rund – bisher ein rundes Bild in einem eckigen Rahmen,
   weil die Themes jede Kachel einer Liste eckig erzwingen.
+- Die Reiter-Kacheln („Wohin?“) und „Songs“ zeigen die Icons der Startseiten-Reiter (Buch, Noten, Radio); der dritte
+  Reiter heißt auf dem Display jetzt wie in der App „Radio & Podcasts“.
+- Ein Song, den das Kind aus seiner Playlist genommen hat, verschwindet sofort aus der Titelliste: Playlists, die die Box
+  selbst ändert, liest sie über den Spotify-Login statt über Spotifys Einbettungsseite (die zeigte den alten Stand noch eine
+  Weile).
+- Eine eigene Playlist, die in der Spotify-App gelöscht wurde, verschwindet auch aus der Suche (und von der Startseite, wenn das
+  Kind sie dorthin gelegt hat) – geprüft höchstens einmal in der Stunde und mit der 6-Stunden-Routine.
+- Suche › Podcasts / Radio: die Zeile „Tipps für Kinder“ ist weg – mit ihr war die Seite in den Kinder-Themes höher als der
+  Bildschirm und bekam einen senkrechten Scrollbalken.
+- **Startseite selbst sortieren** (neuer Schalter unter *Display & Bedienung › Bedienung am Display*, aus = A bis Z wie
+  bisher): Lange auf ein Cover drücken, dann die Cover an ihren Platz ziehen – in der Bühnen-Ansicht mit Pfeilen. „A–Z“
+  (einmal nachgefragt) sortiert wieder alphabetisch. Neues kommt nach vorne; ein Album zu einem Künstler, der schon da
+  ist, ändert seinen Platz nicht. Je Reiter, auf der Box gespeichert (im Backup). Im Theme „Cover Flow“ nicht verfügbar.
+- **Wünsche in der App:** Suchfeld und Seiten (wie bei „Für die Suche freigegeben“), „Alle freigeben“, „Abgelehnte
+  löschen“ und ein **Archiv** für Freigaben (durchsuchbar, dort weiter widerrufbar). Zu Beginn jedes Quartals räumt die
+  Box die Liste selbst auf: Freigaben ins Archiv, Abgelehnte und Zurückgenommene werden gelöscht. Das Archiv ist im Backup.
 - **Alben mit expliziten Songs:** Spotify markiert nur Songs, nicht Alben. Öffnet das Kind ein Spotify-Album, fragt die Box
   einmal dessen Songs ab (einen Tag gemerkt); ist einer explizit, steht dort grau „Nicht für Kinder“ statt „Wünschen“.
   Zusätzlich empfohlen: im Spotify-Konto des Kindes (Family-Verwaltung) „Explizite Inhalte“ sperren.

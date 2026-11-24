@@ -95,8 +95,19 @@ export interface SearchPlaylistsDeps {
    * the versions of the account's playlists (Spotify's snapshot_id, from the same /me/playlists answer, kept a while) and
    * when they were read - a song list kept with the same version is still right (the ✓ asks nobody then)
    */
-  accountSnapshots?: () => Promise<{ at: number; snapshots: Map<string, string> }>
+  accountSnapshots?: () => Promise<AccountSnapshots>
   now?: () => number
+}
+
+/**
+ * the account's playlists as Spotify gave them (/me/playlists): when asked, their ids and versions; complete: all of them
+ * (not cut off after the pages asked) - only then is one missing gone
+ */
+export interface AccountSnapshots {
+  at: number
+  snapshots: Map<string, string>
+  ids?: Set<string>
+  complete?: boolean
 }
 
 /** the songs of a playlist (their ids, in order) as Spotify had them in one version of it */
@@ -110,6 +121,8 @@ const SPOTIFY_ID = /^[A-Za-z0-9]{22}$/
 // Spotify's picture of a playlist: a mosaic of the covers of its first four songs, made a moment after a change
 const MOSAIC_SONGS = 4
 const MOSAIC_DELAY_MS = 60_000
+// playlists gone from Spotify looked for at most once an hour (the search's list; the routine besides)
+const PRUNE_EVERY_MS = 3600_000
 // the routine for all pictures: every 6 hours, the first 10 minutes after the start
 const COVERS_EVERY_MS = 6 * 3600_000
 const COVERS_FIRST_MS = 10 * 60_000
@@ -192,6 +205,7 @@ export class SearchPlaylists {
   private indexQueue: Promise<unknown> = Promise.resolve()
   // when a playlist's picture was asked last (one without a picture: at most every 10 minutes)
   private readonly coverAsked = new Map<string, number>()
+  private prunedAt = 0
 
   constructor(private readonly deps: SearchPlaylistsDeps) {
     this.file = path.join(deps.configDir, 'search-playlists.json')
@@ -493,6 +507,42 @@ export class SearchPlaylists {
    * The routine: the pictures of the account's playlists on the start page (the child's and its own) as Spotify has them
    * now - also what was changed in the Spotify app. One request for all of them.
    */
+  /**
+   * The account's own playlists gone from Spotify (deleted in the Spotify app, or on another device): out of the search
+   * (the pool) and off the start page where the child put them - they play nothing any more. Only from a complete
+   * answer of Spotify, and only what was there before that answer (one made a minute ago is not in it yet). Answer: the
+   * ids taken out.
+   */
+  async pruneGone(force = false): Promise<string[]> {
+    if (!force && this.now() - this.prunedAt < PRUNE_EVERY_MS) return []
+    this.prunedAt = this.now()
+    const account = await this.deps.accountSnapshots?.().catch(() => undefined)
+    const ids = account?.ids
+    if (!account?.complete || !ids) return []
+    const before = (at: string | undefined) => {
+      const t = Date.parse(at ?? '')
+      return Number.isFinite(t) && t < account.at
+    }
+    const entries = await this.deps.pool.entries()
+    const rows = await this.deps.pool.ownPlaylists()
+    // (still in the search or on the start page - one taken out before is not looked at again)
+    const shown = new Set([...entries.filter((e) => e.kind === 'playlist').map((e) => e.spotifyId), ...rows.map((r) => r.id)])
+    const gone = new Set<string>()
+    for (const e of entries)
+      if (e.kind === 'playlist' && e.own === true && !ids.has(e.spotifyId) && before(e.addedAt)) gone.add(e.spotifyId)
+    for (const c of (await this.state()).created)
+      if (shown.has(c.id) && !ids.has(c.id) && before(c.at)) gone.add(c.id)
+    for (const id of gone) {
+      const ident = `playlist:${id}`
+      // (off the start page only where the child put it - what the parents put there, they take off themselves)
+      if (rows.some((r) => r.id === id && r.kidAdded))
+        await this.deps.pool.removeOwn(ident, false).catch(() => undefined)
+      await this.deps.pool.removeByIdent(ident).catch(() => undefined)
+      await this.keepSongs(id, undefined)
+    }
+    return [...gone]
+  }
+
   async refreshAllCovers(): Promise<void> {
     const covers = await this.deps.accountCovers?.().catch(() => undefined)
     if (!covers) return
@@ -551,6 +601,8 @@ export function registerSearchPlaylistsRoutes(app: Express, deps: SearchPlaylist
     const on = playlistsOn(cfg())
     const tracks = tracksOn(cfg())
     if (!on && !tracks) return void res.json({ on: false, create: false, tracks: false, left: 0, targets: [] })
+    // (a playlist deleted in the Spotify app: out of the search before the list is shown - at most once an hour)
+    await playlists.pruneGone().catch(() => undefined)
     res.json({
       on,
       create: createOn(cfg()),
@@ -638,7 +690,10 @@ export function registerSearchPlaylistsRoutes(app: Express, deps: SearchPlaylist
 
   // the pictures of the child's playlists: a routine every 6 hours (only with the playlists' switches on)
   const covers = () => {
-    if (playlistsOn(cfg()) || tracksOn(cfg())) void playlists.refreshAllCovers()
+    if (playlistsOn(cfg()) || tracksOn(cfg())) {
+      void playlists.refreshAllCovers()
+      void playlists.pruneGone(true).catch(() => undefined)
+    }
   }
   setTimeout(covers, COVERS_FIRST_MS).unref?.()
   setInterval(covers, COVERS_EVERY_MS).unref?.()

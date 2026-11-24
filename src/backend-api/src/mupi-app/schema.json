@@ -5719,6 +5719,11 @@
    "id": "bedienung"
   },
   {
+   "l": "Kind darf die Startseite sortieren",
+   "where": "Display & Bedienung › Bedienung am Display",
+   "id": "bedienung"
+  },
+  {
    "l": "Display live",
    "where": "Display & Bedienung › Display live",
    "id": "displaylive"

@@ -19,6 +19,11 @@ export interface SpotifyPlaylistData {
   fullListSnapshot?: string
   /** when loading the rest failed for a reason that may pass (a block, the network) - asked again after an hour (ms) */
   fullListAttemptAt?: number
+  /**
+   * (fork "wishes") read from the Web API with the Spotify login (a playlist of the child's own account): read so again -
+   * Spotify's embed page shows a changed playlist as it was for a while
+   */
+  webApi?: boolean
 }
 
 export interface SpotifyAlbumMetadata {

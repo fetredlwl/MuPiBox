@@ -8248,6 +8248,8 @@ async function loadControls() {
   state.values.set('plPerDay', o.playlistsPerDay ?? 5)
   state.values.set('dispTracks', o.displayTracks === true)
   state.values.set('dispPlDelete', o.displayPlaylistDelete === true)
+  // (fork "wishes": the child sorts the start page itself - start-order.ts)
+  state.values.set('startSort', o.displayStartSort === true)
   state.values.set('plScope', o.playlistScope === true)
   state.values.set('resume', o.resume)
   state.values.set('listTimer', o.listviewTimer)
@@ -8262,54 +8264,200 @@ async function loadControls() {
 
 // (fork "wishes") Wünsche: what the child wished from Spotify on the display (backend wishes.ts) - approved, it goes on
 // the start page under the tab the child chose; Home Assistant links here (#/wuensche)
-const wishesState = { on: false, open: [], decided: [] }
+const wishesState = { on: false, open: [], decided: [], archived: [] }
 const WISH_KIND = { album: 'Album', artist: 'Künstler', show: 'Podcast', track: 'Song' }
 const WISH_CAT = { audiobook: 'Hörspiele', music: 'Musik', other: 'Radio & Podcasts' }
+// (the lists grow - a search field over all of them, pages as in "Für die Suche freigegeben", the size remembered here)
+const wishView = { q: '', size: null, page: { open: 0, decided: 0, archived: 0 } }
+function wishPageSize() {
+  if (wishView.size === null) {
+    let saved = 10
+    try {
+      saved = Number(localStorage.getItem('mupi-wish-page-size') ?? 10)
+    } catch {
+      // (private mode: the default)
+    }
+    wishView.size = POOL_PAGE_SIZES.includes(saved) ? saved : 10
+  }
+  return wishView.size
+}
 
 async function loadWishes() {
   const r = await api(`${API}/wishes`)
   if (!r.ok) throw new Error(`wishes ${r.status}`)
-  Object.assign(wishesState, { on: r.body?.on === true, open: r.body?.open ?? [], decided: r.body?.decided ?? [] })
+  Object.assign(wishesState, {
+    on: r.body?.on === true,
+    open: r.body?.open ?? [],
+    decided: r.body?.decided ?? [],
+    archived: r.body?.archived ?? [],
+  })
 }
 
 function wishesTop() {
-  const thumb = (img) => `<span class="lib-thumb">${img ? `<img src="${esc(img)}" alt="" loading="lazy">` : ''}${icon('music', 18)}</span>`
-  const when = (iso) => (iso ? new Date(iso).toLocaleString(LOCALE, { dateStyle: 'short', timeStyle: 'short' }) : '')
-  const row = (w, buttons) =>
-    `<div class="entry lib-row">${thumb(w.cover)}<span class="lbl"><b translate="no">${esc(w.name)}</b><small><span translate="no">${esc(w.artist || '')}</span>${w.artist ? ' · ' : ''}${esc(WISH_KIND[w.kind] ?? w.kind)} · ${esc(w.target ? `in Playlist „${w.target.name}“` : (WISH_CAT[w.category] ?? w.category))} · ${esc(when(w.at))}</small></span>${buttons}</div>`
-  const open = wishesState.open
-  const decided = wishesState.decided.slice(0, 20)
+  const size = wishPageSize()
+  const { open, decided, archived } = wishesState
+  const many = open.length + decided.length + archived.length > 5
+  const rejected = decided.some((w) => w.status === 'rejected')
   return [
     `<p class="page-intro">${esc('Was das Kind in der Suche am Display bei Spotify gefunden und sich gewünscht hat. Freigegeben kommt es auf die Startseite – unter den Reiter, den das Kind gewählt hat. Die Freigabe bleibt: Das Kind kann es selbst entfernen und über die Suche wieder holen, bis du sie widerrufst.')}</p>`,
     ...(wishesState.on ? [] : [`<p class="help">${esc('Wünsche sind ausgeschaltet: Display & Bedienung › Suche am Display › „Wünsche aus Spotify“.')}</p>`]),
-    `<section class="card wide"><h2>${esc('Offene Wünsche')}</h2>${
-      open.length
-        ? `<div class="rows">${open.map((w) => row(w, `<span class="btns" style="flex-wrap:nowrap"><button class="btn" data-wish-no="${esc(w.id)}">${esc('Ablehnen')}</button><button class="btn primary" data-wish-yes="${esc(w.id)}">${icon('check', 18)}${esc('Freigeben')}</button></span>`)).join('')}</div>`
-        : `<p class="help" style="margin:0">${esc('Keine offenen Wünsche.')}</p>`
+    ...(many
+      ? [
+          `<section class="card wide"><div class="search">${icon('search')}<input class="input" id="wish-q" type="search" placeholder="${esc('In den Wünschen suchen')}" autocomplete="off" value="${esc(wishView.q)}"></div>
+      <div class="field" style="margin:0"><label>${esc('Pro Seite')}</label><div class="seg" id="wish-size">${POOL_PAGE_SIZES.map((n) => `<button aria-pressed="${n === size}" data-v="${n}">${n || 'Alle'}</button>`).join('')}</div></div></section>`,
+        ]
+      : []),
+    `<section class="card wide"><h2>${esc('Offene Wünsche')}</h2><div class="rows" id="wish-open-rows"></div><div id="wish-open-pager"></div>${
+      open.length > 1 ? `<div class="btns"><button class="btn primary" id="wish-approve-all">${icon('check', 18)}${esc('Alle freigeben')}</button></div>` : ''
     }</section>`,
     ...(decided.length
       ? [
-          `<section class="card wide"><h2>${esc('Entschieden')}</h2><div class="rows">${decided
-            .map((w) =>
-              row(
-                w,
-                `<span class="btns" style="flex-wrap:nowrap;align-items:center">${
-                  w.status === 'approved'
-                    ? `<span class="in-lib">${esc('Freigegeben')}</span><button class="btn" data-wish-revoke="${esc(w.id)}">${esc('Widerrufen')}</button>`
-                    : `<span class="in-lib">${esc(w.status === 'revoked' ? 'Zurückgenommen' : 'Abgelehnt')}</span>`
-                }<button class="icon-btn" data-wish-forget="${esc(w.id)}" title="${esc('Aus der Liste entfernen')}" aria-label="${esc('Aus der Liste entfernen')}">${icon('close', 18)}</button></span>`,
-              ),
-            )
-            .join('')}</div>
-          <p class="help">${esc('Aus der Liste entfernen ändert nichts an einer Freigabe – sie steht weiter unter Bibliothek › Für die Suche freigegeben.')}</p>
-          <div class="btns"><button class="btn" id="wish-forget-all">${icon('close', 18)}${esc('Liste leeren')}</button></div></section>`,
+          `<section class="card wide"><h2>${esc('Entschieden')}</h2><div class="rows" id="wish-decided-rows"></div><div id="wish-decided-pager"></div>
+          <p class="help">${esc('Aus der Liste entfernen: Freigaben kommen ins Archiv und lassen sich dort weiter widerrufen, Abgelehnte werden gelöscht. Zu Beginn jedes Quartals räumt die Box die Liste selbst so auf.')}</p>
+          <div class="btns">${rejected ? `<button class="btn" id="wish-forget-rejected">${icon('close', 18)}${esc('Abgelehnte löschen')}</button>` : ''}<button class="btn" id="wish-forget-all">${icon('close', 18)}${esc('Liste leeren')}</button></div></section>`,
+        ]
+      : []),
+    ...(archived.length
+      ? [
+          `<section class="card wide"><h2>${esc('Archiv')}</h2><p class="help" style="margin:0">${esc('Ältere Freigaben. Sie gelten weiter – widerrufen geht auch hier.')}</p><div class="rows" id="wish-archived-rows"></div><div id="wish-archived-pager"></div></section>`,
         ]
       : []),
   ]
 }
 
-function mountWishes(root, page) {
+// one page of a wish list (filtered by the search field) and its pager
+function wishPage(list, which) {
+  const size = wishPageSize()
+  const pages = size ? Math.max(1, Math.ceil(list.length / size)) : 1
+  wishView.page[which] = Math.min(Math.max(0, wishView.page[which]), pages - 1)
+  const at = wishView.page[which]
+  const shown = size ? list.slice(at * size, at * size + size) : list
+  const pager =
+    pages > 1
+      ? `<div class="btns" style="align-items:center"><button class="btn" data-wpg="${which}:-1"${at === 0 ? ' disabled' : ''}>${icon('back', 18)}${esc('Zurück')}</button><span class="help" style="margin:0 8px">${esc(`Seite ${at + 1} von ${pages} · ${list.length} Einträge`)}</span><button class="btn" data-wpg="${which}:1"${at >= pages - 1 ? ' disabled' : ''}>${esc('Weiter')}${icon('chevron', 18)}</button></div>`
+      : ''
+  return { shown, pager }
+}
+
+function drawWishLists(root, page) {
+  const thumb = (img) => `<span class="lib-thumb">${img ? `<img src="${esc(img)}" alt="" loading="lazy">` : ''}${icon('music', 18)}</span>`
+  const when = (iso) => (iso ? new Date(iso).toLocaleString(LOCALE, { dateStyle: 'short', timeStyle: 'short' }) : '')
+  const row = (w, buttons) =>
+    `<div class="entry lib-row">${thumb(w.cover)}<span class="lbl"><b translate="no">${esc(w.name)}</b><small><span translate="no">${esc(w.artist || '')}</span>${w.artist ? ' · ' : ''}${esc(WISH_KIND[w.kind] ?? w.kind)} · ${esc(w.target ? `in Playlist „${w.target.name}“` : (WISH_CAT[w.category] ?? w.category))} · ${esc(when(w.at))}</small></span>${buttons}</div>`
+  const q = norm(wishView.q.trim())
+  const hit = (w) => !q || [w.name, w.artist, w.target?.name].some((t) => norm(String(t ?? '')).includes(q))
+  const none = (empty) => `<p class="help" style="margin:0">${esc(q ? 'Nichts gefunden.' : empty)}</p>`
+  const draw = (which, list, buttons, empty) => {
+    const el = $(`#wish-${which}-rows`, root)
+    if (!el) return
+    const { shown, pager } = wishPage(list.filter(hit), which)
+    el.innerHTML = shown.map((w) => row(w, buttons(w))).join('') || none(empty)
+    $(`#wish-${which}-pager`, root).innerHTML = pager
+  }
+  draw(
+    'open',
+    wishesState.open,
+    (w) =>
+      `<span class="btns" style="flex-wrap:nowrap"><button class="btn" data-wish-no="${esc(w.id)}">${esc('Ablehnen')}</button><button class="btn primary" data-wish-yes="${esc(w.id)}">${icon('check', 18)}${esc('Freigeben')}</button></span>`,
+    'Keine offenen Wünsche.',
+  )
+  draw(
+    'decided',
+    wishesState.decided,
+    (w) =>
+      `<span class="btns" style="flex-wrap:nowrap;align-items:center">${
+        w.status === 'approved'
+          ? `<span class="in-lib">${esc('Freigegeben')}</span><button class="btn" data-wish-revoke="${esc(w.id)}">${esc('Widerrufen')}</button>`
+          : `<span class="in-lib">${esc(w.status === 'revoked' ? 'Zurückgenommen' : 'Abgelehnt')}</span>`
+      }<button class="icon-btn" data-wish-forget="${esc(w.id)}" title="${esc('Aus der Liste entfernen')}" aria-label="${esc('Aus der Liste entfernen')}">${icon('close', 18)}</button></span>`,
+    'Noch leer.',
+  )
+  draw(
+    'archived',
+    wishesState.archived,
+    (w) =>
+      `<span class="btns" style="flex-wrap:nowrap;align-items:center"><span class="in-lib">${esc('Freigegeben')}</span><button class="btn" data-wish-revoke="${esc(w.id)}">${esc('Widerrufen')}</button></span>`,
+    'Noch leer.',
+  )
   for (const img of root.querySelectorAll('.lib-thumb img')) img.addEventListener('error', () => img.remove(), { once: true })
+  for (const b of root.querySelectorAll('[data-wpg]'))
+    b.onclick = () => {
+      const [which, step] = b.dataset.wpg.split(':')
+      wishView.page[which] += Number(step)
+      drawWishLists(root, page)
+    }
+  mountWishRows(root, page)
+}
+
+function mountWishes(root, page) {
+  const q = $('#wish-q', root)
+  if (q)
+    q.oninput = () => {
+      wishView.q = q.value
+      wishView.page = { open: 0, decided: 0, archived: 0 }
+      drawWishLists(root, page)
+    }
+  for (const b of root.querySelectorAll('#wish-size [data-v]'))
+    b.onclick = () => {
+      wishView.size = Number(b.dataset.v)
+      try {
+        localStorage.setItem('mupi-wish-page-size', String(wishView.size))
+      } catch {
+        // (private mode: for now only)
+      }
+      for (const x of root.querySelectorAll('#wish-size [data-v]')) x.setAttribute('aria-pressed', String(x === b))
+      wishView.page = { open: 0, decided: 0, archived: 0 }
+      drawWishLists(root, page)
+    }
+  const reload = async () => {
+    await loadWishes()
+    renderPage(page, false)
+  }
+  const approveAll = $('#wish-approve-all', root)
+  if (approveAll)
+    approveAll.onclick = async () => {
+      const n = wishesState.open.length
+      if (!(await ask('Alle freigeben?', `Alle ${n} offenen Wünsche werden freigegeben – Songs kommen in die gewünschte Playlist, alles andere auf die Startseite unter den gewählten Reiter.`, 'Alle freigeben'))) return
+      approveAll.disabled = true
+      const r = await api(`${API}/wishes/approve-all`, { method: 'POST', body: {} })
+      if (!r.ok) {
+        approveAll.disabled = false
+        return toast('Das hat nicht geklappt', 'info')
+      }
+      toast(r.body?.failed ? `${r.body.approved} freigegeben, ${r.body.failed} nicht – sie bleiben offen` : `${r.body?.approved ?? 0} freigegeben`)
+      libChanged()
+      lib.items = null
+      await reload()
+    }
+  // decided wishes out of the list (approvals into the archive)
+  const forgetMany = async (b, body, title, text, yes, done) => {
+    if (!(await ask(title, text, yes))) return
+    b.disabled = true
+    const r = await api(`${API}/wishes/forget`, { method: 'POST', body })
+    if (!r.ok) {
+      b.disabled = false
+      return toast('Das hat nicht geklappt', 'info')
+    }
+    toast(done)
+    await reload()
+  }
+  const rejected = $('#wish-forget-rejected', root)
+  if (rejected)
+    rejected.onclick = () =>
+      forgetMany(rejected, { rejected: true }, 'Abgelehnte löschen?', 'Die abgelehnten Wünsche verschwinden aus der Liste. Das Kind kann sie sich wieder wünschen.', 'Löschen', 'Abgelehnte gelöscht')
+  const all = $('#wish-forget-all', root)
+  if (all)
+    all.onclick = () =>
+      forgetMany(all, { all: true }, 'Liste leeren?', 'Die entschiedenen Wünsche verschwinden aus der Liste – Freigaben kommen ins Archiv und gelten weiter. Offene Wünsche bleiben.', 'Leeren', 'Liste geleert')
+  drawWishLists(root, page)
+}
+
+// the buttons of the rows (drawn again with each page of a list)
+function mountWishRows(root, page) {
+  const reload = async () => {
+    await loadWishes()
+    renderPage(page, false)
+  }
   const decide = async (b, approve) => {
     const w = wishesState.open.find((x) => x.id === (approve ? b.dataset.wishYes : b.dataset.wishNo))
     if (!w) return
@@ -8330,34 +8478,25 @@ function mountWishes(root, page) {
     )
     if (approve) libChanged()
     lib.items = null
-    await loadWishes()
-    renderPage(page, false)
+    await reload()
   }
   for (const b of root.querySelectorAll('[data-wish-yes]')) b.onclick = () => decide(b, true)
   for (const b of root.querySelectorAll('[data-wish-no]')) b.onclick = () => decide(b, false)
-  // decided wishes out of the list (an approval stays in the search)
-  const forget = async (b, body) => {
-    b.disabled = true
-    const r = await api(`${API}/wishes/forget`, { method: 'POST', body })
-    if (!r.ok) {
-      b.disabled = false
-      return toast('Das hat nicht geklappt', 'info')
+  // one decided wish out of the list (an approval into the archive)
+  for (const b of root.querySelectorAll('[data-wish-forget]'))
+    b.onclick = async () => {
+      b.disabled = true
+      const r = await api(`${API}/wishes/forget`, { method: 'POST', body: { id: b.dataset.wishForget } })
+      if (!r.ok) {
+        b.disabled = false
+        return toast('Das hat nicht geklappt', 'info')
+      }
+      await reload()
     }
-    await loadWishes()
-    renderPage(page, false)
-  }
-  for (const b of root.querySelectorAll('[data-wish-forget]')) b.onclick = () => forget(b, { id: b.dataset.wishForget })
-  const all = $('#wish-forget-all', root)
-  if (all)
-    all.onclick = async () => {
-      if (!(await ask('Liste leeren?', 'Die entschiedenen Wünsche verschwinden aus der Liste. Offene Wünsche und Freigaben bleiben.', 'Leeren'))) return
-      await forget(all, { all: true })
-      toast('Liste geleert')
-    }
-  // an approval taken back: out of the search, off the start page
+  // an approval taken back (in the list or in the archive): out of the search, off the start page
   for (const b of root.querySelectorAll('[data-wish-revoke]'))
     b.onclick = async () => {
-      const w = wishesState.decided.find((x) => x.id === b.dataset.wishRevoke)
+      const w = [...wishesState.decided, ...wishesState.archived].find((x) => x.id === b.dataset.wishRevoke)
       if (!w) return
       if (
         !(await ask(
@@ -8385,8 +8524,7 @@ function mountWishes(root, page) {
       )
       libChanged()
       lib.items = null
-      await loadWishes()
-      renderPage(page, false)
+      await reload()
     }
 }
 
@@ -12800,6 +12938,18 @@ const CONTROLLERS = {
           ],
         },
         {
+          // ((fork "wishes") the child sorts the start page itself; off: A to Z as always)
+          title: 'Startseite',
+          items: [
+            {
+              type: 'toggle',
+              key: 'startSort',
+              label: 'Kind darf die Startseite sortieren',
+              help: 'Lange auf ein Cover drücken, dann die Cover an ihren Platz ziehen – in der Bühnen-Ansicht mit Pfeilen. „A–Z“ sortiert wieder alphabetisch. Neues kommt nach vorne. Im Theme „Cover Flow“ nicht verfügbar.',
+            },
+          ],
+        },
+        {
           // ((fork "wishes") the search's switches: a page of their own, "Suche am Display")
           title: 'Suche',
           items: [
@@ -12879,6 +13029,7 @@ const CONTROLLERS = {
       if (key === 'listTimer') return saveDisplayOptions({ listviewTimer: v }, `Titelliste nach ${fmtSec(v)}`)
       if (key === 'setTimer') return saveDisplayOptions({ settingsAccessTimer: v }, `Einstellungen nach ${fmtSec(v)}`)
       if (key === 'outPick') return saveDisplayOptions({ outputPicker: !!v }, v ? 'Kinder können am Display umschalten' : 'Umschalten nur in der App')
+      if (key === 'startSort') return saveDisplayOptions({ displayStartSort: !!v }, v ? 'Das Kind kann die Startseite sortieren' : 'Startseite wieder von A bis Z')
       if (key === 'dispSearch') {
         const r = await saveDisplayOptions({ displaySearch: !!v }, v ? 'Suche auf dem Display an' : 'Suche auf dem Display aus')
         // ((fork "wishes") the search's other switches depend on it)

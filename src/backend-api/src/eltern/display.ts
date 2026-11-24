@@ -119,6 +119,8 @@ export function registerDisplayRoutes(router: Router, deps: DisplayDeps): void {
       displayTracks: mb.displayTracks === true,
       playlistsPerDay: num(mb.playlistsPerDay, 1, 20) ?? 5,
       displayPlaylistDelete: mb.displayPlaylistDelete === true,
+      // (fork "wishes": the child sorts the start page itself - a long press on a cover; start-order.ts)
+      displayStartSort: mb.displayStartSort === true,
       // (all the rights the search's switches need, given at the last login - see oauth.ts searchScopes)
       playlistScope: searchScopesGiven(cfg as unknown as MupiboxConfig),
       resume: num(mb.resume, 1, 99) ?? 9,
@@ -153,7 +155,7 @@ export function registerDisplayRoutes(router: Router, deps: DisplayDeps): void {
     const mb: Record<string, unknown> = {}
     const chromium: Record<string, unknown> = {}
     const bad = (what: string) => res.status(400).json({ error: `invalid ${what}` })
-    for (const key of ['coverflowShowNames', 'hideScrollbar', 'episodeResume', 'newEpisodes', 'episodeProgress', 'outputPicker', 'displaySearch', 'appSearchPool', 'displayPodcasts', 'displayRadio', 'displayWishes', 'displayPlaylists', 'displayPlaylistCreate', 'displayTracks', 'displayPlaylistDelete']) {
+    for (const key of ['coverflowShowNames', 'hideScrollbar', 'episodeResume', 'newEpisodes', 'episodeProgress', 'outputPicker', 'displaySearch', 'appSearchPool', 'displayPodcasts', 'displayRadio', 'displayWishes', 'displayPlaylists', 'displayPlaylistCreate', 'displayTracks', 'displayPlaylistDelete', 'displayStartSort']) {
       if (body[key] === undefined) continue
       if (typeof body[key] !== 'boolean') return bad(key)
       mb[key] = body[key]

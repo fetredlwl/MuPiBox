@@ -749,10 +749,13 @@ async function tips(page, tag, asked, dir) {
     `${tag}: the field says where the search looks`,
   )
   await shot(page, `${tag}-0-tipps`)
+  // (the tips as high as the screen - with the label "Tips for children" above them a scrollbar appeared)
+  const tipsFit = await overflow(page)
+  rule('R3', !tipsFit.scrolls, `${tag}: the tips under their label fit the screen, nothing scrolls up and down`)
   const opened = await tapListed(page, 'Frosch Funkhaus')
   if (!opened || (await topTag(page)) !== 'app-search-album') throw new Error('no page for the tip')
   await tapListed(page, 'To the start page')
-  await tapListed(page, 'Radio')
+  await tapListed(page, 'Radio & podcasts')
   await wait(800)
   rule('R7', (await topTag(page)) === 'app-search', `${tag}: a tip put on the start page without approval`)
   const after = await listNames(page)
@@ -816,7 +819,7 @@ async function tips(page, tag, asked, dir) {
   const tabs = await listNames(page)
   rule(
     'R12',
-    tabs.includes('Music') && tabs.includes('Audio books') && !tabs.includes('Radio'),
+    tabs.includes('Music') && tabs.includes('Audio books') && !tabs.includes('Radio & podcasts'),
     `${tag}: the other tabs, not its own (${tabs.join(', ')})`,
   )
   await tapListed(page, 'Music')
@@ -861,7 +864,7 @@ async function radio(page, tag, asked, dir) {
     `${tag}: a station goes on the start page (its page fits the screen)`,
   )
   await tapListed(page, 'To the start page')
-  await tapListed(page, 'Radio')
+  await tapListed(page, 'Radio & podcasts')
   await wait(800)
   const row = () =>
     JSON.parse(fs.readFileSync(path.join(dir, 'config', 'data.json'), 'utf8')).find(
@@ -1498,6 +1501,132 @@ async function wishesOff(browser, dir) {
   }
 }
 
+/**
+ * R18: the child sorts the start page ("Kind darf die Startseite sortieren"): a long press starts it (nothing opens),
+ * a cover dragged to another place (the stage: the arrows), kept on the box and after a reload, "A–Z" (asked once more)
+ * forgets it; with the switch off a long press does nothing.
+ */
+async function sortPass(browser, dir) {
+  const file = path.join(dir, 'config', 'mupiboxconfig.json')
+  const dataFile = path.join(dir, 'config', 'data.json')
+  const orderFile = path.join(dir, 'config', 'start-order.json')
+  const sortSwitch = (on) => {
+    const box = JSON.parse(fs.readFileSync(file, 'utf8'))
+    box.mupibox.displayStartSort = on
+    box.mupibox.startCategory = 'audiobook'
+    fs.writeFileSync(file, JSON.stringify(box, null, 2))
+  }
+  // three stations of their own in the first tab (beside the Biber Bande): Biber Bande, Sort A, Sort B, Sort C
+  const lib = JSON.parse(fs.readFileSync(dataFile, 'utf8'))
+  for (const n of ['A', 'B', 'C'])
+    lib.push({ type: 'radio', category: 'audiobook', id: `http://127.0.0.1:9/sort-${n}`, title: `Sort ${n}`, index: lib.length })
+  fs.writeFileSync(dataFile, JSON.stringify(lib, null, 2))
+  sortSwitch(true)
+  await wait(1500)
+  const page = await browser.newPage()
+  await page.setViewport({ width: 1024, height: 600, deviceScaleFactor: 1 })
+  const order = () => {
+    try {
+      return JSON.parse(fs.readFileSync(orderFile, 'utf8')).audiobook
+    } catch {
+      return undefined
+    }
+  }
+  const stage = () => page.evaluate(() => !!document.querySelector('app-home .km-stage'))
+  // the names in the order shown (the stage: the one in the middle only)
+  const titles = () =>
+    page.evaluate(() =>
+      [...document.querySelectorAll('app-home swiper-slide .title-row')].map((t) => t.textContent.trim()),
+    )
+  const center = () => page.evaluate(() => document.querySelector('app-home .km-stage-name')?.textContent.trim() ?? '')
+  // the middle of a cover: the stage's middle one, or the cover of the slide with that name
+  const coverAt = (name) =>
+    page.evaluate((n) => {
+      const el = document.querySelector('app-home .km-stage')
+        ? [...document.querySelectorAll('app-home .km-stage-item')].sort((a, b) => Number(b.style.zIndex) - Number(a.style.zIndex))[0]
+        : [...document.querySelectorAll('app-home swiper-slide')]
+            .find((sl) => sl.querySelector('.title-row')?.textContent.trim() === n)
+            ?.querySelector('.img-row ion-card')
+      const r = el?.getBoundingClientRect()
+      return r ? { x: r.left + r.width / 2, y: r.top + r.height / 2 } : null
+    }, name)
+  const hold = async (name) => {
+    const at = await coverAt(name)
+    if (!at) throw new Error(`no cover ${name}`)
+    await page.mouse.move(at.x, at.y)
+    await page.mouse.down()
+    await wait(1400)
+    await page.mouse.up()
+    await wait(500)
+  }
+  const bar = () => visibleCount(page, '.mupi-sort-bar')
+  try {
+    await page.goto(`http://localhost:${STATIC_PORT}/home`, { waitUntil: 'networkidle2' })
+    await wait(2500)
+    const onStage = await stage()
+    await hold('Sort A')
+    rule(
+      'R18',
+      (await bar()) === 1 && (await topTag(page)) === 'app-home',
+      `sorting: a long press starts it, nothing opens (${onStage ? 'stage' : 'list'})`,
+    )
+    let want
+    if (onStage) {
+      // (the stage: the one in the middle one place to the right - it stays in the middle)
+      const first = await center()
+      await page.click('.mupi-sort-right')
+      await wait(800)
+      want = first
+      rule('R18', (await center()) === first && order()?.length === 4, `sorting: the arrow moves the cover, it stays in the middle (${first})`)
+    } else {
+      // (the list: "Sort B" dragged onto the first place)
+      const from = await coverAt('Sort B')
+      const to = await coverAt('Biber Bande')
+      await page.mouse.move(from.x, from.y)
+      await page.mouse.down()
+      for (let i = 1; i <= 12; i++) await page.mouse.move(from.x + ((to.x - 40 - from.x) * i) / 12, from.y + 6, { steps: 2 })
+      await wait(300)
+      await page.mouse.up()
+      await wait(900)
+      const shown = await titles()
+      want = shown.join('|')
+      rule('R18', shown[0] === 'Sort B' && order()?.length === 4, `sorting: a cover dragged to another place, kept on the box (${shown.join(', ')})`)
+    }
+    await page.click('[data-sort-done]')
+    await wait(500)
+    rule('R18', (await bar()) === 0, 'sorting: "Done" ends it')
+    // after a reload: the same order
+    await page.reload({ waitUntil: 'networkidle2' })
+    await wait(2500)
+    const again = onStage ? undefined : (await titles()).join('|')
+    rule('R18', onStage ? order()?.length === 4 : again === want, `sorting: the order stays after a reload (${again ?? 'stage'})`)
+    // "A–Z": asked once more, then the order forgotten
+    await hold(onStage ? '' : 'Sort A')
+    await page.click('[data-sort-az]')
+    await wait(400)
+    rule('R18', (await visibleCount(page, '.mupi-sort-ask')) === 1, 'sorting: "A–Z" is asked once more')
+    await page.click('[data-sort-yes]')
+    await wait(900)
+    const az = onStage ? [] : await titles()
+    rule(
+      'R18',
+      order() === undefined && (onStage || az.join('|') === 'Biber Bande|Sort A|Sort B|Sort C'),
+      `sorting: "A–Z" sorts as before (${az.join(', ') || 'stage'})`,
+    )
+    await page.click('[data-sort-done]')
+    await wait(400)
+    // the switch off: a long press does nothing
+    sortSwitch(false)
+    await wait(1500)
+    await page.reload({ waitUntil: 'networkidle2' })
+    await wait(2500)
+    await hold('Sort A')
+    rule('R18', (await bar()) === 0, 'sorting: with the switch off a long press does nothing')
+  } finally {
+    await page.close()
+  }
+}
+
 async function podcasts(page, tag, asked) {
   const podAsks = () => asked.filter((u) => u.includes('/api/search-podcasts?')).length
   rule('R6', podAsks() === 1, `${tag}: no podcast search while typing (only the one under the tile "Podcasts")`)
@@ -1714,6 +1843,7 @@ async function main() {
     await appWishes(browser, dir)
     await playlistsPass(browser, dir)
     await wishesOff(browser, dir)
+    await sortPass(browser, dir)
   } catch (err) {
     console.error(`display check could not run: ${err?.message ?? err}`)
     process.exitCode = 2

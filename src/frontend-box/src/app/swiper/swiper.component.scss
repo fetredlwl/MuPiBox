@@ -677,3 +677,99 @@ swiper-container.coverflow {
 .mupi-dim {
   filter: grayscale(1) brightness(0.55);
 }
+
+// ---------- (fork "wishes") the child sorts the list (the start page) ----------
+// sorting: the covers wiggle a little and show the move sign; a cover is dragged (the finger does not scroll the list
+// while it is on a cover - near the edges the list scrolls along), the place it would go to is marked
+@keyframes mupi-wiggle {
+    from {
+        transform: rotate(-1.4deg);
+    }
+    to {
+        transform: rotate(1.4deg);
+    }
+}
+
+ion-card.mupi-sorting {
+    touch-action: none;
+    cursor: grab;
+
+    &:not(.mupi-dragged) {
+        animation: mupi-wiggle 0.28s ease-in-out infinite alternate;
+    }
+}
+
+.km-stage-item.mupi-sorting .km-stage-card {
+    animation: mupi-wiggle 0.28s ease-in-out infinite alternate;
+}
+
+ion-card.mupi-dragged {
+    z-index: 20;
+    transition: none !important;
+    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.5) !important;
+    opacity: 0.92;
+}
+
+.mupi-move {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 56px;
+    height: 56px;
+    margin: -28px 0 0 -28px;
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.55);
+    color: #fff;
+    display: grid;
+    place-items: center;
+    font-size: 32px;
+    pointer-events: none;
+    z-index: 4;
+}
+
+// (the place the dragged cover goes to: a bar on its left)
+swiper-slide.mupi-drop {
+    position: relative;
+
+    &::before {
+        content: '';
+        position: absolute;
+        left: 2px;
+        top: 30px;
+        bottom: 90px;
+        width: 8px;
+        border-radius: 4px;
+        background: var(--km-apricot, var(--ion-color-primary, #3880ff));
+        z-index: 5;
+    }
+}
+
+// the stage: arrows beside the cover in the middle
+.mupi-sort-arrow {
+    position: absolute;
+    top: 126px;
+    width: 64px;
+    height: 64px;
+    border: 0;
+    border-radius: 50%;
+    background: var(--km-apricot, var(--ion-color-primary, #3880ff));
+    color: var(--km-ink, #fff);
+    display: grid;
+    place-items: center;
+    font-size: 36px;
+    box-shadow: 0 5px 0 var(--km-shadow, rgba(0, 0, 0, 0.3));
+    z-index: 50;
+    -webkit-tap-highlight-color: transparent;
+
+    &:active {
+        transform: scale(0.92);
+    }
+}
+
+.mupi-sort-left {
+    left: calc(50% - 140px - 84px);
+}
+
+.mupi-sort-right {
+    left: calc(50% + 140px + 20px);
+}

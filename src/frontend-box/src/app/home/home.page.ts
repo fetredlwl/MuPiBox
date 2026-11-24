@@ -39,6 +39,8 @@ import { BackgroundPlaybackService } from '../background-playback.service'
 import { KmStatusGroupComponent } from '../km-header/km-status-group.component'
 import { NowPlayingPillComponent } from '../now-playing-pill/now-playing-pill.component'
 import { SpotifyBlockService } from '../spotify-block.service'
+import { DisplayTextsService } from '../display-texts.service'
+import { StartOrderService } from '../start-order.service'
 import { SwiperComponent, SwiperData } from '../swiper/swiper.component'
 import { SwiperIonicEventsHelper } from '../swiper/swiper-ionic-events-helper'
 import { KmThemeService } from '../theme/km-theme.service'
@@ -79,6 +81,14 @@ export class HomePage extends SwiperIonicEventsHelper {
   // (fork "wishes") Spotify blocks the box and does not play: its tiles grey, a tap tells why
   private readonly spotifyBlock = inject(SpotifyBlockService)
   protected readonly pillShown = computed(() => this.r2() && this.background.media() !== null)
+  // ((fork "wishes") the child sorts the start page itself: a long press on a cover - not in the Cover Flow theme)
+  protected readonly startOrder = inject(StartOrderService)
+  protected readonly texts = inject(DisplayTextsService)
+  private readonly coverflowTheme = signal(false)
+  protected readonly sortable = computed(() => this.startOrder.on() && !this.coverflowTheme())
+  protected readonly sorting = signal(false)
+  /** "A–Z" tapped: asked once more */
+  protected readonly askReset = signal(false)
 
   // The top bar is folded away by a two-finger swipe (HeaderVisibilityService): the covers are then drawn larger
   protected readonly headerHidden = inject(HeaderVisibilityService).hidden
@@ -144,6 +154,7 @@ export class HomePage extends SwiperIonicEventsHelper {
           this.hiddenCategories.set(hidden)
         }
         this.searchEnabled.set(config?.mupibox?.displaySearch === true)
+        this.coverflowTheme.set(config?.mupibox?.theme === 'coverflow')
         // The tab the parents chose to start with (app › Bedienung) - unless a tab was chosen here already
         const start = this.categories.find((c) => c.key === config?.mupibox?.startCategory)
         if (start && !this.categoryChosen) {
@@ -243,7 +254,8 @@ export class HomePage extends SwiperIonicEventsHelper {
     })
 
     this.swiperData = computed(() => {
-      return this.artists()?.map((artist) => {
+      // ((fork "wishes") in the order the child set - A to Z without one)
+      return this.shownArtists().map((artist) => {
         return {
           name: artist.name,
           imgSrc: this.artworkService.getArtistArtwork(artist.coverMedia),
@@ -256,7 +268,44 @@ export class HomePage extends SwiperIonicEventsHelper {
     })
   }
 
+  /** the tiles of the tab as shown: A to Z, or in the child's order (new ones in front) */
+  protected readonly shownArtists = computed(() => this.startOrder.apply(this.artists() ?? [], this.category()))
+
+  override ionViewWillEnter(): void {
+    super.ionViewWillEnter()
+    // (the parents may have switched sorting on or off meanwhile)
+    this.startOrder.load()
+  }
+
+  override ionViewWillLeave(): void {
+    this.sorting.set(false)
+    this.askReset.set(false)
+    super.ionViewWillLeave()
+  }
+
+  // ---------- (fork "wishes") sorting ----------
+
+  protected startSorting(): void {
+    if (this.sortable()) this.sorting.set(true)
+  }
+
+  protected moveTile(step: { from: number; to: number }): void {
+    this.startOrder.move(this.shownArtists(), this.category(), step.from, step.to)
+  }
+
+  protected sortDone(): void {
+    this.sorting.set(false)
+    this.askReset.set(false)
+  }
+
+  protected resetOrder(): void {
+    this.startOrder.reset(this.category())
+    this.askReset.set(false)
+  }
+
   private switchCategory(step: 1 | -1): void {
+    // (sorting: the tab stays)
+    if (this.sorting()) return
     const visible = this.visibleCategories()
     if (visible.length < 2) return
     const index = Math.max(
