@@ -8,7 +8,8 @@ import type { Express } from 'express'
 import { backupBeforeWrite } from './file-backup'
 import { localOnly } from './request-guard'
 
-export const START_ORDER_CATEGORIES = ['audiobook', 'music', 'nas', 'other'] as const
+// (the start page's tabs, and the search's start - its tiles: Spotify, Playlists, Podcasts, Radio, …)
+export const START_ORDER_CATEGORIES = ['audiobook', 'music', 'nas', 'other', 'search'] as const
 type Category = (typeof START_ORDER_CATEGORIES)[number]
 export type StartOrder = Partial<Record<Category, string[]>>
 

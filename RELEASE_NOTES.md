@@ -47,6 +47,8 @@ Bedienung › Suche am Display*; aus = wie bisher)
 - Ein Song, den das Kind aus seiner Playlist genommen hat, verschwindet sofort aus der Titelliste: Playlists, die die Box
   selbst ändert, liest sie über den Spotify-Login statt über Spotifys Einbettungsseite (die zeigte den alten Stand noch eine
   Weile).
+- Auch der Zähler auf der Abspielseite („1 / 3“) stimmt danach: Das Display fragt die Songs einer Playlist neu ab, wenn sie
+  neu gestartet wird und wenn das Kind einen Song hinein- oder herausnimmt (bisher galt die Zahl vom letzten Abspielen).
 - Eine eigene Playlist, die in der Spotify-App gelöscht wurde, verschwindet auch aus der Suche (und von der Startseite, wenn das
   Kind sie dorthin gelegt hat) – geprüft höchstens einmal in der Stunde und mit der 6-Stunden-Routine.
 - Suche › Podcasts / Radio: die Zeile „Tipps für Kinder“ ist weg – mit ihr war die Seite in den Kinder-Themes höher als der
@@ -54,7 +56,8 @@ Bedienung › Suche am Display*; aus = wie bisher)
 - **Startseite selbst sortieren** (neuer Schalter unter *Display & Bedienung › Bedienung am Display*, aus = A bis Z wie
   bisher): Lange auf ein Cover drücken, dann die Cover an ihren Platz ziehen – in der Bühnen-Ansicht mit Pfeilen. „A–Z“
   (einmal nachgefragt) sortiert wieder alphabetisch. Neues kommt nach vorne; ein Album zu einem Künstler, der schon da
-  ist, ändert seinen Platz nicht. Je Reiter, auf der Box gespeichert (im Backup). Im Theme „Cover Flow“ nicht verfügbar.
+  ist, ändert seinen Platz nicht. Je Reiter, auf der Box gespeichert (im Backup). Genauso lassen sich die Kacheln am Start der
+  Suche sortieren („A–Z“ bringt dort die übliche Reihenfolge zurück). Im Theme „Cover Flow“ nicht verfügbar.
 - **Wünsche in der App:** Suchfeld und Seiten (wie bei „Für die Suche freigegeben“), „Alle freigeben“, „Abgelehnte
   löschen“ und ein **Archiv** für Freigaben (durchsuchbar, dort weiter widerrufbar). Zu Beginn jedes Quartals räumt die
   Box die Liste selbst auf: Freigaben ins Archiv, Abgelehnte und Zurückgenommene werden gelöscht. Das Archiv ist im Backup.

@@ -43,20 +43,28 @@ export class StartOrderService {
 
   /** the tiles of a tab in the child's order (A to Z when it has none, or may not sort) - new ones in front */
   apply(artists: Artist[], category: string): Artist[] {
+    return this.applyBy(artists, category, tileKey)
+  }
+
+  /** a list in the child's order of it (the usual order without one) - those not in it in front; key: what each is kept by */
+  applyBy<T>(list: T[], category: string, key: (item: T) => string): T[] {
     const keys = this.on() ? this.order()[category] : undefined
-    if (!keys?.length) return artists
+    if (!keys?.length) return list
     const at = new Map(keys.map((k, i) => [k, i]))
-    const fresh = artists.filter((a) => !at.has(tileKey(a)))
-    const known = artists
-      .filter((a) => at.has(tileKey(a)))
-      .sort((x, y) => (at.get(tileKey(x)) ?? 0) - (at.get(tileKey(y)) ?? 0))
+    const fresh = list.filter((a) => !at.has(key(a)))
+    const known = list.filter((a) => at.has(key(a))).sort((x, y) => (at.get(key(x)) ?? 0) - (at.get(key(y)) ?? 0))
     return [...fresh, ...known]
   }
 
   /** one tile moved: the tab's order as shown now, kept */
   move(shown: Artist[], category: string, from: number, to: number): void {
+    this.moveBy(shown, category, from, to, tileKey)
+  }
+
+  /** one of a list moved (the search's start: its tiles) - its order as shown now, kept */
+  moveBy<T>(shown: T[], category: string, from: number, to: number, key: (item: T) => string): void {
     if (from === to || from < 0 || to < 0 || from >= shown.length || to >= shown.length) return
-    const keys = shown.map(tileKey)
+    const keys = shown.map(key)
     const [k] = keys.splice(from, 1)
     keys.splice(to, 0, k)
     this.order.update((o) => ({ ...o, [category]: keys }))

@@ -45,6 +45,8 @@ import { PlayerService } from '../player.service'
 import { SpotifyBlockService } from '../spotify-block.service'
 import { StatusComponent } from '../status/status.component'
 import { SwiperComponent, type SwiperData } from '../swiper/swiper.component'
+import { SortBarComponent } from '../sort-bar/sort-bar.component'
+import { StartOrderService } from '../start-order.service'
 import { KmThemeService } from '../theme/km-theme.service'
 import { localizeCoverUrl } from '../utils'
 import { NearEndDirective } from './near-end.directive'
@@ -91,6 +93,9 @@ const WAY_ICON: Record<SearchMode, string> = {
     '<rect x="3" y="9" width="18" height="12" rx="2"/><path d="M7 9 17 4"/><circle cx="15.5" cy="15" r="2.5"/><path d="M6.5 13.5h3M6.5 16.5h3"/>',
   playlists: '<path d="M4 6h11M4 11h11M4 16h7"/><circle cx="16.5" cy="17.5" r="2.5"/><path d="M19 17.5V8l2-1"/>',
 }
+
+/** (fork "wishes") what a tile of the search's start is kept by in the child's order: its way */
+const wayKey = (item: ListItem): string => (item.t === 'way' ? item.m : item.t)
 
 // (fork "wishes") What the search lists with the keyboard folded away - in the album list of the start page and of
 // "Weiterhören" (mupi-swiper): the tiles of the start, the hits, what the directories and Spotify found
@@ -180,6 +185,7 @@ export function searchRank(name: string, query: string): number | null {
     StatusComponent,
     NearEndDirective,
     SwiperComponent,
+    SortBarComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   // (the keyboard draws its keys itself: its styles must reach them - all of them below app-search, see search.page.scss)
@@ -457,7 +463,8 @@ export class SearchPage implements AfterViewInit, OnDestroy {
       if (this.playlistsOn()) ways.push({ t: 'way', m: 'playlists' })
       if (this.podcastsOn()) ways.push({ t: 'way', m: 'podcasts' })
       if (this.radioOn()) ways.push({ t: 'way', m: 'radio' })
-      return ways
+      // (in the child's order - the usual one without)
+      return this.startOrder.applyBy(ways, 'search', wayKey)
     }
     return [
       ...this.hits().map((hit): ListItem => ({ t: 'hit', hit })),
@@ -558,6 +565,10 @@ export class SearchPage implements AfterViewInit, OnDestroy {
   protected readonly categoryLabel = CATEGORY_LABEL
   // (playing, putting on the start page and the tabs: shared with the artist and album page of the search)
   private readonly flow = inject(SearchFlowService)
+  // ((fork "wishes") the child sorts the search's start too, as the start page - app › "Kind darf die Startseite
+  // sortieren"; kept under "search")
+  protected readonly startOrder = inject(StartOrderService)
+  protected readonly sorting = signal(false)
   protected readonly coverUrl = (url: string) => localizeCoverUrl(url || undefined)
 
   constructor() {
@@ -592,8 +603,23 @@ export class SearchPage implements AfterViewInit, OnDestroy {
   }
 
   ionViewWillLeave(): void {
+    this.sorting.set(false)
     this.shown.set(false)
     this.swiper()?.ionViewWillLeave()
+  }
+
+  // ---------- (fork "wishes") sorting the tiles of the start ----------
+
+  protected startSorting(): void {
+    if (this.atStart() && this.startOrder.on()) this.sorting.set(true)
+  }
+
+  protected moveWay(step: { from: number; to: number }): void {
+    this.startOrder.moveBy(this.items(), 'search', step.from, step.to, wayKey)
+  }
+
+  protected sortReset(): void {
+    this.startOrder.reset('search')
   }
 
   /** a cover of the album list tapped (its name is read aloud by the list itself) */
@@ -663,6 +689,8 @@ export class SearchPage implements AfterViewInit, OnDestroy {
     this.loadPool()
     // (fork "wishes": playlists - the tile, how many new ones today, the child's playlists songs may go into)
     this.flow.loadPlaylists()
+    // (fork "wishes": whether the child may sort the tiles of the start, and their order)
+    this.startOrder.load()
     // (Spotify does not play now: said once in a popup - the page keeps its room)
     this.spotifyBlock.tellIfBlocked()
     // back from the artist or album page: what happened there ("… ist jetzt bei Musik")

@@ -1,0 +1,96 @@
+// (fork "wishes") the bar of sorting: over the header, "A–Z" asked once more
+.mupi-sort-bar {
+    position: fixed;
+    left: 0;
+    right: 0;
+    top: 0;
+    height: 76px;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 0 16px;
+    box-sizing: border-box;
+    background: var(--km-night-2, #1f1f1f);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+}
+
+.mupi-sort-hint {
+    flex: 1;
+    min-width: 0;
+    text-align: center;
+    color: var(--km-on-bg, #fff);
+    font-size: 20px;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.mupi-sort-btn {
+    height: 56px;
+    min-width: 110px;
+    padding: 0 22px;
+    border: 0;
+    border-radius: 28px;
+    background: var(--km-cream, #e8e8e8);
+    color: var(--km-ink, #222);
+    font-size: 22px;
+    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    box-shadow: 0 4px 0 var(--km-shadow, rgba(0, 0, 0, 0.3));
+    -webkit-tap-highlight-color: transparent;
+
+    &:active {
+        transform: scale(0.94);
+    }
+
+    svg {
+        width: 28px;
+        height: 28px;
+        fill: none;
+        stroke: currentColor;
+        stroke-width: 3;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+    }
+}
+
+.mupi-sort-done {
+    background: var(--km-apricot, var(--ion-color-primary, #3880ff));
+}
+
+.mupi-sort-ask {
+    position: fixed;
+    inset: 0;
+    z-index: 200;
+    background: rgba(0, 0, 0, 0.55);
+    display: grid;
+    place-items: center;
+}
+
+.mupi-sort-card {
+    min-width: 380px;
+    max-width: 80vw;
+    padding: 26px 28px 24px;
+    border-radius: 26px;
+    background: var(--km-sheet, var(--km-night-2, #2a2a2a));
+    color: var(--km-on-bg, #fff);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    text-align: center;
+
+    p {
+        margin: 0 0 22px;
+        font-size: 24px;
+        font-weight: 600;
+    }
+}
+
+.mupi-sort-row {
+    display: flex;
+    gap: 18px;
+    justify-content: center;
+}

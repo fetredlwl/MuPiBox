@@ -1,0 +1,18 @@
+<div class="mupi-sort-bar" role="toolbar">
+  <button class="mupi-sort-btn" type="button" data-sort-az (click)="asking.set(true)">{{ texts.text('sortAz') }}</button>
+  <span class="mupi-sort-hint">{{ texts.text('sortHint') }}</span>
+  <button class="mupi-sort-btn mupi-sort-done" type="button" data-sort-done (click)="done.emit()">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5" /></svg>{{ texts.text('sortDone') }}
+  </button>
+</div>
+@if (asking()) {
+  <div class="mupi-sort-ask" role="dialog" (click)="asking.set(false)">
+    <div class="mupi-sort-card" (click)="$event.stopPropagation()">
+      <p>{{ texts.text('sortAzQ') }}</p>
+      <div class="mupi-sort-row">
+        <button class="mupi-sort-btn" type="button" data-sort-no (click)="asking.set(false)">{{ texts.text('sortNo') }}</button>
+        <button class="mupi-sort-btn mupi-sort-done" type="button" data-sort-yes (click)="yes()">{{ texts.text('sortYes') }}</button>
+      </div>
+    </div>
+  </div>
+}

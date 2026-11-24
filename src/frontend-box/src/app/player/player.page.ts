@@ -769,6 +769,9 @@ export class PlayerPage implements OnInit, AfterViewInit {
     if (this.resumePlay) {
       await this.resumePlayback()
     } else if (!this.isExternalPlayback) {
+      // ((fork "wishes") started anew: its list of songs asked anew too - the counter "1 / 3" kept the songs of the last
+      // time it played, also after one was taken out of the playlist)
+      if (this.media?.playlistid) this.mediaService.clearMediaInfoCache()
       // Only start playback if this is not external playback (already playing)
       const success = await this.playerService.playMedia(this.media)
       if (!success && this.media.type === 'spotify') {

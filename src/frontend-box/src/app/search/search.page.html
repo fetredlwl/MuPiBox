@@ -155,7 +155,7 @@
       <p class="srch-note">{{ texts.text(n) }}</p>
     }
     @if (swiperData().length) {
-      <mupi-swiper class="srch-list" [data]="swiperData()" [roundImages]="atStart()" [positionKey]="listKey()" [attr.data-names]="swiperNames()" (elementClicked)="itemClicked($event.data)" (nearEnd)="moreWishes()"></mupi-swiper>
+      <mupi-swiper class="srch-list" [data]="swiperData()" [roundImages]="atStart()" [positionKey]="listKey()" [attr.data-names]="swiperNames()" [sortable]="atStart() && startOrder.on()" [sorting]="sorting()" (held)="startSorting()" (moved)="moveWay($event)" (elementClicked)="itemClicked($event.data)" (nearEnd)="moreWishes()"></mupi-swiper>
     }
     </div>
   } @else {
@@ -323,3 +323,7 @@
 <ion-footer class="srch-footer" [class.srch-kb-hidden]="!keyboardShown()">
   <div #keyboard class="simple-keyboard"></div>
 </ion-footer>
+@if (sorting()) {
+  <!-- (fork "wishes") sorting the tiles of the start: a bar over the header - back to the usual order, done -->
+  <mupi-sort-bar (done)="sorting.set(false)" (reset)="sortReset()"></mupi-sort-bar>
+}

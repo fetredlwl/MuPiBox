@@ -1640,6 +1640,63 @@ async function sortPass(browser, dir, view) {
     )
     await page.click('[data-sort-done]')
     await wait(400)
+    // the search's start: its tiles sorted the same way
+    await page.goto(`http://localhost:${STATIC_PORT}/search`, { waitUntil: 'networkidle2' })
+    await wait(2500)
+    const ways = await listNames(page)
+    const tile = (i) =>
+      page.evaluate((index) => {
+        const el = document.querySelector('app-search .km-stage')
+          ? [...document.querySelectorAll('app-search .km-stage-item')].sort((a, b) => Number(b.style.zIndex) - Number(a.style.zIndex))[0]
+          : document.querySelectorAll('app-search swiper-slide .img-row ion-card')[index]
+        const r = el?.getBoundingClientRect()
+        return r ? { x: r.left + r.width / 2, y: r.top + r.height / 2 } : null
+      }, i)
+    const at0 = await tile(0)
+    if (!at0 || ways.length < 2) throw new Error(`no tiles to sort at the search's start (${ways.join(', ')})`)
+    await page.mouse.move(at0.x, at0.y)
+    await page.mouse.down()
+    await wait(1400)
+    await page.mouse.up()
+    await wait(500)
+    rule('R18', (await bar()) === 1 && (await topTag(page)) === 'app-search', `sorting the search's start: a long press starts it (${ways.join(', ')})`)
+    if (onStage) {
+      await page.click('.mupi-sort-right')
+    } else {
+      const from = await tile(1)
+      await page.mouse.move(from.x, from.y)
+      await page.mouse.down()
+      for (let i = 1; i <= 12; i++) await page.mouse.move(from.x + ((at0.x - 40 - from.x) * i) / 12, from.y + 6, { steps: 2 })
+      await wait(300)
+      await page.mouse.up()
+    }
+    await wait(900)
+    const moved = await listNames(page)
+    const searchOrder = () => {
+      try {
+        return JSON.parse(fs.readFileSync(orderFile, 'utf8')).search
+      } catch {
+        return undefined
+      }
+    }
+    rule(
+      'R18',
+      moved[1] === ways[0] && !!searchOrder()?.length,
+      `sorting the search's start: a tile moved, kept on the box (${moved.join(', ')})`,
+    )
+    await page.click('[data-sort-az]')
+    await wait(400)
+    await page.click('[data-sort-yes]')
+    await wait(900)
+    rule(
+      'R18',
+      (await listNames(page)).join('|') === ways.join('|') && searchOrder() === undefined,
+      `sorting the search's start: "A–Z" brings the usual order back (${(await listNames(page)).join(', ')})`,
+    )
+    await page.click('[data-sort-done]')
+    await wait(400)
+    await page.goto(`http://localhost:${STATIC_PORT}/home`, { waitUntil: 'networkidle2' })
+    await wait(1500)
     // the switch off: a long press does nothing
     sortSwitch(false)
     await wait(1500)

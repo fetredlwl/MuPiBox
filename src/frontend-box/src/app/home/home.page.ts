@@ -39,7 +39,7 @@ import { BackgroundPlaybackService } from '../background-playback.service'
 import { KmStatusGroupComponent } from '../km-header/km-status-group.component'
 import { NowPlayingPillComponent } from '../now-playing-pill/now-playing-pill.component'
 import { SpotifyBlockService } from '../spotify-block.service'
-import { DisplayTextsService } from '../display-texts.service'
+import { SortBarComponent } from '../sort-bar/sort-bar.component'
 import { StartOrderService } from '../start-order.service'
 import { SwiperComponent, SwiperData } from '../swiper/swiper.component'
 import { SwiperIonicEventsHelper } from '../swiper/swiper-ionic-events-helper'
@@ -64,6 +64,7 @@ import { KmThemeService } from '../theme/km-theme.service'
     IonSegmentButton,
     SwiperComponent,
     IonContent,
+    SortBarComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -83,12 +84,9 @@ export class HomePage extends SwiperIonicEventsHelper {
   protected readonly pillShown = computed(() => this.r2() && this.background.media() !== null)
   // ((fork "wishes") the child sorts the start page itself: a long press on a cover - not in the Cover Flow theme)
   protected readonly startOrder = inject(StartOrderService)
-  protected readonly texts = inject(DisplayTextsService)
   private readonly coverflowTheme = signal(false)
   protected readonly sortable = computed(() => this.startOrder.on() && !this.coverflowTheme())
   protected readonly sorting = signal(false)
-  /** "A–Z" tapped: asked once more */
-  protected readonly askReset = signal(false)
 
   // The top bar is folded away by a two-finger swipe (HeaderVisibilityService): the covers are then drawn larger
   protected readonly headerHidden = inject(HeaderVisibilityService).hidden
@@ -279,7 +277,6 @@ export class HomePage extends SwiperIonicEventsHelper {
 
   override ionViewWillLeave(): void {
     this.sorting.set(false)
-    this.askReset.set(false)
     super.ionViewWillLeave()
   }
 
@@ -295,12 +292,10 @@ export class HomePage extends SwiperIonicEventsHelper {
 
   protected sortDone(): void {
     this.sorting.set(false)
-    this.askReset.set(false)
   }
 
   protected resetOrder(): void {
     this.startOrder.reset(this.category())
-    this.askReset.set(false)
   }
 
   private switchCategory(step: 1 | -1): void {

@@ -6,6 +6,7 @@ import { environment } from 'src/environments/environment'
 import { CoverFlipService } from '../cover-flip.service'
 import { type DisplayTextKey, DisplayTextsService } from '../display-texts.service'
 import type { CategoryType, Media } from '../media'
+import { MediaService } from '../media.service'
 import { SpotifyBlockService } from '../spotify-block.service'
 
 // (fork "wishes") What the search, its artist page and its album page share: the pool's kinds, playing something of
@@ -151,6 +152,8 @@ export class SearchFlowService {
   private readonly coverFlip = inject(CoverFlipService)
   private readonly texts = inject(DisplayTextsService)
   private readonly spotifyBlock = inject(SpotifyBlockService)
+  // (a playlist's songs changed: what the player keeps of the one playing is asked anew)
+  private readonly media = inject(MediaService)
   private readonly api = environment.backend.apiUrl
 
   /** the tabs a pool hit can go to (those shown on the start page; set by the search) */
@@ -345,6 +348,7 @@ export class SearchFlowService {
           playlist: playlist.id,
         }),
       )
+      this.media.clearMediaInfoCache()
       this.note = this.texts.text(r?.result === 'already' ? 'trackAlready' : 'trackAdded', {
         n: item.name,
         p: playlist.name,
@@ -422,6 +426,7 @@ export class SearchFlowService {
       await firstValueFrom(
         this.http.post(`${this.api}/search-playlists/take-out`, { playlistId, id: song.id, name: song.name }),
       )
+      this.media.clearMediaInfoCache()
       this.note = this.texts.text('plTakenOut', { n: song.name, p: own.name })
     } catch {
       this.note = this.texts.text('searchFailed')
