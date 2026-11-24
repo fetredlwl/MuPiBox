@@ -111,12 +111,19 @@ async function loadFile(code) {
   }
 }
 
+// (fork "wishes") a language with the fork's texts of it: i18n/fork/<code>.json, next to splitti's file (an update of
+// upstream meets none of them; splitti's text wins should both have one)
+async function loadFileWithFork(code) {
+  const [main, fork] = await Promise.all([loadFile(code), loadFile(`fork/${code}`)])
+  return { ...fork, ...main }
+}
+
 const escapeRe = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
 
 /** Loads the language (and English for what it lacks). German needs nothing. */
 export async function loadLanguage() {
   document.documentElement.lang = lang
-  const [own, en] = lang === 'de' ? [{}, {}] : await Promise.all([loadFile(lang), lang === DEFAULT ? {} : loadFile(DEFAULT)])
+  const [own, en] = lang === 'de' ? [{}, {}] : await Promise.all([loadFileWithFork(lang), lang === DEFAULT ? {} : loadFileWithFork(DEFAULT)])
   const all = { ...en, ...own }
   exact = new Map()
   patterns = []
