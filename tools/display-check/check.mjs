@@ -44,6 +44,9 @@ const shots = shotsAt > 0 ? path.resolve(process.argv[shotsAt + 1]) : null
 // (--theme <id>: the display in one of its themes, e.g. weltraum or einhorn - the build checks the default one)
 const themeAt = process.argv.indexOf('--theme')
 const theme = themeAt > 0 ? process.argv[themeAt + 1] : null
+// (--only sort: only the pass of the start page's sorting - quicker while working on it)
+const onlyAt = process.argv.indexOf('--only')
+const only = onlyAt > 0 ? process.argv[onlyAt + 1] : null
 const STATIC_PORT = 4300
 const API = 'http://localhost:8200/api'
 const CHROME = [
@@ -1506,7 +1509,7 @@ async function wishesOff(browser, dir) {
  * a cover dragged to another place (the stage: the arrows), kept on the box and after a reload, "A–Z" (asked once more)
  * forgets it; with the switch off a long press does nothing.
  */
-async function sortPass(browser, dir) {
+async function sortPass(browser, dir, view) {
   const file = path.join(dir, 'config', 'mupiboxconfig.json')
   const dataFile = path.join(dir, 'config', 'data.json')
   const orderFile = path.join(dir, 'config', 'start-order.json')
@@ -1514,13 +1517,18 @@ async function sortPass(browser, dir) {
     const box = JSON.parse(fs.readFileSync(file, 'utf8'))
     box.mupibox.displayStartSort = on
     box.mupibox.startCategory = 'audiobook'
+    // (the km themes: the stage view, or the list of covers - each sorted its way)
+    box.mupibox.themeStage = view === 'stage'
     fs.writeFileSync(file, JSON.stringify(box, null, 2))
   }
-  // three stations of their own in the first tab (beside the Biber Bande): Biber Bande, Sort A, Sort B, Sort C
+  // three playlists of their own in the first tab: Sort A, Sort B, Sort C (not stations: offline - as here - a tab of only
+  // stations and podcasts shows "No connection"; the Biber Bande's podcast is not shown offline either)
   const lib = JSON.parse(fs.readFileSync(dataFile, 'utf8'))
-  for (const n of ['A', 'B', 'C'])
-    lib.push({ type: 'radio', category: 'audiobook', id: `http://127.0.0.1:9/sort-${n}`, title: `Sort ${n}`, index: lib.length })
+  for (const n of lib.some((r) => r.title === 'Sort A') ? [] : ['A', 'B', 'C'])
+    lib.push({ type: 'spotify', category: 'audiobook', playlistid: `sort${n}`.padEnd(22, 'x'), title: `Sort ${n}`, cover: '', index: lib.length })
   fs.writeFileSync(dataFile, JSON.stringify(lib, null, 2))
+  // (the start page reads the box's active list - on the box made from data.json; here written alike)
+  fs.writeFileSync(path.join(dir, 'config', 'active_data.json'), JSON.stringify(lib, null, 2))
   sortSwitch(true)
   await wait(1500)
   const page = await browser.newPage()
@@ -1536,7 +1544,9 @@ async function sortPass(browser, dir) {
   // the names in the order shown (the stage: the one in the middle only)
   const titles = () =>
     page.evaluate(() =>
-      [...document.querySelectorAll('app-home swiper-slide .title-row')].map((t) => t.textContent.trim()),
+      [...document.querySelectorAll('app-home swiper-slide .title-row')]
+        .map((t) => t.textContent.trim())
+        .filter((t) => t.startsWith('Sort ')),
     )
   const center = () => page.evaluate(() => document.querySelector('app-home .km-stage-name')?.textContent.trim() ?? '')
   // the middle of a cover: the stage's middle one, or the cover of the slide with that name
@@ -1552,7 +1562,7 @@ async function sortPass(browser, dir) {
     }, name)
   const hold = async (name) => {
     const at = await coverAt(name)
-    if (!at) throw new Error(`no cover ${name}`)
+    if (!at) throw new Error(`no cover ${name} (shown: ${(await titles()).join(', ') || (await center()) || 'nothing'})`)
     await page.mouse.move(at.x, at.y)
     await page.mouse.down()
     await wait(1400)
@@ -1562,9 +1572,13 @@ async function sortPass(browser, dir) {
   const bar = () => visibleCount(page, '.mupi-sort-bar')
   try {
     await page.goto(`http://localhost:${STATIC_PORT}/home`, { waitUntil: 'networkidle2' })
-    await wait(2500)
+    // (the start page's list: its podcast asked first - give it time)
+    const listed = async () => (await titles()).includes('Sort A') || !!(await center())
+    for (let i = 0; i < 40 && !(await listed()); i++) await wait(500)
+    await shot(page, 'sort-0-start')
     const onStage = await stage()
     await hold('Sort A')
+    await shot(page, 'sort-1-held')
     rule(
       'R18',
       (await bar()) === 1 && (await topTag(page)) === 'app-home',
@@ -1576,12 +1590,19 @@ async function sortPass(browser, dir) {
       const first = await center()
       await page.click('.mupi-sort-right')
       await wait(800)
-      want = first
-      rule('R18', (await center()) === first && order()?.length === 4, `sorting: the arrow moves the cover, it stays in the middle (${first})`)
+      // (after a reload the stage stands on the first of the order: "spotify:sortB…" - "Sort B")
+      want = `Sort ${(order()?.[0] ?? '').charAt('spotify:sort'.length)}`
+      const after = await center()
+      await shot(page, 'sort-2-arrow')
+      rule(
+        'R18',
+        after === first && order()?.[1] === order()?.find((k) => k.includes('sortA')),
+        `sorting: the arrow moves the cover, it stays in the middle (${first} → ${after}; ${(order() ?? []).join(', ')})`,
+      )
     } else {
-      // (the list: "Sort B" dragged onto the first place)
-      const from = await coverAt('Sort B')
-      const to = await coverAt('Biber Bande')
+      // (the list: "Sort C" dragged onto the first place)
+      const from = await coverAt('Sort C')
+      const to = await coverAt('Sort A')
       await page.mouse.move(from.x, from.y)
       await page.mouse.down()
       for (let i = 1; i <= 12; i++) await page.mouse.move(from.x + ((to.x - 40 - from.x) * i) / 12, from.y + 6, { steps: 2 })
@@ -1590,7 +1611,7 @@ async function sortPass(browser, dir) {
       await wait(900)
       const shown = await titles()
       want = shown.join('|')
-      rule('R18', shown[0] === 'Sort B' && order()?.length === 4, `sorting: a cover dragged to another place, kept on the box (${shown.join(', ')})`)
+      rule('R18', shown[0] === 'Sort C' && !!order()?.length, `sorting: a cover dragged to another place, kept on the box (${shown.join(', ')})`)
     }
     await page.click('[data-sort-done]')
     await wait(500)
@@ -1599,7 +1620,11 @@ async function sortPass(browser, dir) {
     await page.reload({ waitUntil: 'networkidle2' })
     await wait(2500)
     const again = onStage ? undefined : (await titles()).join('|')
-    rule('R18', onStage ? order()?.length === 4 : again === want, `sorting: the order stays after a reload (${again ?? 'stage'})`)
+    rule(
+      'R18',
+      onStage ? (await center()) === want && !!order()?.length : again === want,
+      `sorting: the order stays after a reload (${again ?? (await center())})`,
+    )
     // "A–Z": asked once more, then the order forgotten
     await hold(onStage ? '' : 'Sort A')
     await page.click('[data-sort-az]')
@@ -1610,7 +1635,7 @@ async function sortPass(browser, dir) {
     const az = onStage ? [] : await titles()
     rule(
       'R18',
-      order() === undefined && (onStage || az.join('|') === 'Biber Bande|Sort A|Sort B|Sort C'),
+      order() === undefined && (onStage || az.join('|') === 'Sort A|Sort B|Sort C'),
       `sorting: "A–Z" sorts as before (${az.join(', ') || 'stage'})`,
     )
     await page.click('[data-sort-done]')
@@ -1835,15 +1860,18 @@ async function main() {
       headless: true,
       args: ['--no-first-run', '--no-default-browser-check'],
     })
-    for (const size of [
-      { width: 1024, height: 600 },
-      { width: 800, height: 480 },
-    ])
-      await run(browser, dir, size)
-    await appWishes(browser, dir)
-    await playlistsPass(browser, dir)
-    await wishesOff(browser, dir)
-    await sortPass(browser, dir)
+    if (only !== 'sort') {
+      for (const size of [
+        { width: 1024, height: 600 },
+        { width: 800, height: 480 },
+      ])
+        await run(browser, dir, size)
+      await appWishes(browser, dir)
+      await playlistsPass(browser, dir)
+      await wishesOff(browser, dir)
+    }
+    await sortPass(browser, dir, 'stage')
+    await sortPass(browser, dir, 'list')
   } catch (err) {
     console.error(`display check could not run: ${err?.message ?? err}`)
     process.exitCode = 2
