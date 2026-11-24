@@ -1,6 +1,7 @@
 import { HttpClient } from '@angular/common/http'
-import { Injectable, inject, signal } from '@angular/core'
+import { computed, Injectable, inject, signal } from '@angular/core'
 import { environment } from '../environments/environment'
+import { FORK_DISPLAY_TEXTS } from './display-texts-fork'
 
 // Texts of the overlays on the box display. Per text the box shows, in this order:
 //   1. the parents' own text (config displayTexts, set in the parents' web app or the admin interface)
@@ -79,91 +80,8 @@ export const DEFAULT_DISPLAY_TEXTS = {
   displayTestTitle: 'New display',
   displayTestText: 'Do you see this picture? Then tap “Keep”. Otherwise the box goes back to the display before in {s}.',
   displayTestKeep: 'Keep',
-  // (fork "wishes") Spotify blocks the box and does not play (SpotifyPauseComponent)
-  spotifyPausePlayer: 'Spotify is not working right now. You can listen to radio and podcasts.',
-  // (fork "wishes") the search on the display (search page): {n} = a name, {c} = a tab
-  searchPlaceholder: 'What would you like to hear?',
-  searchStart: 'Type the first letters.',
-  searchLoading: 'Loading the library …',
-  searchNothing: 'Nothing found.',
-  searchRemoveQ: 'Remove?',
-  searchArtist: 'Artist',
-  searchPodcast: 'Podcast',
-  searchWhere: 'Where on the start page?',
-  searchGetAll: 'Get everything by {n}',
-  searchAllThere: 'All albums are on the start page already.',
-  searchAlbumsLoading: 'The albums are still loading.',
-  searchPlay: 'Play',
-  searchToStart: 'To the start page',
-  searchAlready: '{n} is here already.',
-  searchAdded: '{n} is now in {c}.',
-  searchGone: '{n} is gone.',
-  searchFailed: 'That did not work.',
-  searchCatAudiobook: 'Audio books',
-  searchCatMusic: 'Music',
-  searchCatRadio: 'Radio & podcasts',
-  // (fork "wishes") podcasts for children in the search (search-podcasts.ts)
-  searchPodcastsButton: 'Podcasts',
-  searchPodcastsLoading: 'Searching …',
-  searchPodcastsNone: 'No podcasts for children found.',
-  searchTipsLabel: 'Tips for children',
-  // (fork "wishes") wishes from Spotify (search, its artist and album page): {n} = a name
-  wishSearchTile: 'Search Spotify',
-  wishLoading: 'Searching Spotify …',
-  wishNone: 'Nothing found on Spotify.',
-  wishButton: 'Wish for it',
-  wishWhole: 'Wish for everything by {n}',
-  wishWished: 'Wished',
-  wishAdult: 'Not for children',
-  wishAdultNote: '{n} is not for children.',
-  // (fork "wishes") the child sorts the start page (a long press on a cover)
-  sortAz: 'A–Z',
-  sortHint: 'Drag the covers to their place',
-  sortDone: 'Done',
-  sortAzQ: 'Sort from A to Z again?',
-  sortYes: 'Yes',
-  sortNo: 'No',
-  wishSent: 'Wish sent: {n}',
-  wishAlready: 'You have wished for {n} already.',
-  wishThere: '{n} is on the box already.',
-  wishPaused: 'Spotify is taking a break – try again later.',
-  wishAllowed: 'You may fetch {n} yourself.',
-  wishOnBox: 'Already on the box',
-  // (fork "wishes") the tiles of the search's start, radio for children, the child's own entries
-  searchManageTile: 'Manage entries',
-  searchMine: 'Mine',
-  searchSpotify: 'Spotify',
-  searchRadioButton: 'Radio',
-  searchRadioNone: 'No radio stations for children found.',
-  searchRadioStation: 'Radio station',
-  searchKey: 'Search',
-  searchMove: 'Somewhere else',
-  searchRemove: 'Remove',
-  searchRemoveYes: 'Yes, remove',
-  // (fork "wishes") playlists in the search, the child's new ones, single songs into them: {n} = a name, {p} = a playlist
-  searchPlaylistsTile: 'Playlists',
-  plNew: 'New playlist',
-  plNameField: 'Name of the playlist',
-  plCreateKey: 'Create',
-  plLimit: 'No new playlist today.',
-  plSongs: 'Take songs out',
-  plSongsNone: 'No songs in it.',
-  plTakeOutQ: 'Take it out?',
-  plTakeOutYes: 'Yes, take out',
-  plTakenOut: '{n} is out of {p}.',
-  trackToPlaylist: 'Into a playlist',
-  trackWhich: 'Which playlist?',
-  trackAdded: '{n} is now in {p}.',
-  trackAlready: '{n} is in {p} already.',
-  trackNoPlaylist: 'Put a playlist on the start page first.',
-  trackSongs: 'Songs',
-  searchKindAlbum: 'Album',
-  searchKindSong: 'Song',
-  wishSentTo: 'Wish sent: {n} – for {p}',
-  plDelete: 'Delete completely',
-  plDeleteQ: 'Delete it completely?',
-  plDeleteYes: 'Yes, delete completely',
-  plDeleted: '{n} is deleted.',
+  // (fork "wishes") the fork's texts (display-texts-fork.ts)
+  ...FORK_DISPLAY_TEXTS,
 }
 export type DisplayTextKey = keyof typeof DEFAULT_DISPLAY_TEXTS
 type TextSet = Partial<Record<DisplayTextKey, string>>
@@ -187,6 +105,13 @@ export class DisplayTextsService {
   private readonly custom = signal<TextSet>({})
   private readonly language = signal('en')
   private readonly languages = signal<Record<string, TextSet>>({})
+  // (fork "wishes") the fork's texts, from a file of their own (display-texts-fork.json): merged with the languages
+  private readonly forkLanguages = signal<Record<string, TextSet>>({})
+  private readonly allLanguages = computed(() => {
+    const sets = { ...this.languages() }
+    for (const [code, texts] of Object.entries(this.forkLanguages())) sets[code] = { ...texts, ...sets[code] }
+    return sets
+  })
 
   constructor() {
     this.http.get<LanguageFile>('assets/i18n/display-texts.json').subscribe({
@@ -196,6 +121,14 @@ export class DisplayTextsService {
           sets[code] = pickTexts(lang?.texts)
         }
         this.languages.set(sets)
+      },
+      error: () => {},
+    })
+    this.http.get<LanguageFile>('assets/i18n/display-texts-fork.json').subscribe({
+      next: (file) => {
+        const sets: Record<string, TextSet> = {}
+        for (const [code, lang] of Object.entries(file?.languages ?? {})) sets[code] = pickTexts(lang?.texts)
+        this.forkLanguages.set(sets)
       },
       error: () => {},
     })
@@ -230,7 +163,7 @@ export class DisplayTextsService {
 
   /** The text for `key`; {name} placeholders are filled from `values`. Reading it inside a computed/template tracks changes. */
   public text(key: DisplayTextKey, values: Record<string, string | number> = {}): string {
-    const sets = this.languages()
+    const sets = this.allLanguages()
     // (a quiet time's heading is the name of its window, see PlaytimeBlockedOverlayComponent - without one the
     // language's text; an own heading saved before, when the parents' app had a field for it, is left out: one heading
     // for every window did not fit them all - "Gute Nacht" for the homework)
