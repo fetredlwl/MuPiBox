@@ -614,26 +614,6 @@
    ]
   },
   {
-   "id": "wuensche",
-   "slug": "wuensche",
-   "area": "bibliothek",
-   "parent": "bibliothek",
-   "title": "Wünsche",
-   "description": "",
-   "icon": "bulb",
-   "sections": []
-  },
-  {
-   "id": "suchfreigaben",
-   "slug": "suchfreigaben",
-   "area": "bibliothek",
-   "parent": "bibliothek",
-   "title": "Für die Suche freigegeben",
-   "description": "",
-   "icon": "search",
-   "sections": []
-  },
-  {
    "id": "podsuche",
    "slug": "podcast-search",
    "area": "bibliothek",
@@ -2324,16 +2304,6 @@
      ]
     }
    ]
-  },
-  {
-   "id": "suchedisplay",
-   "slug": "search-display",
-   "area": "einstellungen",
-   "parent": "g-display",
-   "title": "Suche am Display",
-   "description": "Lupe, Spotify-Wünsche, Songs, Playlists, Podcasts, Radio",
-   "icon": "search",
-   "sections": []
   },
   {
    "id": "displaylive",
@@ -5719,11 +5689,6 @@
    "id": "bedienung"
   },
   {
-   "l": "Kind darf die Startseite sortieren",
-   "where": "Display & Bedienung › Bedienung am Display",
-   "id": "bedienung"
-  },
-  {
    "l": "Display live",
    "where": "Display & Bedienung › Display live",
    "id": "displaylive"
@@ -6702,46 +6667,6 @@
    "l": "System",
    "where": "System",
    "id": "g-system"
-  },
-  {
-   "l": "Suche am Display",
-   "where": "Display & Bedienung › Suche am Display",
-   "id": "suchedisplay"
-  },
-  {
-   "l": "Suche auf dem Display",
-   "where": "Display & Bedienung › Suche am Display",
-   "id": "suchedisplay"
-  },
-  {
-   "l": "Wünsche aus Spotify",
-   "where": "Display & Bedienung › Suche am Display",
-   "id": "suchedisplay"
-  },
-  {
-   "l": "Einzelne Songs aus Spotify",
-   "where": "Display & Bedienung › Suche am Display",
-   "id": "suchedisplay"
-  },
-  {
-   "l": "Playlists in der Suche",
-   "where": "Display & Bedienung › Suche am Display",
-   "id": "suchedisplay"
-  },
-  {
-   "l": "Kind darf Playlists anlegen",
-   "where": "Display & Bedienung › Suche am Display",
-   "id": "suchedisplay"
-  },
-  {
-   "l": "Podcasts für Kinder in der Suche",
-   "where": "Display & Bedienung › Suche am Display",
-   "id": "suchedisplay"
-  },
-  {
-   "l": "Radio für Kinder in der Suche",
-   "where": "Display & Bedienung › Suche am Display",
-   "id": "suchedisplay"
   }
  ],
  "themes": [
