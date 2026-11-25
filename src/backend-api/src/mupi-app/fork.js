@@ -1136,17 +1136,23 @@ const FORK_PAGES = [
     },
   ],
 ]
-// the app's search: the fork's switches and pages
+// the app's search: the fork's switches and pages - [the entry they come after (its label), the entries]; null: at the end
 const FORK_SEARCH = [
-  { l: 'Kind darf die Startseite sortieren', where: 'Display & Bedienung › Bedienung am Display', id: 'bedienung' },
-  { l: 'Suche am Display', where: 'Display & Bedienung › Suche am Display', id: 'suchedisplay' },
-  { l: 'Suche auf dem Display', where: 'Display & Bedienung › Suche am Display', id: 'suchedisplay' },
-  { l: 'Wünsche aus Spotify', where: 'Display & Bedienung › Suche am Display', id: 'suchedisplay' },
-  { l: 'Einzelne Songs aus Spotify', where: 'Display & Bedienung › Suche am Display', id: 'suchedisplay' },
-  { l: 'Playlists in der Suche', where: 'Display & Bedienung › Suche am Display', id: 'suchedisplay' },
-  { l: 'Kind darf Playlists anlegen', where: 'Display & Bedienung › Suche am Display', id: 'suchedisplay' },
-  { l: 'Podcasts für Kinder in der Suche', where: 'Display & Bedienung › Suche am Display', id: 'suchedisplay' },
-  { l: 'Radio für Kinder in der Suche', where: 'Display & Bedienung › Suche am Display', id: 'suchedisplay' },
+  [
+    'Hörstand auf dem Display zeigen',
+    { l: 'Kind darf die Startseite sortieren', where: 'Display & Bedienung › Bedienung am Display', id: 'bedienung' },
+  ],
+  [null, { l: 'Suche am Display', where: 'Display & Bedienung › Suche am Display', id: 'suchedisplay' }],
+  [null, { l: 'Suche auf dem Display', where: 'Display & Bedienung › Suche am Display', id: 'suchedisplay' }],
+  [null, { l: 'Wünsche aus Spotify', where: 'Display & Bedienung › Suche am Display', id: 'suchedisplay' }],
+  [null, { l: 'Einzelne Songs aus Spotify', where: 'Display & Bedienung › Suche am Display', id: 'suchedisplay' }],
+  [null, { l: 'Playlists in der Suche', where: 'Display & Bedienung › Suche am Display', id: 'suchedisplay' }],
+  [null, { l: 'Kind darf Playlists anlegen', where: 'Display & Bedienung › Suche am Display', id: 'suchedisplay' }],
+  [
+    null,
+    { l: 'Podcasts für Kinder in der Suche', where: 'Display & Bedienung › Suche am Display', id: 'suchedisplay' },
+  ],
+  [null, { l: 'Radio für Kinder in der Suche', where: 'Display & Bedienung › Suche am Display', id: 'suchedisplay' }],
 ]
 
 /** once, with the schema loaded (before its pages are known to the app) */
@@ -1155,5 +1161,9 @@ export function forkSchema(schema) {
     const at = schema.pages.findIndex((p) => p.id === before)
     schema.pages.splice(at >= 0 ? at : schema.pages.length, 0, ...pages)
   }
-  schema.searchIndex.push(...FORK_SEARCH)
+  for (const [after, entry] of FORK_SEARCH) {
+    const at = after === null ? -1 : schema.searchIndex.findIndex((e) => e.l === after)
+    if (at >= 0) schema.searchIndex.splice(at + 1, 0, entry)
+    else schema.searchIndex.push(entry)
+  }
 }
