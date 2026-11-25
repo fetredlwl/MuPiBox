@@ -1108,7 +1108,9 @@ async function appWishes(browser, dir) {
   await page.setViewport({ width: 1280, height: 900, deviceScaleFactor: 1 })
   try {
     await page.goto(`http://localhost:${STATIC_PORT}/app/#/wuensche`, { waitUntil: 'networkidle2' })
-    await wait(2500)
+    // (the app's page built: up to 15 s - two checks at once load the computer, 2.5 s were too short then)
+    await page.waitForSelector('[data-wish-yes]', { timeout: 15000 }).catch(() => {})
+    await wait(500)
     if (shots) await page.screenshot({ path: path.join(shots, 'app-wuensche.png') })
     const text = await page.evaluate(() => document.body.innerText)
     const wished = JSON.parse(fs.readFileSync(path.join(dir, 'config', 'wishes.json'), 'utf8')).find(
