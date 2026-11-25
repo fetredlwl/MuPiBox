@@ -1,8 +1,8 @@
-// The fork's last tag for the update page (eltern/updates.ts): the tags carry their day in the name, the newest day is the last
+// The fork's last tag for the update page (eltern/fork-updates.ts): the tags carry their day in the name, the newest day is the last
 // one; the official tags (5.0.17 ...) and names that could not be handed to the update script are not taken.
 import assert from 'node:assert'
 import { describe, it } from 'node:test'
-import { lastForkTag } from './eltern/updates'
+import { lastForkTag } from './eltern/fork-updates'
 
 describe('lastForkTag', () => {
   it('takes the tag with the newest day', () => {

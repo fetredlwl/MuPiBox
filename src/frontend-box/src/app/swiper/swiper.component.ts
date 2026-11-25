@@ -62,7 +62,7 @@ export interface SwiperData<T> {
 @Component({
   selector: 'mupi-swiper',
   templateUrl: './swiper.component.html',
-  styleUrls: ['./swiper.component.scss'],
+  styleUrls: ['./swiper.component.scss', './swiper.component.fork.scss'],
   imports: [AsyncPipe, IonCard, IonCardHeader, IonCardTitle, IonCol, IonGrid, IonIcon, IonRow],
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
   changeDetection: ChangeDetectionStrategy.OnPush,

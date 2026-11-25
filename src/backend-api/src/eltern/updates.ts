@@ -13,6 +13,7 @@ import * as os from 'node:os'
 import * as path from 'node:path'
 import type { Router } from 'express'
 import type { MupiboxConfig } from '../models/mupibox-config.model'
+import { forkLastTag, forkRelease, forkRows, forkStartArgs } from './fork-updates'
 import { requireCsrf, requireSession } from './middleware'
 
 export interface UpdatesDeps {
@@ -24,12 +25,7 @@ const STATE_DIR = '/var/lib/mupibox-update'
 const UNIT = 'mupibox-update'
 const CHANNELS = ['stable', 'beta', 'dev'] as const
 type Channel = (typeof CHANNELS)[number]
-
-// Fork: this fork's own channel beside the official ones. It installs the fork's branch with the update script's
-// branch mode (start_mupibox_update.sh branch <branch> <owner/repo> <label>); the official channels stay as they are -
-// "Stabil" is the way back. The label starts with FORK, so the installed version is told apart from the official
-// channels (no "update available" from them for a fork, see parseInstalled).
-export const FORK = { repo: 'fetredlwl/MuPiBox', branch: 'wishes' } as const
+// (fork "wishes": its own channel - fork-updates.ts)
 export type InstalledChannel = Channel | 'fork'
 
 function run(cmd: string, args: string[], timeoutMs = 30000): Promise<{ ok: boolean; stdout: string; stderr: string }> {
@@ -215,116 +211,6 @@ async function devDate(): Promise<string | null> {
   return devDateCache?.date || null
 }
 
-// The fork's branch as it is on GitHub now: its last commit (short id, day) and the official version it is based on
-// (the stable one in the fork's version.json). Asked every 10 minutes at most - GitHub answers 60 questions an hour
-// from one home network without a login.
-export interface ForkRelease {
-  repo: string
-  branch: string
-  sha: string
-  date: string
-  base: string | null
-  label: string
-}
-let forkCache: { at: number; info: ForkRelease } | null = null
-
-export async function forkRelease(fresh = false): Promise<ForkRelease | null> {
-  if (fresh || !forkCache || Date.now() - forkCache.at > 600_000) {
-    try {
-      const r = await fetch(`https://api.github.com/repos/${FORK.repo}/branches/${FORK.branch}`, {
-        signal: AbortSignal.timeout(8000),
-        headers: { Accept: 'application/vnd.github+json' },
-      })
-      if (r.ok) {
-        const b = (await r.json()) as { commit?: { sha?: string; commit?: { committer?: { date?: string } } } }
-        const full = String(b.commit?.sha ?? '')
-        const sha = full.slice(0, 7)
-        const date = String(b.commit?.commit?.committer?.date ?? '').slice(0, 10)
-        let base: string | null = null
-        try {
-          const v = await fetch(`https://raw.githubusercontent.com/${FORK.repo}/${full}/version.json`, { signal: AbortSignal.timeout(8000) })
-          if (v.ok) {
-            const stable = ((await v.json()) as { release?: { stable?: { version?: string }[] } }).release?.stable ?? []
-            const last = String(stable[stable.length - 1]?.version ?? '')
-            if (/^\d+(?:\.\d+)+$/.test(last)) base = last
-          }
-        } catch {
-          // without the base the label has no number
-        }
-        if (/^[0-9a-f]{40}$/.test(full) && /^\d{4}-\d{2}-\d{2}$/.test(date)) {
-          const label = ['FORK', base, FORK.branch, sha, date].filter(Boolean).join(' ')
-          forkCache = { at: Date.now(), info: { repo: FORK.repo, branch: FORK.branch, sha, date, base, label } }
-        }
-      }
-    } catch {
-      // no internet: the last answer, if any
-    }
-  }
-  return forkCache?.info ?? null
-}
-
-// The fork's last tag: the named state to go back to while the branch ("wishes") goes on. The tags carry their day in the
-// name (fork-2026-11-23-spotify-live-suche) - the newest day is the last one (the tag list of GitHub has no order by
-// date). The same cache as the branch: asked every 10 minutes at most.
-export interface ForkTag {
-  repo: string
-  tag: string
-  sha: string
-  date: string
-  base: string | null
-  label: string
-}
-let forkTagCache: { at: number; info: ForkTag } | null = null
-
-/** the newest of the tag names that carry a day (yyyy-mm-dd), none when no tag does */
-export function lastForkTag(names: string[]): string | null {
-  const dated = names
-    .filter((n) => /^[A-Za-z0-9._-]{1,60}$/.test(n))
-    .map((n) => ({ n, day: /\d{4}-\d{2}-\d{2}/.exec(n)?.[0] ?? '' }))
-    .filter((o) => o.day)
-  dated.sort((a, b) => (a.day === b.day ? a.n.localeCompare(b.n) : a.day.localeCompare(b.day)))
-  return dated.length ? dated[dated.length - 1].n : null
-}
-
-export async function forkLastTag(fresh = false): Promise<ForkTag | null> {
-  if (fresh || !forkTagCache || Date.now() - forkTagCache.at > 600_000) {
-    try {
-      const r = await fetch(`https://api.github.com/repos/${FORK.repo}/tags?per_page=100`, {
-        signal: AbortSignal.timeout(8000),
-        headers: { Accept: 'application/vnd.github+json' },
-      })
-      if (r.ok) {
-        const list = (await r.json()) as { name?: string; commit?: { sha?: string } }[]
-        const tag = lastForkTag(list.map((t) => String(t.name ?? '')))
-        const full = String(list.find((t) => t.name === tag)?.commit?.sha ?? '')
-        if (tag && /^[0-9a-f]{40}$/.test(full)) {
-          let base: string | null = null
-          try {
-            const v = await fetch(`https://raw.githubusercontent.com/${FORK.repo}/${full}/version.json`, {
-              signal: AbortSignal.timeout(8000),
-            })
-            if (v.ok) {
-              const stable =
-                ((await v.json()) as { release?: { stable?: { version?: string }[] } }).release?.stable ?? []
-              const last = String(stable[stable.length - 1]?.version ?? '')
-              if (/^\d+(?:\.\d+)+$/.test(last)) base = last
-            }
-          } catch {
-            // without the base the label has no number
-          }
-          const sha = full.slice(0, 7)
-          const date = /\d{4}-\d{2}-\d{2}/.exec(tag)?.[0] ?? ''
-          const label = ['FORK', base, tag, sha].filter(Boolean).join(' ')
-          forkTagCache = { at: Date.now(), info: { repo: FORK.repo, tag, sha, date, base, label } }
-        }
-      }
-    } catch {
-      // no internet: the last answer, if any
-    }
-  }
-  return forkTagCache?.info ?? null
-}
-
 /** "4.2.4 stable", "3.2.5 BETA", "DEV 5.0.2 2026-09-01", "FORK 5.0.17 wishes 1a2b3c4 2026-11-22" -> its number and channel */
 export function parseInstalled(v: string): { number: string | null; channel: InstalledChannel } {
   const number = /\d+(?:\.\d+)+/.exec(v)?.[0] ?? null
@@ -399,10 +285,7 @@ export function registerUpdateRoutes(router: Router, deps: UpdatesDeps): void {
       latest,
       devDate: date,
       update: newer && mine.number && compareVersions(newer.version, mine.number) > 0 ? { channel: mine.channel, version: newer.version } : null,
-      fork: fork ? { ...fork, installed: mine.channel === 'fork' && installed.includes(` ${fork.sha} `) } : null,
-      forkTag: forkTag
-        ? { ...forkTag, installed: mine.channel === 'fork' && installed.includes(` ${forkTag.tag} `) }
-        : null,
+      ...forkRows(installed, mine.channel, fork, forkTag),
       job,
     })
   })
@@ -419,27 +302,13 @@ export function registerUpdateRoutes(router: Router, deps: UpdatesDeps): void {
       res.status(400).json({ error: 'invalid kind' })
       return
     }
-    // (the fork: its branch asked again now - the label names the commit that is installed; repository and branch are
-    // the fixed ones above, never from the request. The fork's last tag goes the same way: the update script takes a
-    // tag where it takes a branch, the unit's kind is "fork" for both)
-    let forkArgs: string[] = []
-    let unitKind = kind
-    if (kind === 'fork') {
-      const f = await forkRelease(true)
-      if (!f || !/^[A-Za-z0-9 ._-]{1,80}$/.test(f.label)) {
-        res.status(503).json({ error: 'the fork could not be reached' })
-        return
-      }
-      forkArgs = [f.repo, f.branch, f.label]
-    } else if (kind === 'fork-tag') {
-      const f = await forkLastTag(true)
-      if (!f || !/^[A-Za-z0-9 ._-]{1,80}$/.test(f.label)) {
-        res.status(503).json({ error: 'the fork could not be reached' })
-        return
-      }
-      forkArgs = [f.repo, f.tag, f.label]
-      unitKind = 'fork'
+    // (the fork: its branch or its last tag, asked again now - fork-updates.ts)
+    const forkStart = await forkStartArgs(kind)
+    if (forkStart === 'unreachable') {
+      res.status(503).json({ error: 'the fork could not be reached' })
+      return
     }
+    const [unitKind, forkArgs] = forkStart ?? [kind, []]
     const active = (await run('systemctl', ['is-active', UNIT], 5000)).stdout.trim()
     if (active === 'active' || active === 'activating') {
       res.status(409).json({ error: 'an update is running' })
