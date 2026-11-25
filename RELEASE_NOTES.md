@@ -77,6 +77,13 @@ Bedienung › Suche am Display*; aus = wie bisher)
 - Home Assistant: Ereignisse für neue Playlists (`created`) und Songs (`kind: "track"`, mit `playlist`); die Wünsche-Erweiterung
   (`search_events.py`) ist dafür aktualisiert. Backup und Wiederherstellung sichern die neue Datei `search-playlists.json` mit.
 - Display-Prüfung: Regeln R14–R16; alle neuen Texte in allen Sprachen.
+- **„Kontingente trennen“ jetzt von Anfang an an** (*Bibliothek › Spotify › Sync-Einstellungen › Spotify-Sperren*): Sperrt
+  Spotify nur die Kataloganfragen (`QUOTA_EXCEEDED`), spielt die Box weiter ab. Bisher war der Schalter nach der Installation
+  aus – eine Box, die neu auf den Fork kam, konnte nach ihrer ersten Sperre einen Tag lang kein Spotify abspielen. Wer ihn
+  ausgeschaltet hat, behält „aus“ (wie in der MuPiBox vorgesehen).
+- Für Entwickler: Der Code des Forks steht jetzt weitgehend in eigenen Dateien (`fork-routes.ts`, `eltern/fork-updates.ts`,
+  `mupi-app/fork.js`, `mupi-app/i18n/fork/`, `display-texts-fork.*`, `swiper.component.fork.scss`); splittis Dateien haben nur
+  noch kleine Einhänge-Stellen. Das macht den späteren Merge von splittis 5.1 deutlich leichter. Ohne Änderung der Funktion.
 
 **Anleitungen**
 - [docs/INSTALLATION.md](docs/INSTALLATION.md): Erstinstallation des Forks auf einer laufenden Standard-MuPiBox per SSH, Prüfen,

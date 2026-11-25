@@ -82,12 +82,12 @@ Als Dienst läuft die Installation unabhängig von jedem Fenster weiter. Mit den
 sie per SSH oder im Dashboard-Terminal eingibst; nur **direkt** darfst du das Skript in keinem von beiden starten.
 
 Stände heißen *Tags* (feste, getestete Stände); die Liste steht in den [Release-Notes](../RELEASE_NOTES.md).
-**Empfohlen: der letzte getestete Stand** `fork-2026-11-23-spotify-live-suche`. Die zwei Befehle **einzeln, nacheinander** einfügen.
+**Empfohlen: der letzte getestete Stand** `fork-2026-11-24-startseite-sortieren`. Die zwei Befehle **einzeln, nacheinander** einfügen.
 
 **Schritt 1 – das Installationsskript des Forks laden** (es wird nur gespeichert, noch nicht ausgeführt):
 
 ```shell
-cd; curl -fsSL -o fork-update.sh https://raw.githubusercontent.com/fetredlwl/MuPiBox/fork-2026-11-23-spotify-live-suche/update/start_mupibox_update.sh
+cd; curl -fsSL -o fork-update.sh https://raw.githubusercontent.com/fetredlwl/MuPiBox/fork-2026-11-24-startseite-sortieren/update/start_mupibox_update.sh
 ```
 
 Kontrolle: `ls -l fork-update.sh` zeigt eine Datei mit einigen zehntausend Byte (nicht 0 und keine Fehlermeldung).
@@ -95,7 +95,7 @@ Kontrolle: `ls -l fork-update.sh` zeigt eine Datei mit einigen zehntausend Byte 
 **Schritt 2 – als Dienst starten:**
 
 ```shell
-sudo systemd-run --unit=mupibox-fork-install --collect --setenv=TERM=xterm --working-directory=/home/dietpi /bin/bash -c 'script -qfec "bash /home/dietpi/fork-update.sh branch fork-2026-11-23-spotify-live-suche fetredlwl/MuPiBox \"FORK 5.0.17 fork-2026-11-23-spotify-live-suche 77aa80a\"" /home/dietpi/fork-install.log && systemctl reboot'
+sudo systemd-run --unit=mupibox-fork-install --collect --setenv=TERM=xterm --working-directory=/home/dietpi /bin/bash -c 'script -qfec "bash /home/dietpi/fork-update.sh branch fork-2026-11-24-startseite-sortieren fetredlwl/MuPiBox \"FORK 5.0.18 fork-2026-11-24-startseite-sortieren 0671c5e\"" /home/dietpi/fork-install.log && systemctl reboot'
 ```
 
 Es kommt nur eine Zeile wie `Running as unit: mupibox-fork-install.service`. Dann läuft die Installation im Hintergrund.
@@ -107,9 +107,9 @@ Was die Teile des zweiten Befehls bedeuten, falls du später einen **anderen Sta
 | Teil | Bedeutung |
 |---|---|
 | `mupibox-fork-install` | Name des Dienstes (zum Nachsehen, siehe unten) |
-| `fork-2026-11-23-spotify-live-suche` (in Schritt 1 und 2) | der Tag. Steht ein Zweigname wie `wishes` dort, bekommst du den **laufenden Entwicklungsstand** – der kann Fehler haben |
+| `fork-2026-11-24-startseite-sortieren` (in Schritt 1 und 2) | der Tag. Steht ein Zweigname wie `wishes` dort, bekommst du den **laufenden Entwicklungsstand** – der kann Fehler haben |
 | `fetredlwl/MuPiBox` | das Repository des Forks (`<Besitzer>/<Name>`) |
-| `"FORK 5.0.17 … 77aa80a"` | die Versionsbezeichnung, die die Box danach anzeigt: `FORK`, die Basis-Version von splitti, der Tag, die ersten 7 Zeichen der Kennung. `FORK` am Anfang muss stehen bleiben, sonst hält die Box den Fork für eine offizielle Entwicklerversion. Die Angaben zu jedem Tag stehen in den Release-Notes |
+| `"FORK 5.0.18 … 0671c5e"` | die Versionsbezeichnung, die die Box danach anzeigt: `FORK`, die Basis-Version von splitti, der Tag, die ersten 7 Zeichen der Kennung. `FORK` am Anfang muss stehen bleiben, sonst hält die Box den Fork für eine offizielle Entwicklerversion. Die Angaben zu jedem Tag stehen in den Release-Notes |
 | `script -qfec … /home/dietpi/fork-install.log` | gibt dem Skript ein Terminal (es braucht eins für die Fortschrittsanzeige) und schreibt alles in die Datei `fork-install.log` |
 | `&& systemctl reboot` | startet die Box neu, **wenn** die Installation ohne Fehler fertig wurde |
 
@@ -128,7 +128,10 @@ Mit Strg + C hörst du auf zu lesen; die Installation läuft weiter. Ob der Dien
 2. Das **Display zeigt eine Wartungsanzeige**. Das dauert **10 bis 30 Minuten**.
 3. Am Ende **startet die Box von selbst neu**. Danach läuft der Fork.
 
-Die Box in dieser Zeit am Netzteil lassen und **nicht ausschalten**. Das SSH-Fenster darfst du schließen.
+Die Box in dieser Zeit am Netzteil lassen und **nicht ausschalten** – auch nicht, wenn es lange dauert oder die App noch die
+alte Version zeigt: Die App wechselt erst ganz am Ende mit. Das SSH-Fenster darfst du schließen; geht der Rechner in den
+Ruhemodus, läuft die Installation auf der Box weiter. Ein Raspberry Pi 3 braucht länger und wird dabei warm (über 70 °C sind
+normal; er drosselt dann nur seinen Takt) – am besten offen hinstellen.
 
 **Bricht die Installation doch ab** (Stromausfall, Fehler): die Box **neu starten** (Netzteil kurz ab und wieder an). Der Dienst
 `mupi_update_recover` stellt dann **vor allem anderen die vorherige Installation wieder her**; die Box läuft wie vorher.
@@ -140,7 +143,7 @@ Danach Schritt 1 und 2 noch einmal; sie sind wiederholbar. Die Ursache steht am 
 
 1. Nach dem Neustart zeigt das Display die Startseite wie vorher (Bibliothek und Einstellungen sind unverändert).
 2. In der MuPiBox-App *Einstellungen › System › Updates* öffnen: bei **Installiert** steht jetzt etwas wie
-   `FORK 5.0.17 fork-2026-11-23-spotify-live-suche 77aa80a`. Darunter erscheinen die Zeilen **„Fork · Letzter Tag“** und
+   `FORK 5.0.18 fork-2026-11-24-startseite-sortieren 0671c5e`. Darunter erscheinen die Zeilen **„Fork · Letzter Tag“** und
    **„Fork · Entwicklungsstand“** – über sie machst du künftig alle Updates (Teil 8).
 3. Per SSH (optional): `jq -r .mupibox.version /etc/mupibox/mupiboxconfig.json` zeigt dieselbe Zeile.
 

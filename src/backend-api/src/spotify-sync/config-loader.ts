@@ -51,8 +51,8 @@ export function loadSpotifySyncConfig(mupibox: MupiboxConfig | undefined): Spoti
   merged.background_request_seconds = Number.isFinite(bg)
     ? Math.max(BACKGROUND_REQUEST_SECONDS_MIN, Math.min(BACKGROUND_REQUEST_SECONDS_MAX, Math.round(bg)))
     : DEFAULT_SPOTIFY_SYNC_CONFIG.background_request_seconds
-  // (on only when set to true)
-  merged.split_quota_block = merged.split_quota_block === true
+  // (on unless switched off - set to false)
+  merged.split_quota_block = merged.split_quota_block !== false
   return merged
 }
 

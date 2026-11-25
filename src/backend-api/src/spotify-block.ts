@@ -15,7 +15,8 @@
 // other 429 (the 30-second rate limit counts all the app's requests) holds back the player too, as does every 429 the
 // player is answered with (it notes playerUntil itself). A file of an older version has no playerUntil: all of it waits.
 // Only with the switch in the app (Sync-Einstellungen › Spotify-Sperren, spotify_sync.split_quota_block): off, every
-// block holds back all of it as before - for the blocks noted from then on; switched on, from the next block.
+// block holds back all of it as before - for the blocks noted from then on; switched on, from the next block. On unless
+// switched off (spotify-sync/config-loader.ts).
 
 import * as fs from 'node:fs'
 import * as path from 'node:path'

@@ -131,12 +131,13 @@ describe('spotify-block: switch off (as MuPiBox has it)', () => {
 })
 
 describe('spotify_sync.split_quota_block in the settings', () => {
-  it('off unless set to true', async () => {
+  it('on unless switched off (set to false)', async () => {
     const { loadSpotifySyncConfig } = await import('./spotify-sync/config-loader')
     type Cfg = Parameters<typeof loadSpotifySyncConfig>[0]
-    assert.equal(loadSpotifySyncConfig({} as Cfg).split_quota_block, false)
+    assert.equal(loadSpotifySyncConfig({} as Cfg).split_quota_block, true)
+    assert.equal(loadSpotifySyncConfig({ spotify_sync: {} } as unknown as Cfg).split_quota_block, true)
     assert.equal(
-      loadSpotifySyncConfig({ spotify_sync: { split_quota_block: 'yes' } } as unknown as Cfg).split_quota_block,
+      loadSpotifySyncConfig({ spotify_sync: { split_quota_block: false } } as unknown as Cfg).split_quota_block,
       false,
     )
     assert.equal(

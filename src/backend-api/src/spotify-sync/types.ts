@@ -63,7 +63,8 @@ export interface SpotifySyncConfig {
   // for the display's search): many at once got the app blocked for hours (fork "wishes")
   background_request_seconds: number
   // Spotify's quota block of the catalog (QUOTA_EXCEEDED) holds back the catalog only, the box goes on playing (fork
-  // "wishes", see spotify-block.ts) - off: every block holds back all of it, as MuPiBox has it
+  // "wishes", see spotify-block.ts) - off: every block holds back all of it, as MuPiBox has it. On unless switched off
+  // (25.11.2026: a box new on the fork was kept from playing for a day by its first quota block)
   split_quota_block: boolean
   manual_throttle_seconds: number
   stale_lock_minutes: number
@@ -86,7 +87,7 @@ export const DEFAULT_SPOTIFY_SYNC_CONFIG: SpotifySyncConfig = {
   artists: [],
   polling_interval_seconds: 900, // 15 min (Q6=B)
   background_request_seconds: 15,
-  split_quota_block: false,
+  split_quota_block: true,
   manual_throttle_seconds: 60,
   stale_lock_minutes: 10,
   category_mapping: {
