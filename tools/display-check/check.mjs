@@ -25,7 +25,8 @@
 //   R12 "Einträge verwalten": what the child fetched itself, on a page of its own - another tab or off the start page
 //   R13 radio for children: tips of children's stations only, asked once; on the start page without approval
 //
-// Usage: node check.mjs <www dir> [--shots <dir>] [--theme <id>]   (needs Chrome; port 8200 and 4300 free)
+// Usage: node check.mjs <www dir> [--shots <dir>] [--theme <id>] [--port-offset <n>]   (needs Chrome; port 8200 and 4300
+// free - with --port-offset n: 8200+n and 4300+n, so that two checks run at the same time, see port-shift.mjs)
 // Exit code 0: all rules kept; 1: a rule broken (listed); 2: could not run.
 
 import { spawn } from 'node:child_process'
@@ -33,7 +34,7 @@ import fs from 'node:fs'
 import http from 'node:http'
 import os from 'node:os'
 import path from 'node:path'
-import { fileURLToPath } from 'node:url'
+import { fileURLToPath, pathToFileURL } from 'node:url'
 import puppeteer from 'puppeteer-core'
 
 const here = path.dirname(fileURLToPath(import.meta.url))
@@ -47,8 +48,12 @@ const theme = themeAt > 0 ? process.argv[themeAt + 1] : null
 // (--only sort: only the pass of the start page's sorting - quicker while working on it)
 const onlyAt = process.argv.indexOf('--only')
 const only = onlyAt > 0 ? process.argv[onlyAt + 1] : null
-const STATIC_PORT = 4300
-const API = 'http://localhost:8200/api'
+// (--port-offset n: the ports moved by n - a second check at the same time, e.g. in another theme; build-deploy.sh)
+const offsetAt = process.argv.indexOf('--port-offset')
+const PORT_OFFSET = offsetAt > 0 ? Number(process.argv[offsetAt + 1]) || 0 : 0
+const STATIC_PORT = 4300 + PORT_OFFSET
+const BACKEND_PORT = 8200 + PORT_OFFSET
+const API = `http://localhost:${BACKEND_PORT}/api`
 const CHROME = [
   process.env.CHROME_PATH,
   'C:/Program Files/Google/Chrome/Application/chrome.exe',
@@ -306,10 +311,10 @@ function serveWww() {
       const out = http.request(
         {
           host: 'localhost',
-          port: 8200,
+          port: BACKEND_PORT,
           path: req.url,
           method: req.method,
-          headers: { ...req.headers, host: 'localhost:8200' },
+          headers: { ...req.headers, host: `localhost:${BACKEND_PORT}` },
         },
         (r) => {
           res.writeHead(r.statusCode ?? 502, r.headers)
@@ -359,6 +364,13 @@ async function startBackend(dir) {
       MUPIBOX_SPOTIFY_FIXTURE_LOG: path.join(dir, 'spotify-calls.log'),
       // (Spotify answers after the page change, as on the box: the artist's covers came then and were not drawn)
       MUPIBOX_SPOTIFY_FIXTURE_DELAY_MS: '1200',
+      // (--port-offset: the backend's ports moved along - port-shift.mjs, loaded before it)
+      ...(PORT_OFFSET
+        ? {
+            DISPLAY_CHECK_PORT_OFFSET: String(PORT_OFFSET),
+            NODE_OPTIONS: `${process.env.NODE_OPTIONS ?? ''} --import=${pathToFileURL(path.join(here, 'port-shift.mjs')).href}`.trim(),
+          }
+        : {}),
     },
     stdio: ['ignore', 'pipe', 'pipe'],
   })

@@ -26,7 +26,14 @@ gebaute Display. Chrome klickt die Suche bei 1024×600 und 800×480 durch.
 | R18 | Startseite und Start der Suche sortieren (Schalter an): langes Drücken startet das Sortieren, nichts geht auf; ein Cover wird an einen anderen Platz gezogen (Bühne: Pfeile), die Reihenfolge bleibt nach dem Neuladen; „A–Z“ fragt einmal nach und sortiert wie vorher; Schalter aus: langes Drücken tut nichts |
 | R0 | Vorbedingung: das Backend meldet die Test-Sperren so, wie sie gesetzt wurden |
 
-Von Hand: `node tools/display-check/check.mjs <www-Ordner> [--shots <Ordner>]` (mit `--shots` legt sie ein Bild je
-Schritt ab). Braucht Chrome und freie Ports 8200 und 4300.
+Von Hand: `node tools/display-check/check.mjs <www-Ordner> [--shots <Ordner>] [--theme <id>] [--port-offset <n>]` (mit
+`--shots` legt sie ein Bild je Schritt ab). Braucht Chrome und freie Ports 8200 und 4300 – mit `--port-offset n` die Ports
+8200+n und 4300+n; so laufen zwei Prüfungen gleichzeitig (`port-shift.mjs` verschiebt dafür die Ports des Backends, ohne
+seinen Code zu ändern).
+
+Im Build (`tools/build-deploy.sh`) läuft die Prüfung im Standard-Theme und – nur wenn sich das Display seit der letzten
+`deploy.zip` geändert hat (`src/frontend-box`, `themes`, diese Prüfung) – gleichzeitig im Theme „Einhorn“. Scheitert ein Lauf
+dabei, wiederholt der Build ihn einmal allein (zwei Läufe auf einmal belasten den Rechner); erst ein zweites Scheitern hält
+den Build an.
 
 Reparieren kann die Prüfung nichts selbst: Sie zeigt, welche Regel bricht, und hält den Build an.

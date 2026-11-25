@@ -15,15 +15,44 @@ cp backend-player/README.md deploy/
 cd ..
 # the display check on what goes into the zip: a broken rule stops the build (nothing is zipped)
 [ -d tools/display-check/node_modules ] || (cd tools/display-check && npm install --no-audit --no-fund > /dev/null)
-if ! node tools/display-check/check.mjs src/deploy/www; then
-  echo "Display-Prüfung nicht bestanden - deploy.zip NICHT gebaut"
-  exit 1
+# (once more in a theme of the children - the boxes use km themes: einhorn, light, with the cover stage - but only when
+# the display changed since the last deploy.zip: its code, the themes or the check itself. Both at the same time, the
+# second on ports moved by 10 (check.mjs --port-offset). A run that fails is run once more on its own - the two at once
+# load the computer, and a click may come too late: a rule broken twice stops the build.)
+LAST_ZIP="$(git log -1 --format=%H -- bin/nodejs/deploy.zip)"
+THEMES=(default)
+if [ -z "$LAST_ZIP" ] || ! git diff --quiet "$LAST_ZIP" HEAD -- src/frontend-box themes tools/display-check; then
+  THEMES+=(einhorn)
+else
+  echo "Display seit der letzten deploy.zip unverändert - Prüfung nur im Standard-Theme"
 fi
-# (once more in a theme of the children: the boxes use km themes - einhorn, light, with the cover stage)
-if ! node tools/display-check/check.mjs src/deploy/www --theme einhorn; then
-  echo "Display-Prüfung (Einhorn) nicht bestanden - deploy.zip NICHT gebaut"
-  exit 1
-fi
+CHECK_DIR="$(mktemp -d)"
+check_args() { [ "$1" = default ] && echo "" || echo "--theme $1"; }
+declare -A PIDS
+i=0
+for t in "${THEMES[@]}"; do
+  node tools/display-check/check.mjs src/deploy/www $(check_args "$t") --port-offset $((i * 10)) > "$CHECK_DIR/$t.log" 2>&1 &
+  PIDS[$t]=$!
+  i=$((i + 1))
+done
+FAILED=()
+for t in "${THEMES[@]}"; do
+  if wait "${PIDS[$t]}"; then
+    echo "== Display-Prüfung ($t)"; tail -n 1 "$CHECK_DIR/$t.log"
+  else
+    echo "== Display-Prüfung ($t) beim gleichzeitigen Lauf nicht bestanden:"; grep -E "^FAIL|could not run" "$CHECK_DIR/$t.log"
+    FAILED+=("$t")
+  fi
+done
+for t in "${FAILED[@]}"; do
+  echo "== Display-Prüfung ($t) noch einmal, allein"
+  if ! node tools/display-check/check.mjs src/deploy/www $(check_args "$t"); then
+    echo "Display-Prüfung ($t) nicht bestanden - deploy.zip NICHT gebaut"
+    rm -rf "$CHECK_DIR"
+    exit 1
+  fi
+done
+rm -rf "$CHECK_DIR"
 cd src
 python -I ../tools/mkzip.py deploy ../bin/nodejs/deploy.zip
 rm -rf deploy
